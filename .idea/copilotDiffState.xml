@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/frontend/src/main.js">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/frontend/src/main.js" />
+              <option name="originalContent" value="import { createApp } from 'vue';&#10;import App from './App.vue';&#10;import router from './router';&#10;&#10;import Aura from '@primevue/themes/aura';&#10;import PrimeVue from 'primevue/config';&#10;import ConfirmationService from 'primevue/confirmationservice';&#10;import ToastService from 'primevue/toastservice';&#10;&#10;import './assets/styles.scss';&#10;import './assets/tailwind.css';&#10;&#10;const app = createApp(App);&#10;&#10;app.use(router);&#10;app.use(PrimeVue, {&#10;    theme: {&#10;        preset: Aura,&#10;        options: {&#10;            darkModeSelector: '.app-dark'&#10;        }&#10;    }&#10;});&#10;app.use(ToastService);&#10;app.use(ConfirmationService);&#10;&#10;app.mount('#app');&#10;" />
+              <option name="updatedContent" value="import { createApp } from 'vue';&#10;import App from './App.vue';&#10;import router from './router';&#10;&#10;import Aura from '@primevue/themes/aura';&#10;import PrimeVue from 'primevue/config';&#10;import ConfirmationService from 'primevue/confirmationservice';&#10;import ToastService from 'primevue/toastservice';&#10;import Chart from 'primevue/chart';&#10;&#10;import './assets/styles.scss';&#10;import './assets/tailwind.css';&#10;&#10;const app = createApp(App);&#10;&#10;app.use(router);&#10;app.use(PrimeVue, {&#10;    theme: {&#10;        preset: Aura,&#10;        options: {&#10;            darkModeSelector: '.app-dark'&#10;        }&#10;    }&#10;});&#10;app.use(ToastService);&#10;app.use(ConfirmationService);&#10;app.component('Chart', Chart);&#10;&#10;app.mount('#app');" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

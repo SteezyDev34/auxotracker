@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ${DOCKER_DIR}/php82
+    container_name: auxotracker
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=auxotracker.lan
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=auxotracker.lan
+      - LETSENCRYPT_EMAIL=your-email@auxotracker.lan
+    volumes:
+      - ./:/var/www/html
+      - ./docker/apache/auxotracker.lan.conf:/etc/apache2/sites-enabled/auxotracker.lan.conf
+      - ${DOCKER_DIR}/certs/auxotracker.lan.crt:/etc/apache2/ssl/auxotracker.lan.crt
+      - ${DOCKER_DIR}/certs/auxotracker.lan.key:/etc/apache2/ssl/auxotracker.lan.key
+      - ./docker/logs/apache:/var/log/apache2
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    external: true

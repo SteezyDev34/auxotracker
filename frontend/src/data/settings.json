@@ -1,0 +1,112 @@
+{
+    "subscriptionOptions": [
+        { "name": "Voir les options d'abonnement", "slug": "view-subscription-options" },
+        { "name": "Historique des paiements", "slug": "payment-history" },
+        { "name": "Changer de mot de passe", "slug": "change-password" }
+    ],
+    "languageOptions": [
+        { "name": "Français", "slug": "french" },
+        { "name": "Anglais", "slug": "english" },
+        { "name": "Espagnol", "slug": "spanish" }
+    ],
+    "defaultLanguage": "french",
+
+    "currencyOptions": [
+        { "name": "Euro (€)", "slug": "euro" },
+        { "name": "US Dollar ($)", "slug": "usd" },
+        { "name": "British Pound (£)", "slug": "gbp" },
+        { "name": "Canadian Dollar (C$)", "slug": "cad" },
+        { "name": "Australian Dollar (A$)", "slug": "aud" },
+        { "name": "Swiss Franc (CHF)", "slug": "chf" },
+        { "name": "Japanese Yen (¥)", "slug": "jpy" },
+        { "name": "Chinese Yuan (¥)", "slug": "cny" },
+        { "name": "Indian Rupee (₹)", "slug": "inr" },
+        { "name": "South Korean Won (₩)", "slug": "krw" },
+        { "name": "Mexican Peso (MX$)", "slug": "mxn" },
+        { "name": "Brazilian Real (R$)", "slug": "brl" },
+        { "name": "South African Rand (R)", "slug": "zar" },
+        { "name": "Russian Ruble (₽)", "slug": "rub" },
+        { "name": "New Zealand Dollar (NZ$)", "slug": "nzd" },
+        { "name": "Singapore Dollar (S$)", "slug": "sgd" },
+        { "name": "Hong Kong Dollar (HK$)", "slug": "hkd" },
+        { "name": "Swedish Krona (SEK)", "slug": "sek" },
+        { "name": "Norwegian Krone (NOK)", "slug": "nok" },
+        { "name": "Danish Krone (DKK)", "slug": "dkk" },
+        { "name": "Turkish Lira (₺)", "slug": "try" },
+        { "name": "Argentine Peso (ARS)", "slug": "ars" },
+        { "name": "Colombian Peso (COP)", "slug": "cop" },
+        { "name": "Thai Baht (฿)", "slug": "thb" },
+        { "name": "Indonesian Rupiah (Rp)", "slug": "idr" },
+        { "name": "Philippine Peso (₱)", "slug": "php" },
+        { "name": "Malaysian Ringgit (RM)", "slug": "myr" }
+    ],
+    "defaultCurrency": "euro",
+
+    "homepageOptions": [
+        { "name": "Gestion des paris", "slug": "bet-management" },
+        { "name": "Tableau de bord", "slug": "dashboard" },
+        { "name": "Statistiques", "slug": "statistics" }
+    ],
+    "defaultHomepage": "bet-management",
+
+    "timezoneOptions": [
+        { "name": "Europe/Paris", "slug": "europe-paris" },
+        { "name": "America/New_York", "slug": "america-new-york" },
+        { "name": "America/Chicago", "slug": "america-chicago" },
+        { "name": "America/Denver", "slug": "america-denver" },
+        { "name": "America/Los_Angeles", "slug": "america-los-angeles" },
+        { "name": "Asia/Tokyo", "slug": "asia-tokyo" },
+        { "name": "Asia/Hong_Kong", "slug": "asia-hong-kong" },
+        { "name": "Asia/Dubai", "slug": "asia-dubai" },
+        { "name": "Asia/Shanghai", "slug": "asia-shanghai" },
+        { "name": "Asia/Singapore", "slug": "asia-singapore" },
+        { "name": "Australia/Sydney", "slug": "australia-sydney" },
+        { "name": "Australia/Melbourne", "slug": "australia-melbourne" },
+        { "name": "Europe/London", "slug": "europe-london" },
+        { "name": "Europe/Berlin", "slug": "europe-berlin" },
+        { "name": "Europe/Madrid", "slug": "europe-madrid" },
+        { "name": "Europe/Rome", "slug": "europe-rome" },
+        { "name": "Europe/Moscow", "slug": "europe-moscow" },
+        { "name": "America/Sao_Paulo", "slug": "america-sao-paulo" },
+        { "name": "America/Buenos_Aires", "slug": "america-buenos-aires" },
+        { "name": "Africa/Cairo", "slug": "africa-cairo" },
+        { "name": "Africa/Johannesburg", "slug": "africa-johannesburg" },
+        { "name": "Asia/Kolkata", "slug": "asia-kolkata" },
+        { "name": "Asia/Seoul", "slug": "asia-seoul" }
+    ],
+    "defaultTimezone": "europe-paris",
+
+    "displayBetViewOptions": [
+        { "name": "Jour", "slug": "day" },
+        { "name": "Semaine", "slug": "week" },
+        { "name": "Mois", "slug": "month" }
+    ],
+    "defaultDisplayBetView": "day",
+
+    "displayDashboardOptions": [
+        { "name": "Global", "slug": "global" },
+        { "name": "Année en cours", "slug": "current-year" },
+        { "name": "Mois en cours", "slug": "current-month" }
+    ],
+    "defaultDisplayDashboard": "global",
+
+    "duplicateBetDateOptions": [
+        { "name": "Hier", "slug": "yesterday" },
+        { "name": "Aujourd'hui", "slug": "today" },
+        { "name": "Demain", "slug": "tomorrow" }
+    ],
+    "defaultDuplicateBetDate": "today",
+
+    "addBetDateOptions": [
+        { "name": "Hier", "slug": "yesterday" },
+        { "name": "Aujourd'hui", "slug": "today" },
+        { "name": "Demain", "slug": "tomorrow" }
+    ],
+    "defaultAddBetDate": "today",
+
+    "calendarDisplayOptions": [
+        { "name": "Journée en cours", "slug": "current-day" },
+        { "name": "Semaine", "slug": "week" },
+        { "name": "Mois", "slug": "month" }
+    ]
+}

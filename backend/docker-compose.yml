@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ${DOCKER_DIR}/php82
+    container_name: api.auxotracker
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - VIRTUAL_HOST=api.auxotracker.lan
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=api.auxotracker.lan
+      - LETSENCRYPT_EMAIL=your-email@api.auxotracker.lan
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=localhost,127.0.0.1,::1
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=localhost,127.0.0.1,::1
+    volumes:
+      - ./:/var/www/html
+      - ./docker/apache/api.auxotracker.lan.conf:/etc/apache2/sites-enabled/api.auxotracker.lan.conf
+      - ${DOCKER_DIR}/certs/api.auxotracker.lan.crt:/etc/apache2/ssl/api.auxotracker.lan.crt
+      - ${DOCKER_DIR}/certs/api.auxotracker.lan.key:/etc/apache2/ssl/api.auxotracker.lan.key
+      - ./docker/logs/apache:/var/log/apache2
