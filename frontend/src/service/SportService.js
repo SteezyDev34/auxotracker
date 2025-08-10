@@ -166,7 +166,7 @@ export const SportService = {
      * @param {number} limit - Nombre d'éléments par page (défaut: 200)
      * @param {number} leagueId - ID de la ligue pour filtrer (optionnel)
      */
-    async searchTeamsBySport(sportId, search = '', page = 1, limit = 200, leagueId = null) {
+    async searchTeamsBySport(sportId, search = '', page = 1, limit = 200, leagueId = null, countryId = null) {
         try {
             const params = new URLSearchParams({
                 page: page.toString(),
@@ -179,6 +179,10 @@ export const SportService = {
 
             if (leagueId) {
                 params.append('league_id', leagueId.toString());
+            }
+
+            if (countryId) {
+                params.append('country_id', countryId.toString());
             }
 
             const response = await fetch(`${API_BASE_URL}/sports/${sportId}/teams/search?${params}`, {

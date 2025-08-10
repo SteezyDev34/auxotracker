@@ -12,7 +12,9 @@ class Sport extends Model
 
     protected $fillable = [
         'name',
-        'description'
+        'description',
+        'slug',
+        'img'
     ];
 
     // Relations
@@ -20,4 +22,4 @@ class Sport extends Model
     {
         return $this->hasMany(Bet::class);
     }
-} 
+}

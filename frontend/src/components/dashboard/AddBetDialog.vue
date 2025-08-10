@@ -10,7 +10,7 @@
     <form @submit.prevent="submitForm" class="space-y-4">
       <!-- Date du pari -->
       <div class="flex flex-col gap-2">
-        <Calendar 
+        <DatePicker 
           id="bet_date" 
           v-model="formData.bet_date" 
           dateFormat="dd/mm/yy" 
@@ -37,41 +37,99 @@
         
         <!-- Sport -->
         <div class="flex flex-col gap-2 mb-4">
-          <Select 
-            :id="`sport_id_${eventIndex}`" 
-            v-model="eventData.sport_id" 
-            :options="sports" 
-            optionLabel="name" 
-            optionValue="id" 
-            placeholder="Sport *"
-            class="w-full"
-            :class="{ 'p-invalid': errors[`sport_id_${eventIndex}`] }"
-            @change="(event) => onSportChange(event, eventIndex)"
-          />
+          <div class="relative">
+            <AutoComplete 
+              :id="`sport_${eventIndex}`" 
+              v-model="eventData.selectedSport" 
+              :suggestions="eventData.sportSearchResults || []" 
+              @complete="(event) => searchSports(event, eventIndex)"
+              @item-select="(event) => onSportSelect(event, eventIndex)"
+              @dropdown-click="() => onSportDropdownShow(eventIndex)"
+              optionLabel="name"
+              :placeholder="eventData.selectedSport && eventData.selectedSport.length > 0 ? '' : 'Sport *'"
+              class="w-full max-w-full select-custom"
+              :class="{ 'p-invalid': errors[`sport_id_${eventIndex}`] }"
+              :loading="eventData.sportLoading"
+              panelClass="select-panel-custom"
+              @focus="() => searchSports({ query: '' }, eventIndex)"
+              :minLength="0"
+              dropdown
+              dropdownMode="blank"
+              multiple
+              display="chip"
+              aria-label="Rechercher et sélectionner un sport"
+              role="combobox"
+              aria-expanded="false"
+              aria-autocomplete="list"
+            >
+              <!-- Template pour afficher le sport sélectionné -->
+              <template #chip="slotProps">
+                <div class="flex items-center gap-2">
+                  <!-- Icône du sport sélectionné -->
+                  <img
+                    v-if="slotProps.value && slotProps.value.img"
+                    :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.value.img.replace('.png', '.svg')}`"
+                    :alt="slotProps.value.name"
+                    class="w-4 h-4 object-contain filter brightness-0"
+                    @error="$event.target.style.display='none'"
+                  />
+                  <div 
+                    v-else-if="slotProps.value"
+                    class="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600"
+                  >
+                    {{ slotProps.value.name ? slotProps.value.name.charAt(0).toUpperCase() : '?' }}
+                  </div>
+                  <!-- Nom du sport sélectionné -->
+                  <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
+                </div>
+              </template>
+              
+              <!-- Template pour les options du dropdown -->
+              <template #option="slotProps">
+                <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
+                  <!-- Icône du sport -->
+                  <img
+                    v-if="slotProps.option.img"
+                    :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.option.img.replace('.png', '.svg')}`"
+                    :alt="slotProps.option.name"
+                    class="w-5 h-5 object-contain flex-shrink-0 filter brightness-0"
+                    @error="$event.target.style.display='none'"
+                  />
+                  <div 
+                    v-else
+                    class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600 flex-shrink-0"
+                  >
+                    {{ slotProps.option.name ? slotProps.option.name.charAt(0).toUpperCase() : '?' }}
+                  </div>
+                  <!-- Nom du sport -->
+                  <span class="truncate">{{ slotProps.option.name }}</span>
+                </div>
+              </template>
+            </AutoComplete>
+          </div>
           <small v-if="errors[`sport_id_${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`sport_id_${eventIndex}`] }}</small>
         </div>
 
         <!-- Champs conditionnels selon le sport -->
-        <div v-if="eventData.sport_id" class="space-y-4">
+        <div v-if="eventData.sport_id" class="space-y-4 mb-4">
           <!-- Pays -->
           <div class="flex flex-col gap-2">
             <div class="relative">
               <AutoComplete 
                 :id="`country_${eventIndex}`" 
                 v-model="eventData.selectedCountry" 
-                :suggestions="eventData.countrySearchResults || []" 
+                :suggestions="eventData.countryFilteredResults || []" 
                 @complete="(event) => searchCountries(event, eventIndex)"
                 @item-select="(event) => onCountrySelect(event, eventIndex)"
                 optionLabel="name"
                 placeholder="Pays (optionnel)"
                 class="w-full max-w-full select-custom"
                 :class="{ 'p-invalid': errors[`country_id_${eventIndex}`] }"
-                :loading="eventData.countryLoading"
-                @show="() => onCountryDropdownShow(eventIndex)"
-                @focus="() => searchCountries({ query: '' }, eventIndex)"
                 :minLength="0"
                 dropdown
                 dropdownMode="blank"
+                multiple
+                display="chip"
                 aria-label="Rechercher et sélectionner un pays"
                 role="combobox"
                 aria-expanded="false"
@@ -108,15 +166,6 @@
                     <span class="truncate">{{ slotProps.option.name }}</span>
                   </div>
                 </template>
-                
-                <template #footer v-if="countryHasMore">
-                   <div class="flex justify-center items-center p-2" v-if="countryLoading">
-                     <i class="pi pi-spin pi-spinner"></i>
-                   </div>
-                   <div class="text-center p-2 text-sm text-gray-500" v-else>
-                     Faites défiler pour charger plus de résultats
-                   </div>
-                 </template>
 
               </AutoComplete>
             </div>
@@ -133,7 +182,7 @@
                 @complete="(event) => searchLeagues(event, eventIndex)"
                 @item-select="(event) => onLeagueSelect(event, eventIndex)"
                 optionLabel="name"
-                placeholder="Ligue *"
+                :placeholder="eventData.selectedLeague && eventData.selectedLeague.length > 0 ? '' : 'Ligue *'"
                 class="w-full max-w-full select-custom"
                 :class="{ 'p-invalid': errors[`league-${eventIndex}`] }"
                 :loading="eventData.leagueLoading"
@@ -144,21 +193,39 @@
                 :minLength="0"
                 dropdown
                 dropdownMode="blank"
+                multiple
+                display="chip"
                 aria-label="Rechercher et sélectionner une ligue"
                 role="combobox"
                 aria-expanded="false"
                 aria-autocomplete="list"
               >
+                <!-- Template pour afficher la ligue sélectionnée avec son logo -->
+                 <template #chip="slotProps">
+                   <div class="flex items-center gap-2">
+                     
+                     <!-- Logo de la ligue -->
+                     <img 
+                       v-if="slotProps.value.id"
+                       :src="`${apiBaseUrl}/storage/league_logos/${slotProps.value.id}.png`" 
+                       :alt="slotProps.value.name"
+                       class="w-4 h-4 rounded object-cover flex-shrink-0" 
+                       @error="$event.target.style.display='none'"
+                     />
+                     <!-- Nom de la ligue -->
+                     <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
+                   </div>
+                 </template>
                 <template #option="slotProps">
                   <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
                     <!-- Drapeau du pays -->
                     <img 
-                      v-if="slotProps.option.country_id"
-                      :src="`${apiBaseUrl}/storage/country_flags/${slotProps.option.country_id}.png`" 
-                      :alt="slotProps.option.country?.name || 'Pays'"
-                      class="w-4 h-4 rounded object-cover flex-shrink-0" 
-                      @error="$event.target.style.display='none'"
-                    />
+                       v-if="slotProps.value.country_id"
+                       :src="`${apiBaseUrl}/storage/country_flags/${slotProps.value.country_id}.png`" 
+                       :alt="slotProps.value.country?.name || 'Pays'"
+                       class="w-4 h-4 rounded object-cover flex-shrink-0" 
+                       @error="$event.target.style.display='none'"
+                     />
                     <!-- Logo de la ligue -->
                     <img 
                       v-if="slotProps.option.img"
@@ -197,7 +264,7 @@
                   @complete="(event) => searchTeam1(event, eventIndex)"
                   @item-select="(event) => onTeam1Select(event, eventIndex)"
                   optionLabel="name"
-                  placeholder="Équipe 1 *"
+                  :placeholder="eventData.selectedTeam1 && eventData.selectedTeam1.length > 0 ? '' : 'Équipe 1 *'"
                   class="w-full max-w-full select-custom"
                   :class="{ 'p-invalid': errors[`team1-${eventIndex}`] }"
                   :loading="eventData.team1Loading"
@@ -208,11 +275,28 @@
                   :minLength="0"
                   dropdown
                   dropdownMode="blank"
+                  multiple
+                  display="chip"
                   aria-label="Rechercher et sélectionner l'équipe 1"
                   role="combobox"
                   aria-expanded="false"
                   aria-autocomplete="list"
                 >
+                  <!-- Template pour afficher l'équipe 1 sélectionnée avec son logo -->
+                   <template #chip="slotProps">
+                     <div class="flex items-center gap-2">
+                       <!-- Logo de l'équipe -->
+                       <img 
+                         v-if="slotProps.value.id"
+                         :src="`${apiBaseUrl}/storage/team_logos/${slotProps.value.id}.png`" 
+                         :alt="slotProps.value.name"
+                         class="w-4 h-4 rounded object-cover flex-shrink-0" 
+                         @error="$event.target.style.display='none'"
+                       />
+                       <!-- Nom de l'équipe -->
+                       <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
+                     </div>
+                   </template>
                   <template #option="slotProps">
                     <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
                       <!-- Logo de l'équipe -->
@@ -254,7 +338,7 @@
                     @complete="(event) => searchTeam2(event, eventIndex)"
                     @item-select="(event) => onTeam2Select(event, eventIndex)"
                     optionLabel="name"
-                    placeholder="Équipe 2 *"
+                    :placeholder="eventData.selectedTeam2 && eventData.selectedTeam2.length > 0 ? '' : 'Équipe 2 *'"
                     class="w-full max-w-full select-custom"
                     :class="{ 'p-invalid': errors[`team2-${eventIndex}`] }"
                     :loading="eventData.team2Loading"
@@ -265,11 +349,28 @@
                     :minLength="0"
                     dropdown
                     dropdownMode="blank"
+                    multiple
+                    display="chip"
                     aria-label="Rechercher et sélectionner l'équipe 2"
                     role="combobox"
                     aria-expanded="false"
                     aria-autocomplete="list"
                   >
+                    <!-- Template pour afficher l'équipe 2 sélectionnée avec son logo -->
+                     <template #chip="slotProps">
+                       <div class="flex items-center gap-2">
+                         <!-- Logo de l'équipe -->
+                         <img 
+                           v-if="slotProps.value.id"
+                           :src="`${apiBaseUrl}/storage/team_logos/${slotProps.value.id}.png`" 
+                           :alt="slotProps.value.name"
+                           class="w-4 h-4 rounded object-cover flex-shrink-0" 
+                           @error="$event.target.style.display='none'"
+                         />
+                         <!-- Nom de l'équipe -->
+                         <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
+                       </div>
+                     </template>
                     <template #option="slotProps">
                       <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
                         <!-- Logo de l'équipe -->
@@ -338,14 +439,14 @@
               <div class="flex flex-col gap-2">
                 <InputText 
                   id="event_odds" 
+                  ref="eventOddsInput"
                   v-model="currentEvent.odds" 
                   placeholder="Cote de l'événement *"
                   class="w-full"
                   :class="{ 'p-invalid': errors.event_odds }"
-                  type="number"
-                  step="0.01"
-                  min="1"
-                  @input="calculateGlobalOdds"
+                  type="text"
+                  @input="handleEventOddsInput"
+                  @keypress="handleEventOddsKeypress"
                 />
                 <small v-if="errors.event_odds" class="text-red-500 block mt-1">{{ errors.event_odds }}</small>
               </div>
@@ -416,16 +517,15 @@
         <!-- Cote -->
         <div class="flex flex-col justify-center min-w-0 w-full">
           <div class="w-full">
-            <InputNumber 
+            <InputText 
               id="global_odds" 
               v-model="formData.global_odds" 
-              :minFractionDigits="2" 
-              :maxFractionDigits="2" 
-              :min="1" 
-              placeholder="Cote (ex: 2.50)"
+              type="text"
+              placeholder="Cote"
               class="w-full text-xs"
-              inputClass="w-full text-xs px-1 py-1"
               :class="{ 'p-invalid': errors.global_odds }"
+              @input="handleOddsInput"
+              @keypress="handleOddsKeypress"
             />
           </div>
           <small v-if="errors.global_odds" class="text-red-500 text-xs truncate">{{ errors.global_odds }}</small>
@@ -434,20 +534,15 @@
         <!-- Mise -->
         <div class="flex flex-col justify-center min-w-0 w-full">
           <div class="w-full">
-            <InputNumber 
+            <InputText 
               id="stake" 
               v-model="formData.stake" 
-              :mode="betTypeValue === 'currency' ? 'currency' : 'decimal'" 
-              :currency="betTypeValue === 'currency' ? 'EUR' : undefined"
-              :suffix="betTypeValue === 'percentage' ? ' %' : ''"
-              :minFractionDigits="2" 
-              :maxFractionDigits="2" 
-              :min="0" 
-              :max="betTypeValue === 'percentage' ? 100 : undefined"
+              type="text"
               :placeholder="betTypeValue === 'currency' ? 'Mise en €' : betTypeValue === 'percentage' ? 'Mise en %' : 'Mise'"
               class="w-full text-xs"
-              inputClass="w-full text-xs px-1 py-1"
               :class="{ 'p-invalid': errors.stake }"
+              @input="handleStakeInput"
+              @keypress="handleStakeKeypress"
             />
           </div>
           <small v-if="errors.stake" class="text-red-500 text-xs truncate">{{ errors.stake }}</small>
@@ -524,7 +619,7 @@ import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
-import Calendar from 'primevue/calendar';
+import DatePicker from 'primevue/datepicker';
 import Select from 'primevue/select';
 import SelectButton from 'primevue/selectbutton';
 import AutoComplete from 'primevue/autocomplete';
@@ -551,10 +646,12 @@ const toast = useToast();
 const loading = ref(false);
 const sports = ref([]);
 const countries = ref([]);
+const allCountries = ref([]);
 const errors = ref({});
+const eventOddsInput = ref(null);
 const availableLeagues = ref([]);
 const availableTeams = ref([]);
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 // Variables pour la recherche de pays
 const countrySearchQuery = ref('');
@@ -562,7 +659,7 @@ const countrySearchResults = ref([]);
 const countryLoading = ref(false);
 const countryCurrentPage = ref(1);
 const countryHasMore = ref(false);
-const selectedCountry = ref(null);
+const selectedCountry = ref([]);
 
 // Variables pour la recherche de ligues
 const leagueSearchQuery = ref('');
@@ -570,7 +667,7 @@ const leagueSearchResults = ref([]);
 const leagueLoading = ref(false);
 const leagueCurrentPage = ref(1);
 const leagueHasMore = ref(false);
-const selectedLeague = ref(null);
+const selectedLeague = ref([]);
 
 // Variables pour la recherche d'équipes 1
 const team1SearchQuery = ref('');
@@ -578,7 +675,7 @@ const team1SearchResults = ref([]);
 const team1Loading = ref(false);
 const team1CurrentPage = ref(1);
 const team1HasMore = ref(false);
-const selectedTeam1 = ref(null);
+const selectedTeam1 = ref([]);
 
 // Variables pour la recherche d'équipes 2
 const team2SearchQuery = ref('');
@@ -586,7 +683,13 @@ const team2SearchResults = ref([]);
 const team2Loading = ref(false);
 const team2CurrentPage = ref(1);
 const team2HasMore = ref(false);
-const selectedTeam2 = ref(null);
+const selectedTeam2 = ref([]);
+
+// Variables pour la recherche de sports
+const sportSearchQuery = ref('');
+const sportSearchResults = ref([]);
+const sportLoading = ref(false);
+const selectedSport = ref([]);
 
 // Variables pour le type de mise
 const betTypeValue = ref('currency');
@@ -607,12 +710,14 @@ const eventCards = ref([
     description: '',
     result: null,
     odds: null,
-    selectedCountry: null,
-    selectedLeague: null,
-    selectedTeam1: null,
-    selectedTeam2: null,
-    countrySearchResults: [],
-    countryLoading: false,
+    selectedSport: [],
+    selectedCountry: [],
+    selectedLeague: [],
+    selectedTeam1: [],
+    selectedTeam2: [],
+    sportSearchResults: [],
+    sportLoading: false,
+    countryFilteredResults: [],
     leagueSearchResults: [],
     leagueLoading: false,
     team1SearchResults: [],
@@ -732,11 +837,14 @@ async function loadCountries() {
   try {
     const countryData = await CountryService.getCountries();
     // Utiliser les vrais IDs des pays depuis l'API
-    countries.value = countryData.map(country => ({
+    const formattedCountries = countryData.map(country => ({
       id: country.id, // Utiliser le vrai ID du pays
       name: country.name,
       code: country.code
     }));
+    
+    countries.value = formattedCountries;
+    allCountries.value = formattedCountries;
   } catch (error) {
     console.error('Erreur lors du chargement des pays:', error);
     toast.add({
@@ -746,6 +854,7 @@ async function loadCountries() {
       life: 3000
     });
     countries.value = [];
+    allCountries.value = [];
   }
 }
 
@@ -804,12 +913,83 @@ async function loadTeamsByLeague(leagueId) {
 }
 
 /**
- * Gérer le changement de sport
- * @param {Object} event - Événement de changement
+ * Rechercher des sports avec filtrage côté client
+ * @param {Object} event - Événement de recherche contenant la query
  * @param {number} eventIndex - Index de l'événement
  */
-async function onSportChange(event, eventIndex) {
+async function searchSports(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
+  const query = event.query || '';
+  
+  console.log('🔍 searchSports appelée avec:', {
+    query,
+    eventIndex
+  });
+  
+  // Initialiser les résultats si nécessaire
+  if (!eventData.sportSearchResults) {
+    eventData.sportSearchResults = [];
+  }
+  
+  try {
+    eventData.sportLoading = true;
+    console.log('⏳ Début de la requête API sports...');
+    
+    // Récupérer tous les sports
+    const allSportsData = await SportService.getSports();
+    
+    console.log('📡 Réponse API sports reçue:', {
+      data: allSportsData,
+      dataLength: allSportsData?.length
+    });
+    
+    // Filtrer les sports selon la query
+    if (!query.trim().length) {
+      eventData.sportSearchResults = allSportsData || [];
+    } else {
+      eventData.sportSearchResults = (allSportsData || []).filter((sport) => {
+        return sport.name.toLowerCase().includes(query.toLowerCase());
+      });
+    }
+    
+    console.log('📝 Résultats sports mis à jour pour événement', eventIndex);
+    
+    console.log('✅ searchSports terminée:', {
+      totalResults: eventData.sportSearchResults.length,
+      eventIndex
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur lors de la recherche des sports:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Erreur',
+      detail: 'Impossible de rechercher les sports',
+      life: 3000
+    });
+  } finally {
+    eventData.sportLoading = false;
+    console.log('🏁 searchSports: loading terminé');
+  }
+}
+
+/**
+ * Gérer la sélection d'un sport
+ * @param {Object} event - Événement de sélection
+ * @param {number} eventIndex - Index de l'événement
+ */
+async function onSportSelect(event, eventIndex) {
+  const eventData = eventCards.value[eventIndex];
+  
+  // Pour le mode multiple, utiliser le premier élément pour la logique métier
+  if (eventData.selectedSport && eventData.selectedSport.length > 0) {
+    const firstSport = eventData.selectedSport[0];
+    eventData.sport_id = firstSport.id;
+    console.log('✅ Sport sélectionné pour événement', eventIndex, ':', firstSport);
+  } else {
+    eventData.sport_id = null;
+    console.log('✅ Sport désélectionné pour événement', eventIndex);
+  }
   
   // Réinitialiser les champs liés au sport pour cette card
   eventData.country_id = null;
@@ -818,100 +998,59 @@ async function onSportChange(event, eventIndex) {
   eventData.team2 = null;
   
   // Réinitialiser la recherche de pays pour cette card
-  eventData.selectedCountry = null;
-  eventData.countrySearchResults = [];
+  eventData.selectedCountry = [];
+  eventData.countryFilteredResults = [];
   
   // Réinitialiser la recherche de ligues pour cette card
-  eventData.selectedLeague = null;
+  eventData.selectedLeague = [];
   eventData.leagueSearchResults = [];
   
   // Réinitialiser la recherche d'équipes pour cette card
-  eventData.selectedTeam1 = null;
+  eventData.selectedTeam1 = [];
   eventData.team1SearchResults = [];
-  eventData.selectedTeam2 = null;
+  eventData.selectedTeam2 = [];
   eventData.team2SearchResults = [];
-  team1SearchResults.value = [];
-  team1SearchQuery.value = '';
-  team1CurrentPage.value = 1;
-  team1HasMore.value = false;
-  
-  // Réinitialiser la recherche d'équipes 2
-  selectedTeam2.value = null;
-  team2SearchResults.value = [];
-  team2SearchQuery.value = '';
-  team2CurrentPage.value = 1;
-  team2HasMore.value = false;
   
   // Charger les équipes du sport sélectionné
-  if (formData.value.sport_id) {
-    await loadTeamsBySport(formData.value.sport_id);
+  if (eventData.sport_id) {
+    await loadTeamsBySport(eventData.sport_id);
     // Charger les premières ligues
-    await searchLeagues({ query: '' });
+    await searchLeagues({ query: '' }, eventIndex);
     // Charger les premières équipes pour les deux sélecteurs
-    await searchTeam1({ query: '' });
-    await searchTeam2({ query: '' });
+    await searchTeam1({ query: '' }, eventIndex);
+    await searchTeam2({ query: '' }, eventIndex);
   }
 }
 
 /**
- * Rechercher des pays avec pagination
+ * Gérer le changement de sport (fonction de compatibilité)
+ * @param {Object} event - Événement de changement
+ * @param {number} eventIndex - Index de l'événement
+ */
+async function onSportChange(event, eventIndex) {
+  // Cette fonction est maintenant gérée par onSportSelect
+  console.log('⚠️ onSportChange appelée - redirection vers onSportSelect');
+  await onSportSelect(event, eventIndex);
+}
+
+/**
+ * Rechercher des pays avec filtrage côté client
  * @param {Object} event - Événement de recherche contenant la query
  * @param {number} eventIndex - Index de l'événement
  */
-async function searchCountries(event, eventIndex) {
+function searchCountries(event, eventIndex) {
   const query = event.query || '';
   const eventData = eventCards.value[eventIndex];
   
-  console.log('🔍 searchCountries appelée avec:', {
-    query,
-    eventIndex,
-    currentResults: eventData.countrySearchResults?.length || 0
-  });
-  
-  // Si c'est une nouvelle recherche, réinitialiser
-  if (!eventData.countrySearchResults || eventData.countrySearchResults.length === 0) {
-    console.log('🔄 Initialisation recherche pays pour événement', eventIndex);
-    eventData.countrySearchResults = [];
-  }
-  
-  try {
-    eventData.countryLoading = true;
-    console.log('⏳ Début de la requête API pays...');
-    
-    const response = await CountryService.searchCountriesWithPagination(
-      query,
-      1,
-      30
-    );
-    
-    console.log('📡 Réponse API pays reçue:', {
-      data: response.data,
-      dataLength: response.data?.length,
-      hasMore: response.hasMore,
-      pagination: response.pagination,
-      fullResponse: response
-    });
-    
-    eventData.countrySearchResults = response.data;
-    console.log('📝 Résultats pays mis à jour pour événement', eventIndex);
-    
-    console.log('✅ searchCountries terminée:', {
-      totalResults: eventData.countrySearchResults.length,
-      eventIndex
-    });
-    
-  } catch (error) {
-    console.error('❌ Erreur lors de la recherche des pays:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Erreur',
-      detail: 'Impossible de rechercher les pays',
-      life: 3000
-    });
-  } finally {
-    eventData.countryLoading = false;
-    console.log('🏁 searchCountries: loading terminé');
-  }
+  setTimeout(() => {
+    if (!query.trim().length) {
+      eventData.countryFilteredResults = [...allCountries.value];
+    } else {
+      eventData.countryFilteredResults = allCountries.value.filter((country) => {
+        return country.name.toLowerCase().includes(query.toLowerCase());
+      });
+    }
+  }, 250);
 }
 
 /**
@@ -924,11 +1063,15 @@ async function searchCountries(event, eventIndex) {
  * @param {number} eventIndex - Index de l'événement
  */
 function onCountrySelect(event, eventIndex) {
-  const country = event.value;
   const eventData = eventCards.value[eventIndex];
   
-  eventData.country_id = country.id;
-  eventData.selectedCountry = country;
+  // Pour le mode multiple, utiliser le premier élément pour la logique métier
+  if (eventData.selectedCountry && eventData.selectedCountry.length > 0) {
+    const firstCountry = eventData.selectedCountry[0];
+    eventData.country_id = firstCountry.id;
+  } else {
+    eventData.country_id = null;
+  }
   
   // Déclencher le changement de pays
   onCountryChange(eventIndex);
@@ -947,14 +1090,14 @@ async function onCountryChange(eventIndex) {
   eventData.team2 = null;
   
   // Réinitialiser la recherche de ligues pour cette card
-  eventData.selectedLeague = null;
+  eventData.selectedLeague = [];
   eventData.leagueSearchResults = [];
   
   // Réinitialiser la recherche d'équipes pour cette card
-  eventData.selectedTeam1 = null;
+  eventData.selectedTeam1 = [];
   eventData.team1SearchResults = [];
   
-  eventData.selectedTeam2 = null;
+  eventData.selectedTeam2 = [];
   eventData.team2SearchResults = [];
   
   // Recharger les ligues avec le filtre de pays si un sport est sélectionné
@@ -1039,15 +1182,20 @@ async function searchLeagues(event, eventIndex) {
  */
 async function onLeagueSelect(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
-  const league = event.value;
-  eventData.league = league.id;
-  eventData.selectedLeague = league; // Assigner l'objet complet pour l'affichage
+  
+  // Pour le mode multiple, utiliser le premier élément pour la logique métier
+  if (eventData.selectedLeague && eventData.selectedLeague.length > 0) {
+    const firstLeague = eventData.selectedLeague[0];
+    eventData.league = firstLeague.id;
+  } else {
+    eventData.league = null;
+  }
   
   // Réinitialiser les équipes sélectionnées
   eventData.team1 = null;
   eventData.team2 = null;
-  eventData.selectedTeam1 = null;
-  eventData.selectedTeam2 = null;
+  eventData.selectedTeam1 = [];
+  eventData.selectedTeam2 = [];
   
   // Recharger les équipes avec le filtre de ligue pour les deux sélecteurs
   await searchTeam1({ query: eventData.team1SearchQuery || '' }, eventIndex, true);
@@ -1093,7 +1241,8 @@ async function searchTeam1(event, eventIndex, resetSearch = false) {
       query,
       1,
       30,
-      eventData.league // Filtrer par ligue si sélectionnée
+      eventData.league, // Filtrer par ligue si sélectionnée
+      eventData.country_id // Filtrer par pays si sélectionné
     );
     
     console.log('📡 Réponse API équipes 1 reçue:', {
@@ -1131,7 +1280,7 @@ async function searchTeam1(event, eventIndex, resetSearch = false) {
       life: 3000
     });
   } finally {
-    team1Loading.value = false;
+    eventData.team1Loading = false;
     console.log('🏁 searchTeam1: loading terminé');
   }
 }
@@ -1175,7 +1324,8 @@ async function searchTeam2(event, eventIndex, resetSearch = false) {
       query,
       1,
       30,
-      eventData.league // Filtrer par ligue si sélectionnée
+      eventData.league, // Filtrer par ligue si sélectionnée
+      eventData.country_id // Filtrer par pays si sélectionné
     );
     
     console.log('📡 Réponse API équipes 2 reçue:', {
@@ -1187,28 +1337,21 @@ async function searchTeam2(event, eventIndex, resetSearch = false) {
     
     // Filtrer pour exclure l'équipe 1 si elle est sélectionnée
     let filteredData = response.data;
-    if (formData.value.team1) {
-      filteredData = response.data.filter(team => team.id !== formData.value.team1);
+    if (eventData.team1) {
+      filteredData = response.data.filter(team => team.id !== eventData.team1);
       console.log('🚫 Équipe 1 exclue des résultats équipe 2:', {
         originalCount: response.data.length,
         filteredCount: filteredData.length,
-        excludedTeamId: formData.value.team1
+        excludedTeamId: eventData.team1
       });
     }
     
-    if (team2CurrentPage.value === 1) {
-      team2SearchResults.value = filteredData;
-      console.log('📝 Première page équipes 2 - résultats remplacés');
-    } else {
-      team2SearchResults.value = [...team2SearchResults.value, ...filteredData];
-      console.log('📝 Page suivante équipes 2 - résultats ajoutés');
-    }
+    eventData.team2SearchResults = filteredData;
+    console.log('📝 Résultats équipes 2 mis à jour pour événement', eventIndex);
     
-    team2HasMore.value = response.hasMore;
     console.log('✅ searchTeam2 terminée:', {
-      totalResults: team2SearchResults.value.length,
-      hasMore: team2HasMore.value,
-      currentPage: team2CurrentPage.value
+      totalResults: eventData.team2SearchResults.length,
+      eventIndex
     });
     
   } catch (error) {
@@ -1220,7 +1363,7 @@ async function searchTeam2(event, eventIndex, resetSearch = false) {
       life: 3000
     });
   } finally {
-    team2Loading.value = false;
+    eventData.team2Loading = false;
     console.log('🏁 searchTeam2: loading terminé');
   }
 }
@@ -1232,10 +1375,16 @@ async function searchTeam2(event, eventIndex, resetSearch = false) {
  */
 function onTeam1Select(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
-  const team = event.value;
-  eventData.team1 = team.id;
-  eventData.selectedTeam1 = team; // Assigner l'objet complet pour l'affichage
-  console.log('✅ Équipe 1 sélectionnée pour événement', eventIndex, ':', team);
+  
+  // Pour le mode multiple, utiliser le premier élément pour la logique métier
+  if (eventData.selectedTeam1 && eventData.selectedTeam1.length > 0) {
+    const firstTeam = eventData.selectedTeam1[0];
+    eventData.team1 = firstTeam.id;
+    console.log('✅ Équipe 1 sélectionnée pour événement', eventIndex, ':', firstTeam);
+  } else {
+    eventData.team1 = null;
+    console.log('✅ Équipe 1 désélectionnée pour événement', eventIndex);
+  }
   
   // Rafraîchir les résultats de l'équipe 2 pour exclure l'équipe 1 sélectionnée
   if (eventData.team2SearchResults && eventData.team2SearchResults.length > 0) {
@@ -1251,10 +1400,16 @@ function onTeam1Select(event, eventIndex) {
  */
 function onTeam2Select(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
-  const team = event.value;
-  eventData.team2 = team.id;
-  eventData.selectedTeam2 = team; // Assigner l'objet complet pour l'affichage
-  console.log('✅ Équipe 2 sélectionnée pour événement', eventIndex, ':', team);
+  
+  // Pour le mode multiple, utiliser le premier élément pour la logique métier
+  if (eventData.selectedTeam2 && eventData.selectedTeam2.length > 0) {
+    const firstTeam = eventData.selectedTeam2[0];
+    eventData.team2 = firstTeam.id;
+    console.log('✅ Équipe 2 sélectionnée pour événement', eventIndex, ':', firstTeam);
+  } else {
+    eventData.team2 = null;
+    console.log('✅ Équipe 2 désélectionnée pour événement', eventIndex);
+  }
   
   // Rafraîchir les résultats de l'équipe 1 pour exclure l'équipe 2 sélectionnée
   if (eventData.team1SearchResults && eventData.team1SearchResults.length > 0) {
@@ -1320,6 +1475,20 @@ function onTeam2DropdownShow(eventIndex) {
 }
 
 /**
+ * Gérer l'affichage du dropdown des sports
+ * @param {number} eventIndex - Index de l'événement
+ */
+function onSportDropdownShow(eventIndex) {
+  console.log('🔽 Dropdown sports ouvert pour événement', eventIndex);
+  
+  // Charger les sports si pas encore chargés pour cette card
+  const eventData = eventCards.value[eventIndex];
+  if (!eventData.sportSearchResults || eventData.sportSearchResults.length === 0) {
+    searchSports({ query: '' }, eventIndex);
+  }
+}
+
+/**
  * Gérer l'affichage du dropdown des ligues
  * @param {number} eventIndex - Index de l'événement
  */
@@ -1333,54 +1502,7 @@ function onLeagueDropdownShow(eventIndex) {
   }
 }
 
-/**
- * Gérer l'affichage du dropdown des pays
- * @param {number} eventIndex - Index de l'événement
- */
-function onCountryDropdownShow(eventIndex) {
-  console.log('🔽 Dropdown pays ouvert pour événement', eventIndex);
-  
-  // Charger les pays si pas encore chargés pour cette card
-  const eventData = eventCards.value[eventIndex];
-  if (!eventData.countrySearchResults || eventData.countrySearchResults.length === 0) {
-    searchCountries({ query: '' }, eventIndex);
-  }
-  
-  // Attacher le scroll listener pour le lazy loading
-  nextTick(() => {
-    const findAndAttachCountryListener = () => {
-      const panel = document.querySelector('.p-autocomplete-list-container');
-      console.log('🔍 Panel pays trouvé:', panel);
-      
-      if (panel && !panel.hasCountryScrollListener) {
-        panel.hasCountryScrollListener = true;
-        panel.addEventListener('scroll', (e) => handleCountryPanelScroll(e, eventIndex));
-        console.log('✅ Scroll listener pays attaché au panel');
-        return true;
-      } else if (panel && panel.hasCountryScrollListener) {
-        console.log('⚠️ Scroll listener pays déjà attaché');
-        return true;
-      } else {
-        console.log('❌ Aucun panel pays trouvé');
-        return false;
-      }
-    };
-    
-    if (!findAndAttachCountryListener()) {
-      setTimeout(() => {
-        if (!findAndAttachCountryListener()) {
-          setTimeout(findAndAttachCountryListener, 300);
-        }
-      }, 100);
-    }
-  });
-  
-  // Charger les pays initiaux si nécessaire
-  if (eventData.countrySearchResults.length === 0) {
-    console.log('🔄 Chargement initial des pays au dropdown');
-    searchCountries({ query: '' }, eventIndex);
-  }
-}
+
 
 /**
  * Gérer le défilement du panel équipes 1 pour le lazy loading
@@ -1469,47 +1591,230 @@ function handleTeam2PanelScroll(event) {
 }
 
 /**
- * Gérer le défilement du panel pays pour le lazy loading
- * @param {Event} event - Événement de défilement
+ * Gérer la saisie de la cote pour remplacer immédiatement les virgules par des points
+ * @param {Event} event - Événement d'input
  */
-function handleCountryPanelScroll(event) {
-  const panel = event.target;
-  const scrollTop = panel.scrollTop;
-  const scrollHeight = panel.scrollHeight;
-  const clientHeight = panel.clientHeight;
+function handleOddsInput(event) {
+  let inputValue = event.target.value;
+  console.log('handleOddsInput - Valeur tapée:', inputValue);
   
-  // Calculer le pourcentage de défilement
-  const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
+  // Remplacer immédiatement toutes les virgules par des points
+  const normalizedValue = inputValue.replace(/,/g, '.');
+  console.log('handleOddsInput - Valeur normalisée:', normalizedValue);
   
-  console.log('📊 Scroll pays détecté:', {
-    scrollTop,
-    scrollHeight,
-    clientHeight,
-    scrollPercentage: Math.round(scrollPercentage * 100) + '%',
-    hasMore: countryHasMore.value,
-    loading: countryLoading.value,
-    currentPage: countryCurrentPage.value,
-    resultsCount: countrySearchResults.value.length
-  });
-  
-  // Si on a atteint 90% du défilement et qu'il y a plus de données
-  if (scrollPercentage >= 0.9) {
-    console.log('🎯 90% atteint pour pays! État actuel:', {
-      hasMore: countryHasMore.value,
-      loading: countryLoading.value,
-      willTrigger: countryHasMore.value && !countryLoading.value
-    });
+  // Si une virgule a été détectée, forcer le remplacement immédiat
+  if (inputValue !== normalizedValue) {
+    console.log('handleOddsInput - Virgule détectée, remplacement en cours...');
+    // Sauvegarder la position du curseur
+    const cursorPosition = event.target.selectionStart;
     
-    if (countryHasMore.value && !countryLoading.value) {
-      console.log('🚀 Déclenchement du lazy loading pays...');
-      loadMoreCountries();
-    } else {
-      console.log('❌ Lazy loading pays non déclenché:', {
-        reason: !countryHasMore.value ? 'Pas de données supplémentaires' : 'Chargement en cours'
-      });
-    }
+    // Mettre à jour immédiatement la valeur de l'input
+    event.target.value = normalizedValue;
+    
+    // Restaurer la position du curseur
+    event.target.setSelectionRange(cursorPosition, cursorPosition);
+    
+    // Mettre à jour le v-model
+    formData.value.global_odds = normalizedValue;
+    console.log('handleOddsInput - Remplacement terminé, nouvelle valeur:', event.target.value);
+    return;
+  }
+  
+  // Vérifier que la valeur est un nombre réel valide
+  if (normalizedValue === '' || normalizedValue === '.') {
+    formData.value.global_odds = null;
+    return;
+  }
+  
+  // Validation du format nombre réel
+  const numericValue = parseFloat(normalizedValue);
+  if (!isNaN(numericValue) && isFinite(numericValue) && numericValue > 0) {
+    formData.value.global_odds = numericValue;
+  } else {
+    // Si la valeur n'est pas valide, on garde la dernière valeur valide
+    console.warn('Valeur de cote invalide:', normalizedValue);
   }
 }
+
+/**
+ * Gérer la saisie de la mise pour accepter les virgules et les points comme séparateurs décimaux
+ * @param {Event} event - Événement d'input
+ */
+function handleStakeInput(event) {
+  let inputValue = event.target.value;
+  console.log('handleStakeInput - Valeur tapée:', inputValue);
+  
+  // Remplacer immédiatement toutes les virgules par des points
+  const normalizedValue = inputValue.replace(/,/g, '.');
+  console.log('handleStakeInput - Valeur normalisée:', normalizedValue);
+  
+  // Si une virgule a été détectée, forcer le remplacement immédiat
+  if (inputValue !== normalizedValue) {
+    console.log('handleStakeInput - Virgule détectée, remplacement en cours...');
+    // Sauvegarder la position du curseur
+    const cursorPosition = event.target.selectionStart;
+    
+    // Mettre à jour immédiatement la valeur de l'input
+    event.target.value = normalizedValue;
+    
+    // Restaurer la position du curseur
+    event.target.setSelectionRange(cursorPosition, cursorPosition);
+    
+    // Mettre à jour le v-model
+    formData.value.stake = normalizedValue;
+    console.log('handleStakeInput - Remplacement terminé, nouvelle valeur:', event.target.value);
+    return;
+  }
+  
+  // Vérifier que la valeur est un nombre réel valide
+  if (normalizedValue === '' || normalizedValue === '.') {
+    formData.value.stake = null;
+    return;
+  }
+  
+  // Validation du format nombre réel (la mise peut être 0)
+  const numericValue = parseFloat(normalizedValue);
+  if (!isNaN(numericValue) && isFinite(numericValue) && numericValue >= 0) {
+    formData.value.stake = numericValue;
+  } else {
+    // Si la valeur n'est pas valide, on garde la dernière valeur valide
+    console.warn('Valeur de mise invalide:', normalizedValue);
+  }
+}
+
+/**
+ * Gérer la saisie de la cote d'événement pour remplacer immédiatement les virgules par des points
+ * @param {Event} event - Événement d'input
+ */
+function handleEventOddsInput(event) {
+  let inputValue = event.target.value;
+  console.log('handleEventOddsInput - Valeur tapée:', inputValue);
+  
+  // Remplacer immédiatement toutes les virgules par des points
+  const normalizedValue = inputValue.replace(/,/g, '.');
+  console.log('handleEventOddsInput - Valeur normalisée:', normalizedValue);
+  
+  // Si une virgule a été détectée, forcer le remplacement immédiat
+  if (inputValue !== normalizedValue) {
+    console.log('handleEventOddsInput - Virgule détectée, remplacement en cours...');
+    // Sauvegarder la position du curseur
+    const cursorPosition = event.target.selectionStart;
+    
+    // Mettre à jour immédiatement la valeur de l'input
+    event.target.value = normalizedValue;
+    
+    // Restaurer la position du curseur
+    event.target.setSelectionRange(cursorPosition, cursorPosition);
+    
+    // Mettre à jour le v-model
+    currentEvent.value.odds = normalizedValue;
+    console.log('handleEventOddsInput - Remplacement terminé, nouvelle valeur:', event.target.value);
+    return;
+  }
+  
+  // Vérifier que la valeur est un nombre réel valide
+  if (normalizedValue === '' || normalizedValue === '.') {
+    currentEvent.value.odds = null;
+    // Recalculer la cote globale même avec une valeur vide
+    calculateGlobalOdds();
+    return;
+  }
+  
+  // Validation du format nombre réel
+  const numericValue = parseFloat(normalizedValue);
+  if (!isNaN(numericValue) && isFinite(numericValue) && numericValue > 0) {
+    currentEvent.value.odds = numericValue;
+  } else {
+    // Si la valeur n'est pas valide, on garde la dernière valeur valide
+    console.warn('Valeur de cote d\'événement invalide:', normalizedValue);
+  }
+  
+  // Recalculer la cote globale
+  calculateGlobalOdds();
+}
+
+/**
+ * Gérer les touches pressées pour la cote globale (permettre point et virgule)
+ * @param {KeyboardEvent} event - Événement de frappe
+ */
+function handleOddsKeypress(event) {
+  const char = String.fromCharCode(event.which);
+  const currentValue = event.target.value;
+  
+  // Permettre les chiffres, le point, la virgule et les touches de contrôle
+  if (!/[0-9.,]/.test(char) && event.which !== 8 && event.which !== 46 && event.which !== 37 && event.which !== 39) {
+    event.preventDefault();
+    return;
+  }
+  
+  // Empêcher plusieurs séparateurs décimaux (point ou virgule)
+  if ((char === '.' || char === ',') && (currentValue.includes('.') || currentValue.includes(','))) {
+    event.preventDefault();
+    return;
+  }
+  
+  // Empêcher le point/virgule en première position
+  if ((char === '.' || char === ',') && currentValue === '') {
+    event.preventDefault();
+    return;
+  }
+}
+
+/**
+ * Gérer les touches pressées pour la mise (permettre point et virgule)
+ * @param {KeyboardEvent} event - Événement de frappe
+ */
+function handleStakeKeypress(event) {
+  const char = String.fromCharCode(event.which);
+  const currentValue = event.target.value;
+  
+  // Permettre les chiffres, le point, la virgule et les touches de contrôle
+  if (!/[0-9.,]/.test(char) && event.which !== 8 && event.which !== 46 && event.which !== 37 && event.which !== 39) {
+    event.preventDefault();
+    return;
+  }
+  
+  // Empêcher plusieurs séparateurs décimaux (point ou virgule)
+  if ((char === '.' || char === ',') && (currentValue.includes('.') || currentValue.includes(','))) {
+    event.preventDefault();
+    return;
+  }
+  
+  // Empêcher le point/virgule en première position
+  if ((char === '.' || char === ',') && currentValue === '') {
+    event.preventDefault();
+    return;
+  }
+}
+
+/**
+ * Gérer les touches pressées pour la cote d'événement (permettre point et virgule)
+ * @param {KeyboardEvent} event - Événement de frappe
+ */
+function handleEventOddsKeypress(event) {
+  const char = String.fromCharCode(event.which);
+  const currentValue = event.target.value;
+  
+  // Permettre les chiffres, le point, la virgule et les touches de contrôle
+  if (!/[0-9.,]/.test(char) && event.which !== 8 && event.which !== 46 && event.which !== 37 && event.which !== 39) {
+    event.preventDefault();
+    return;
+  }
+  
+  // Empêcher plusieurs séparateurs décimaux (point ou virgule)
+  if ((char === '.' || char === ',') && (currentValue.includes('.') || currentValue.includes(','))) {
+    event.preventDefault();
+    return;
+  }
+  
+  // Empêcher le point/virgule en première position
+  if ((char === '.' || char === ',') && currentValue === '') {
+    event.preventDefault();
+    return;
+  }
+}
+
+
 
 /**
  * Gérer l'ouverture du dropdown pour attacher le scroll listener
@@ -1552,68 +1857,7 @@ function onDropdownShow() {
   });
 }
 
-/**
- * Charger plus de pays (pagination)
- */
-async function loadMoreCountries() {
-  console.log('🚀 loadMoreCountries appelée avec état:', {
-    hasMore: countryHasMore.value,
-    loading: countryLoading.value,
-    currentPage: countryCurrentPage.value,
-    query: countrySearchQuery.value,
-    currentResultsCount: countrySearchResults.value.length
-  });
-  
-  if (!countryHasMore.value || countryLoading.value) {
-    console.log('❌ loadMoreCountries bloquée:', {
-      noMore: !countryHasMore.value,
-      alreadyLoading: countryLoading.value
-    });
-    return;
-  }
-  
-  try {
-    countryLoading.value = true;
-    countryCurrentPage.value++;
-    
-    console.log('🚀 Chargement page', countryCurrentPage.value, 'pour query pays:', countrySearchQuery.value);
-    
-    const response = await CountryService.searchCountriesWithPagination(
-      countrySearchQuery.value,
-      countryCurrentPage.value,
-      30
-    );
-    
-    console.log('📡 loadMoreCountries - Réponse API:', {
-      data: response.data,
-      dataLength: response.data?.length,
-      hasMore: response.hasMore,
-      pagination: response.pagination,
-      fullResponse: response
-    });
-    
-    // Ajouter les nouveaux résultats à la liste existante
-    const previousCount = countrySearchResults.value.length;
-    countrySearchResults.value = [...countrySearchResults.value, ...response.data];
-    countryHasMore.value = response.hasMore;
-    
-    console.log('✅ Page pays chargée:', {
-      newCountries: response.data.length,
-      previousTotal: previousCount,
-      newTotal: countrySearchResults.value.length,
-      hasMoreAfter: countryHasMore.value
-    });
-    
-  } catch (error) {
-    console.error('❌ Erreur lors du chargement de plus de pays:', error);
-    // Revenir à la page précédente en cas d'erreur
-    countryCurrentPage.value--;
-    console.log('🔄 Page pays remise à:', countryCurrentPage.value);
-  } finally {
-    countryLoading.value = false;
-    console.log('🏁 loadMoreCountries: loading terminé');
-  }
-}
+
 
 /**
  * Charger plus de ligues (pagination)
@@ -1901,8 +2145,8 @@ function resetForm() {
   leagueLoading.value = false;
   
   // Réinitialiser les variables de recherche d'équipes
-  selectedTeam1.value = null;
-  selectedTeam2.value = null;
+  selectedTeam1.value = [];
+  selectedTeam2.value = [];
   teamSearchResults.value = [];
   teamSearchQuery.value = '';
   teamCurrentPage.value = 1;
@@ -1931,10 +2175,7 @@ function cleanupScrollListeners() {
       panel.removeEventListener('scroll', handleTeam2PanelScroll);
       panel.hasTeam2ScrollListener = false;
     }
-    if (panel.hasCountryScrollListener) {
-      panel.removeEventListener('scroll', handleCountryPanelScroll);
-      panel.hasCountryScrollListener = false;
-    }
+
   });
 }
 
@@ -1945,8 +2186,8 @@ function clearLeague() {
   selectedLeague.value = null;
   formData.value.league = null;
   // Réinitialiser les équipes quand on supprime la ligue
-  selectedTeam1.value = null;
-  selectedTeam2.value = null;
+  selectedTeam1.value = [];
+  selectedTeam2.value = [];
   formData.value.team1 = null;
   formData.value.team2 = null;
 }
@@ -1955,7 +2196,7 @@ function clearLeague() {
  * Supprimer l'équipe 1 sélectionnée
  */
 function clearTeam1() {
-  selectedTeam1.value = null;
+  selectedTeam1.value = [];
   formData.value.team1 = null;
 }
 
@@ -1963,7 +2204,7 @@ function clearTeam1() {
  * Supprimer l'équipe 2 sélectionnée
  */
 function clearTeam2() {
-  selectedTeam2.value = null;
+  selectedTeam2.value = [];
   formData.value.team2 = null;
 }
 
@@ -2023,12 +2264,14 @@ function addEventCard() {
     description: '',
     result: null,
     odds: null,
-    selectedCountry: null,
-    selectedLeague: null,
-    selectedTeam1: null,
-    selectedTeam2: null,
-    countrySearchResults: [],
-    countryLoading: false,
+    selectedSport: [],
+    selectedCountry: [],
+    selectedLeague: [],
+    selectedTeam1: [],
+    selectedTeam2: [],
+    sportSearchResults: [],
+    sportLoading: false,
+    countryFilteredResults: [],
     leagueSearchResults: [],
     leagueLoading: false,
     team1SearchResults: [],
@@ -2083,10 +2326,10 @@ function resetEventFields() {
   currentEvent.value.odds = null;
   
   // Réinitialiser les variables de sélection
-  selectedCountry.value = null;
-  selectedLeague.value = null;
-  selectedTeam1.value = null;
-  selectedTeam2.value = null;
+  selectedCountry.value = [];
+  selectedLeague.value = [];
+  selectedTeam1.value = [];
+  selectedTeam2.value = [];
   
   // Réinitialiser l'événement actuel
   currentEvent.value = {

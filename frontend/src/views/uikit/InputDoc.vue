@@ -3,6 +3,33 @@ import { CountryService } from '@/service/CountryService';
 import { NodeService } from '@/service/NodeService';
 import { onMounted, ref } from 'vue';
 
+// Imports des composants PrimeVue
+import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
+import FloatLabel from 'primevue/floatlabel';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import Textarea from 'primevue/textarea';
+import AutoComplete from 'primevue/autocomplete';
+import DatePicker from 'primevue/datepicker';
+import Slider from 'primevue/slider';
+import Rating from 'primevue/rating';
+import ColorPicker from 'primevue/colorpicker';
+import Knob from 'primevue/knob';
+import RadioButton from 'primevue/radiobutton';
+import Checkbox from 'primevue/checkbox';
+import ToggleSwitch from 'primevue/toggleswitch';
+import Listbox from 'primevue/listbox';
+import Select from 'primevue/select';
+import MultiSelect from 'primevue/multiselect';
+import TreeSelect from 'primevue/treeselect';
+import ToggleButton from 'primevue/togglebutton';
+import SelectButton from 'primevue/selectbutton';
+import Fluid from 'primevue/fluid';
+import InputGroup from 'primevue/inputgroup';
+import InputGroupAddon from 'primevue/inputgroupaddon';
+import Button from 'primevue/button';
+
 const floatValue = ref(null);
 const autoValue = ref(null);
 const selectedAutoValue = ref(null);

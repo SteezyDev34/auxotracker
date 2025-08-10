@@ -164,7 +164,7 @@ class SportController extends Controller
     }
 
     /**
-     * Rechercher les équipes d'un sport avec pagination et filtrage par ligue
+     * Rechercher les équipes d'un sport avec pagination et filtrage par ligue et pays
      */
     public function searchTeamsBySport(Request $request, $sportId): JsonResponse
     {
@@ -173,9 +173,15 @@ class SportController extends Controller
             $page = (int) $request->get('page', 1);
             $limit = min((int) $request->get('limit', 30), 50); // Limiter à 50 max, défaut 30
             $leagueId = $request->get('league_id'); // Filtre optionnel par ligue
+            $countryId = $request->get('country_id'); // Filtre optionnel par pays
             
-            $query = Team::whereHas('league', function($q) use ($sportId) {
+            $query = Team::whereHas('league', function($q) use ($sportId, $countryId) {
                 $q->where('sport_id', $sportId);
+                
+                // Appliquer le filtre par pays si fourni
+                if (!empty($countryId)) {
+                    $q->where('country_id', $countryId);
+                }
             })
             ->with(['league:id,name'])
             ->orderBy('name');

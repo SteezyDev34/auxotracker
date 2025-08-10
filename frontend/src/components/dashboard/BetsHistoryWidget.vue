@@ -5,6 +5,10 @@ import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import AddBetDialog from './AddBetDialog.vue';
 import Button from 'primevue/button';
+import Tooltip from 'primevue/tooltip';
+
+// Enregistrement des directives
+const vTooltip = Tooltip;
 
 // Variables réactives
 const bets = ref([]);

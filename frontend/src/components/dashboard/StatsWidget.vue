@@ -2,6 +2,10 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import Chart from 'primevue/chart';
 import { BetService } from '@/service/BetService';
+import Tooltip from 'primevue/tooltip';
+
+// Enregistrement des directives
+const vTooltip = Tooltip;
 
 const props = defineProps({
   period: { type: String, default: 'all' },

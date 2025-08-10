@@ -10,5 +10,19 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://api.auxotracker.lan',
+        changeOrigin: true,
+        secure: false
+      },
+      '/storage': {
+        target: 'https://api.auxotracker.lan',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   }
 })
