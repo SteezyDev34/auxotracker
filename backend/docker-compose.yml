@@ -6,7 +6,8 @@ services:
       context: ${DOCKER_DIR}/php82
     container_name: api.auxotracker
     restart: unless-stopped
-    network_mode: "host"
+    ports:
+      - "8080:80"
     environment:
       - VIRTUAL_HOST=api.auxotracker.lan
       - VIRTUAL_PORT=80
@@ -14,13 +15,15 @@ services:
       - LETSENCRYPT_EMAIL=your-email@api.auxotracker.lan
       - HTTP_PROXY=
       - HTTPS_PROXY=
-      - NO_PROXY=localhost,127.0.0.1,::1
-      - http_proxy=
-      - https_proxy=
-      - no_proxy=localhost,127.0.0.1,::1
+    networks:
+      - shared_network
     volumes:
       - ./:/var/www/html
       - ./docker/apache/api.auxotracker.lan.conf:/etc/apache2/sites-enabled/api.auxotracker.lan.conf
       - ${DOCKER_DIR}/certs/api.auxotracker.lan.crt:/etc/apache2/ssl/api.auxotracker.lan.crt
       - ${DOCKER_DIR}/certs/api.auxotracker.lan.key:/etc/apache2/ssl/api.auxotracker.lan.key
       - ./docker/logs/apache:/var/log/apache2
+
+networks:
+  shared_network:
+    external: true
