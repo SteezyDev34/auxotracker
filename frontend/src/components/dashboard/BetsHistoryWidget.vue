@@ -5,6 +5,7 @@ import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import AddBetDialog from './AddBetDialog.vue';
 import Button from 'primevue/button';
+import Chip from 'primevue/chip';
 import Tooltip from 'primevue/tooltip';
 
 // Enregistrement des directives
@@ -15,7 +16,9 @@ const bets = ref([]);
 const loading = ref(false);
 const error = ref('');
 const expandedMonths = ref(new Set());
+const expandedBets = ref(new Set());
 const showAddBetDialog = ref(false);
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
 
 
 // Charger tous les paris
@@ -134,6 +137,15 @@ function toggleMonth(monthKey) {
   }
 }
 
+// Basculer l'expansion des événements d'un pari
+function toggleBetEvents(betId) {
+  if (expandedBets.value.has(betId)) {
+    expandedBets.value.delete(betId);
+  } else {
+    expandedBets.value.add(betId);
+  }
+}
+
 
 
 // Obtenir la couleur de la barre pour le résultat du pari
@@ -188,10 +200,71 @@ function calculateProfitLoss(bet) {
   return 0;
 }
 
+// Construire l'URL du logo d'une équipe
+function getTeamLogoUrl(team) {
+  if (!team || !team.img) return '';
+  return `${apiBaseUrl}/storage/${team.img}`;
+}
+
+// Construire l'URL du logo d'une ligue
+function getLeagueLogoUrl(league) {
+  if (!league || !league.img) return '';
+  return `${apiBaseUrl}/storage/${league.img}`;
+}
+
+// Construire l'URL du drapeau d'un pays
+function getCountryFlagUrl(country) {
+  if (!country || !country.flag) return '';
+  return `${apiBaseUrl}/storage/${country.flag}`;
+}
+
+// Obtenir l'icône du sport
+function getSportIcon(sport) {
+  if (!sport || !sport.icon) return '';
+  return `${apiBaseUrl}/storage/${sport.icon}`;
+}
+
+// Construire l'URL de l'icône d'un sport
+function getSportIconUrl(sport) {
+  if (!sport || !sport.img) return '';
+  return `${apiBaseUrl}/storage/${sport.img}`;
+}
+
+// Vérifier si un pari a plusieurs événements
+function isMultiEventBet(bet) {
+  return bet.events && bet.events.length > 1;
+}
+
+// Obtenir le nom du match pour un événement
+function getEventMatchName(event) {
+  if (!event.team1 || !event.team2) return 'Match non défini';
+  return `${event.team1.name} - ${event.team2.name}`;
+}
+
+// Obtenir les informations du marché pour un événement
+function getEventMarketInfo(event) {
+  return event.market || 'Marché non défini';
+}
+
 // Obtenir le nom du match avec les logos des équipes
 function getMatchName(bet) {
   if (bet.events && bet.events.length > 0) {
-    const event = bet.events[0]; // Prendre le premier événement
+    // Si plusieurs événements (pari combiné)
+    if (bet.events.length > 1) {
+      return {
+        html: `
+          <div class="flex items-center gap-2">
+            <div class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+              Combiné ${bet.events.length} événements
+            </div>
+          </div>
+        `,
+        text: `Combiné ${bet.events.length} événements`
+      };
+    }
+    
+    // Si un seul événement
+    const event = bet.events[0];
     if (event.team1 && event.team2) {
       // Utiliser l'URL de l'API pour accéder aux logos d'équipes
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
@@ -203,12 +276,12 @@ function getMatchName(bet) {
           <div class="flex items-center gap-2">
             ${team1Logo}
              <span class="font-medium">${event.team1.name}</span>
-             <span class="text-gray-500 mx-1">vs</span>
+             <span class="text-gray-500 mx-1"> - </span>
              <span class="font-medium">${event.team2.name}</span>
              ${team2Logo}
           </div>
         `,
-        text: `${event.team1.name} vs ${event.team2.name}`
+        text: `${event.team1.name} - ${event.team2.name}`
       };
     }
   }
@@ -259,12 +332,56 @@ function getLeagueInfo(bet) {
 // Obtenir les informations du pays avec icône de sport
 function getCountryInfo(bet) {
   if (bet.events && bet.events.length > 0) {
+    // Si plusieurs événements (pari combiné)
+    if (bet.events.length > 1) {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
+      
+      // Icône de sport (football par défaut) - SVG intégré
+      const sportIcon = `<svg viewBox="0 0 32 32" class="w-5 h-5" focusable="false" role="img">
+        <path d="M16 0a16 16 0 100 32 16 16 0 000-32zm1 5l5-3 2 1 2 2 1 1 1 1v1l-1 4-5 2-5-4zM4 7l1-1 1-1 2-2 2-1 5 3v5l-5 4-5-2-1-4V7zm0 17l-1-1-1-2v-1l-1-1v-2l3-4 6 2 1 7-2 3zm16 7h-2-1a14 14 0 01-2 0h-1-1l-3-5 2-4h8l2 4zm11-12l-1 1v1l-1 2-1 1-5 1-2-3 1-7 6-2 3 4v2z"></path>
+      </svg>`;
+      
+      // Collecter les pays uniques des événements
+      const uniqueCountries = new Set();
+      const uniqueLeagues = new Set();
+      
+      bet.events.forEach(event => {
+        if (event.league) {
+          if (event.league.country && event.league.country.id) {
+            uniqueCountries.add(event.league.country.id);
+          } else if (event.league.country_id) {
+            uniqueCountries.add(event.league.country_id);
+          }
+          uniqueLeagues.add(event.league.name);
+        }
+      });
+      
+      // Afficher les drapeaux des pays uniques (max 3)
+      const countryFlags = Array.from(uniqueCountries).slice(0, 3).map(countryId => 
+        `<img src="${apiBaseUrl}/storage/country_flags/${countryId}.png" alt="Pays" class="w-3 h-3 rounded object-cover" onerror="this.style.display='none'" />`
+      ).join('');
+      
+      const moreCountries = uniqueCountries.size > 3 ? `<span class="text-xs text-gray-500">+${uniqueCountries.size - 3}</span>` : '';
+      
+      return {
+        html: `
+          <div class="flex items-center gap-1">
+            ${sportIcon}
+            ${countryFlags}
+            ${moreCountries}
+          </div>
+        `,
+        text: `${uniqueCountries.size} pays`
+      };
+    }
+    
+    // Si un seul événement
     const event = bet.events[0];
     if (event.league) {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
       
       // Icône de sport (football par défaut) - SVG intégré
-      const sportIcon = `<svg viewBox="0 0 32 32" class="w-5 h-5" focusable="false" role="img">
+      const sportIcon = `<svg viewBox="0 0 32 32" class="w-4 h-4" focusable="false" role="img">
         <path d="M16 0a16 16 0 100 32 16 16 0 000-32zm1 5l5-3 2 1 2 2 1 1 1 1v1l-1 4-5 2-5-4zM4 7l1-1 1-1 2-2 2-1 5 3v5l-5 4-5-2-1-4V7zm0 17l-1-1-1-2v-1l-1-1v-2l3-4 6 2 1 7-2 3zm16 7h-2-1a14 14 0 01-2 0h-1-1l-3-5 2-4h8l2 4zm11-12l-1 1v1l-1 2-1 1-5 1-2-3 1-7 6-2 3 4v2z"></path>
       </svg>`;
       
@@ -284,7 +401,7 @@ function getCountryInfo(bet) {
       const leagueLogo = event.league.img ? `<img src="${apiBaseUrl}/storage/${event.league.img}" alt="${event.league.name}" class="w-4 h-4 rounded object-cover" />` : '';
       
       if (countryId && countryName) {
-        const countryLogo = `<img src="${apiBaseUrl}/storage/country_flags/${countryId}.png" alt="${countryName}" class="w-5 h-5 rounded object-cover" onerror="this.style.display='none'" />`;
+        const countryLogo = `<img src="${apiBaseUrl}/storage/country_flags/${countryId}.png" alt="${countryName}" class="w-4 h-4 rounded object-cover" onerror="this.style.display='none'" />`;
         
         return {
           html: `
@@ -319,9 +436,35 @@ function getCountryInfo(bet) {
 // Obtenir les informations du marché depuis l'événement
 function getMarketInfo(bet) {
   if (bet.events && bet.events.length > 0) {
+    // Si plusieurs événements (pari combiné)
+    if (bet.events.length > 1) {
+      // Collecter les marchés uniques
+      const uniqueMarkets = new Set();
+      bet.events.forEach(event => {
+        if (event.market) {
+          uniqueMarkets.add(event.market);
+        } else if (event.type) {
+          uniqueMarkets.add(event.type);
+        }
+      });
+      
+      if (uniqueMarkets.size > 0) {
+        const markets = Array.from(uniqueMarkets);
+        if (markets.length === 1) {
+          return markets[0]; // Tous les événements ont le même marché
+        } else {
+          return `${markets.length} marchés différents`; // Marchés mixtes
+        }
+      }
+      return 'Marchés combinés';
+    }
+    
+    // Si un seul événement
     const event = bet.events[0];
     if (event.market) {
       return event.market;
+    } else if (event.type) {
+      return event.type;
     }
   }
   // Fallback vers bet_code si event.market n'est pas disponible
@@ -425,14 +568,122 @@ onMounted(loadBets);
                   >
                     <!-- Contenu principal -->
                     <div class="flex-1 p-3">
-                      <!-- Bloc d'informations du match -->
-                      <div class="mb-3 flex flex-col items-center justify-center text-center">
-                        <div class="flex items-center justify-center text-xs text-muted-color mb-1">
-                          <span v-html="getCountryInfo(bet).html"></span>
+                      <!-- Événements du pari -->
+                      <div v-if="bet.events && bet.events.length > 0" class="mb-3">
+                        <!-- Si un seul événement -->
+                        <div v-if="bet.events.length === 1" class="bg-gray-50 rounded-lg p-3">
+                          <div class="event-card text-center">
+                            <!-- Informations sport, pays et ligue -->
+                            <div class="flex items-center justify-center gap-2 mb-2">
+                              <div v-html="getCountryInfo(bet).html"></div>
+                              <!-- Nom de la ligue -->
+                              <div v-if="bet.events[0].league" class="flex items-center gap-1">
+                                <span class="text-xs text-gray-500">{{ bet.events[0].league.name }}</span>
+                              </div>
+                            </div>
+                            <!-- Logo des équipes -->
+                            <div v-if="bet.events[0].team1 && bet.events[0].team2" class="flex items-center justify-center gap-2 mb-2">
+                              <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                                <img 
+                                  v-if="bet.events[0].team1.img" 
+                                  :src="getTeamLogoUrl(bet.events[0].team1)" 
+                                  :alt="bet.events[0].team1.name" 
+                                  class="w-6 h-6 rounded-full object-cover"
+                                  @error="$event.target.style.display='none'"
+                                />
+                                <span v-if="!bet.events[0].team1.img" class="text-xs">{{ bet.events[0].team1.name.charAt(0) }}</span>
+                              </div>
+                              <span class="text-sm font-medium">{{ bet.events[0].team1.name }}</span>
+                              <span class="text-xs text-gray-500"> - </span>
+                              <span class="text-sm font-medium">{{ bet.events[0].team2.name }}</span>
+                              <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                                <img 
+                                  v-if="bet.events[0].team2.img" 
+                                  :src="getTeamLogoUrl(bet.events[0].team2)" 
+                                  :alt="bet.events[0].team2.name" 
+                                  class="w-6 h-6 rounded-full object-cover"
+                                  @error="$event.target.style.display='none'"
+                                />
+                                <span v-if="!bet.events[0].team2.img" class="text-xs">{{ bet.events[0].team2.name.charAt(0) }}</span>
+                              </div>
+                            </div>
+                            <div class="text-xs text-gray-600 mb-2">
+                              {{ bet.events[0].market || bet.events[0].type || 'Marché non spécifié' }}
+                            </div>
+
+                          </div>
                         </div>
-                        <div class="font-medium" v-html="getMatchName(bet).html"></div>
-                        <div class="text-xs text-muted-color mt-1">
-                          {{ getMarketInfo(bet) }}
+                        
+                        <!-- Si plusieurs événements (accordéon) -->
+                        <div v-else class="space-y-2">
+                          <div 
+                            @click="toggleBetEvents(bet.id)"
+                            class="bg-blue-50 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors"
+                          >
+                            <div class="flex items-center justify-between">
+                              <div class="flex items-center gap-2">
+                                <i :class="expandedBets.has(bet.id) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="text-sm text-blue-600"></i>
+                                <span class="text-sm font-medium text-blue-800">
+                                  Pari combiné - {{ bet.events.length }} événements
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <!-- Liste des événements (accordéon) -->
+                          <div v-if="expandedBets.has(bet.id)" class="space-y-2">
+                            <div 
+                              v-for="(event, index) in bet.events" 
+                              :key="index"
+                              class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center"
+                            >
+                              <!-- Informations sport, pays et ligue pour chaque événement -->
+                                <div class="flex items-center justify-center gap-2 mb-2">
+                                  <div v-html="getCountryInfo({ events: [event] }).html"></div>
+                                  <!-- Nom de la ligue -->
+                                  <div v-if="event.league" class="flex items-center gap-1">
+                                    <span class="text-xs text-gray-500">{{ event.league.name }}</span>
+                                  </div>
+                                </div>
+                              <div class="flex items-center justify-center mb-2">
+                                <div class="flex items-center gap-2">
+                                  <!-- Logo des équipes -->
+                                  <div v-if="event.team1 && event.team2" class="flex items-center gap-2">
+                                    <div class="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                                      <img 
+                                        v-if="event.team1.img" 
+                                        :src="getTeamLogoUrl(event.team1)" 
+                                        :alt="event.team1.name" 
+                                        class="w-5 h-5 rounded-full object-cover"
+                                        @error="$event.target.style.display='none'"
+                                      />
+                                      <span v-if="!event.team1.img" class="text-xs">{{ event.team1.name.charAt(0) }}</span>
+                                    </div>
+                                    <span class="text-sm font-medium">{{ event.team1.name }}</span>
+                                    <span class="text-xs text-gray-500"> - </span>
+                                    <span class="text-sm font-medium">{{ event.team2.name }}</span>
+                                    <div class="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                                      <img 
+                                        v-if="event.team2.img" 
+                                        :src="getTeamLogoUrl(event.team2)" 
+                                        :alt="event.team2.name" 
+                                        class="w-5 h-5 rounded-full object-cover"
+                                        @error="$event.target.style.display='none'"
+                                      />
+                                      <span v-if="!event.team2.img" class="text-xs">{{ event.team2.name.charAt(0) }}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div class="text-xs text-gray-600">
+                                {{ event.market || event.type || 'Marché non spécifié' }}
+                              </div>
+                              <div v-if="event.odd" class="flex justify-end">
+                                <Chip :label="parseFloat(event.odd).toFixed(2)" severity="info" class="text-xs font-medium" />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       
