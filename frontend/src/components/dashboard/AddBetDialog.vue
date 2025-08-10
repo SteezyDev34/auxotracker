@@ -7,7 +7,7 @@
     :modal="true"
     @hide="resetForm"
   >
-    <form @submit.prevent="submitForm" class="space-y-4">
+    <form @submit.prevent="submitForm" class="space-y-4 mb-4">
       <!-- Date du pari -->
       <div class="flex flex-col gap-2">
         <DatePicker 
@@ -46,13 +46,14 @@
               @item-select="(event) => onSportSelect(event, eventIndex)"
               @dropdown-click="() => onSportDropdownShow(eventIndex)"
               optionLabel="name"
-              :placeholder="eventData.selectedSport && eventData.selectedSport.length > 0 ? '' : 'Sport *'"
+              :placeholder="eventData.selectedSport && eventData.selectedSport.length > 0 ? '' : 'Sport'"
               class="w-full max-w-full select-custom"
               :class="{ 'p-invalid': errors[`sport_id_${eventIndex}`] }"
               :loading="eventData.sportLoading"
               panelClass="select-panel-custom"
               @focus="() => searchSports({ query: '' }, eventIndex)"
               :minLength="0"
+              selectionLimit="1"
               dropdown
               dropdownMode="blank"
               multiple
@@ -122,7 +123,7 @@
                 @complete="(event) => searchCountries(event, eventIndex)"
                 @item-select="(event) => onCountrySelect(event, eventIndex)"
                 optionLabel="name"
-                placeholder="Pays (optionnel)"
+                :placeholder="eventData.selectedCountry && eventData.selectedCountry.length > 0 ? '' : 'Pays'"
                 class="w-full max-w-full select-custom"
                 :class="{ 'p-invalid': errors[`country_id_${eventIndex}`] }"
                 :minLength="0"
@@ -182,7 +183,7 @@
                 @complete="(event) => searchLeagues(event, eventIndex)"
                 @item-select="(event) => onLeagueSelect(event, eventIndex)"
                 optionLabel="name"
-                :placeholder="eventData.selectedLeague && eventData.selectedLeague.length > 0 ? '' : 'Ligue *'"
+                :placeholder="eventData.selectedLeague && eventData.selectedLeague.length > 0 ? '' : 'Ligue'"
                 class="w-full max-w-full select-custom"
                 :class="{ 'p-invalid': errors[`league-${eventIndex}`] }"
                 :loading="eventData.leagueLoading"
@@ -220,9 +221,9 @@
                   <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
                     <!-- Drapeau du pays -->
                     <img 
-                       v-if="slotProps.value.country_id"
-                       :src="`${apiBaseUrl}/storage/country_flags/${slotProps.value.country_id}.png`" 
-                       :alt="slotProps.value.country?.name || 'Pays'"
+                       v-if="slotProps.option.country_id"
+                       :src="`${apiBaseUrl}/storage/country_flags/${slotProps.option.country_id}.png`" 
+                       :alt="slotProps.option.country?.name || 'Pays'"
                        class="w-4 h-4 rounded object-cover flex-shrink-0" 
                        @error="$event.target.style.display='none'"
                      />
@@ -264,7 +265,7 @@
                   @complete="(event) => searchTeam1(event, eventIndex)"
                   @item-select="(event) => onTeam1Select(event, eventIndex)"
                   optionLabel="name"
-                  :placeholder="eventData.selectedTeam1 && eventData.selectedTeam1.length > 0 ? '' : 'Équipe 1 *'"
+                  :placeholder="eventData.selectedTeam1 && eventData.selectedTeam1.length > 0 ? '' : 'Équipe 1'"
                   class="w-full max-w-full select-custom"
                   :class="{ 'p-invalid': errors[`team1-${eventIndex}`] }"
                   :loading="eventData.team1Loading"
@@ -338,7 +339,7 @@
                     @complete="(event) => searchTeam2(event, eventIndex)"
                     @item-select="(event) => onTeam2Select(event, eventIndex)"
                     optionLabel="name"
-                    :placeholder="eventData.selectedTeam2 && eventData.selectedTeam2.length > 0 ? '' : 'Équipe 2 *'"
+                    :placeholder="eventData.selectedTeam2 && eventData.selectedTeam2.length > 0 ? '' : 'Équipe 2'"
                     class="w-full max-w-full select-custom"
                     :class="{ 'p-invalid': errors[`team2-${eventIndex}`] }"
                     :loading="eventData.team2Loading"
@@ -407,13 +408,13 @@
         <!-- Description de l'événement -->
         <div class="flex flex-col gap-2 mb-4">
           <InputText 
-            id="event_description" 
-            v-model="currentEvent.description" 
+            :id="`event_description_${eventIndex}`" 
+            v-model="eventData.description" 
             placeholder="Description de l'événement *"
             class="w-full"
-            :class="{ 'p-invalid': errors.event_description }"
+            :class="{ 'p-invalid': errors[`event_description-${eventIndex}`] }"
           />
-          <small v-if="errors.event_description" class="text-red-500 block mt-1">{{ errors.event_description }}</small>
+          <small v-if="errors[`event_description-${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`event_description-${eventIndex}`] }}</small>
         </div>
 
             <!-- Champs spécifiques à l'événement pour les paris combinés -->
@@ -421,34 +422,34 @@
               <!-- Résultat de l'événement -->
               <div class="flex flex-col gap-2">
                 <Select 
-                  id="event_result" 
-                  v-model="currentEvent.result" 
+                  :id="`event_result_${eventIndex}`" 
+                  v-model="eventData.result" 
                   :options="resultOptions" 
                   optionLabel="label" 
                   optionValue="value"
                   placeholder="Résultat de l'événement *"
                   class="w-full select-custom"
-                  :class="{ 'p-invalid': errors.event_result }"
+                  :class="{ 'p-invalid': errors[`event_result-${eventIndex}`] }"
                   panelClass="select-panel-custom"
                   aria-label="Sélectionner le résultat de l'événement"
                 />
-                <small v-if="errors.event_result" class="text-red-500 block mt-1">{{ errors.event_result }}</small>
+                <small v-if="errors[`event_result-${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`event_result-${eventIndex}`] }}</small>
               </div>
 
               <!-- Cote de l'événement -->
               <div class="flex flex-col gap-2">
                 <InputText 
-                  id="event_odds" 
-                  ref="eventOddsInput"
-                  v-model="currentEvent.odds" 
+                  :id="`event_odds_${eventIndex}`" 
+                  :ref="`eventOddsInput_${eventIndex}`"
+                  v-model="eventData.odds" 
                   placeholder="Cote de l'événement *"
                   class="w-full"
-                  :class="{ 'p-invalid': errors.event_odds }"
+                  :class="{ 'p-invalid': errors[`event_odds-${eventIndex}`] }"
                   type="text"
-                  @input="handleEventOddsInput"
+                  @input="(e) => handleEventOddsInput(e, eventIndex)"
                   @keypress="handleEventOddsKeypress"
                 />
-                <small v-if="errors.event_odds" class="text-red-500 block mt-1">{{ errors.event_odds }}</small>
+                <small v-if="errors[`event_odds-${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`event_odds-${eventIndex}`] }}</small>
               </div>
             </div>
           </div>
@@ -456,7 +457,7 @@
 
 
           <!-- Bouton Ajouter un pari combiné -->
-          <div class="flex justify-center mt-4">
+          <div class="flex justify-center mt-4 mb-4">
             <Button 
               type="button" 
               label="Ajouter un pari combiné" 
@@ -562,7 +563,7 @@
         </div>
 
         <!-- Gain potentiel (desktop uniquement) -->
-        <div class="hidden sm:flex flex-col justify-center min-w-0 w-full">
+        <div class="hidden sm:flex flex-col justify-center min-w-0 w-full mt-4 mb-4">
           <div class="w-full">
             <div class="p-2 bg-gray-50 rounded border text-xs font-semibold text-green-600 h-8 flex items-center justify-center">
               {{ potentialWin.toFixed(2) }} €
@@ -572,8 +573,42 @@
         </div>
       </div>
 
-      <!-- Gain potentiel (mobile uniquement) -->
-      <div class="sm:hidden flex flex-col gap-2">
+      <!-- Section détaillée du gain potentiel (mode pourcentage uniquement) -->
+      <div v-if="betTypeValue === 'percentage'" class="flex flex-col gap-2 mb-4 mt-4">
+        <div class="p-4 bg-gray-50 rounded border">
+          <h4 class="text-sm font-semibold text-gray-800 mb-3">Détails du gain potentiel</h4>
+          
+          <!-- Capital actuel -->
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600">Capital actuel :</span>
+            <span class="text-sm font-medium">
+              <i v-if="capitalLoading" class="pi pi-spin pi-spinner text-xs"></i>
+              <span v-else>{{ currentCapital.toFixed(2) }} €</span>
+            </span>
+          </div>
+          
+          <!-- Mise calculée -->
+          <div v-if="calculatedStake > 0" class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600">Mise calculée ({{ formData.stake }}%) :</span>
+            <span class="text-sm font-medium text-blue-600">{{ calculatedStake.toFixed(2) }} €</span>
+          </div>
+          
+          <!-- Cote -->
+          <div v-if="formData.global_odds" class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600">Cote :</span>
+            <span class="text-sm font-medium">{{ parseFloat(formData.global_odds).toFixed(2) }}</span>
+          </div>
+          
+          <!-- Gain potentiel -->
+          <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+            <span class="text-sm font-semibold text-gray-800">Gain potentiel :</span>
+            <span class="text-lg font-bold text-green-600">{{ potentialWin.toFixed(2) }} €</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gain potentiel simple (mode devise uniquement) -->
+      <div v-if="betTypeValue === 'currency'" class="flex flex-col gap-2 mt-4 mb-4">
         <div class="p-3 bg-gray-50 rounded border text-lg font-semibold text-green-600 text-center">
           Gain potentiel : {{ potentialWin.toFixed(2) }} €
         </div>
@@ -581,7 +616,6 @@
 
       <!-- Résultat (optionnel) -->
       <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-        <label for="result" class="font-medium sm:w-32 sm:flex-shrink-0">Résultat (optionnel)</label>
         <div class="flex-1">
           <Select 
             id="result" 
@@ -698,6 +732,11 @@ const betTypeOptions = ref([
   { symbol: '%', value: 'percentage' }
 ]);
 
+// Variables pour le capital actuel
+const currentCapital = ref(0);
+const calculatedStake = ref(0);
+const capitalLoading = ref(false);
+
 // Variables pour les cards d'événements multiples
 const eventCards = ref([
   {
@@ -751,7 +790,7 @@ const formData = ref({
   team2: null,
   global_odds: null,
   stake: null,
-  result: null
+  result: 'pending'
 });
 
 
@@ -771,8 +810,18 @@ const visible = computed({
 });
 
 const potentialWin = computed(() => {
-  if (formData.value.stake && formData.value.global_odds) {
-    return formData.value.stake * formData.value.global_odds;
+  let stake = 0;
+  
+  if (betTypeValue.value === 'percentage' && calculatedStake.value > 0) {
+    // Utiliser la mise calculée en pourcentage
+    stake = calculatedStake.value;
+  } else if (betTypeValue.value === 'currency' && formData.value.stake) {
+    // Utiliser la mise en devise
+    stake = parseFloat(formData.value.stake);
+  }
+  
+  if (stake > 0 && formData.value.global_odds) {
+    return stake * parseFloat(formData.value.global_odds);
   }
   return 0;
 });
@@ -783,20 +832,10 @@ const showSportFields = computed(() => {
 });
 
 const isFormValid = computed(() => {
-  const baseValid = formData.value.bet_date &&
-                   formData.value.sport_id &&
-                   formData.value.global_odds &&
-                   formData.value.stake;
-  
-  // Si les champs sport sont affichés, ils doivent être remplis
-  if (showSportFields.value) {
-    return baseValid &&
-           formData.value.league &&
-           formData.value.team1 &&
-           formData.value.team2;
-  }
-  
-  return baseValid;
+  // Seuls les champs essentiels sont obligatoires
+  return formData.value.bet_date &&
+         formData.value.global_odds &&
+         formData.value.stake;
 });
 
 
@@ -981,12 +1020,13 @@ async function searchSports(event, eventIndex) {
 async function onSportSelect(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
-  // Pour le mode multiple, utiliser le premier élément pour la logique métier
-  if (eventData.selectedSport && eventData.selectedSport.length > 0) {
-    const firstSport = eventData.selectedSport[0];
-    eventData.sport_id = firstSport.id;
-    console.log('✅ Sport sélectionné pour événement', eventIndex, ':', firstSport);
+  // Remplacer l'élément existant par le nouveau sport sélectionné
+  if (event.value) {
+    eventData.selectedSport = [event.value]; // Remplacer par le nouveau sport
+    eventData.sport_id = event.value.id;
+    console.log('✅ Sport sélectionné pour événement', eventIndex, ':', event.value);
   } else {
+    eventData.selectedSport = [];
     eventData.sport_id = null;
     console.log('✅ Sport désélectionné pour événement', eventIndex);
   }
@@ -1065,11 +1105,12 @@ function searchCountries(event, eventIndex) {
 function onCountrySelect(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
-  // Pour le mode multiple, utiliser le premier élément pour la logique métier
-  if (eventData.selectedCountry && eventData.selectedCountry.length > 0) {
-    const firstCountry = eventData.selectedCountry[0];
-    eventData.country_id = firstCountry.id;
+  // Remplacer l'élément existant par le nouveau pays sélectionné
+  if (event.value) {
+    eventData.selectedCountry = [event.value]; // Remplacer par le nouveau pays
+    eventData.country_id = event.value.id;
   } else {
+    eventData.selectedCountry = [];
     eventData.country_id = null;
   }
   
@@ -1183,11 +1224,12 @@ async function searchLeagues(event, eventIndex) {
 async function onLeagueSelect(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
-  // Pour le mode multiple, utiliser le premier élément pour la logique métier
-  if (eventData.selectedLeague && eventData.selectedLeague.length > 0) {
-    const firstLeague = eventData.selectedLeague[0];
-    eventData.league = firstLeague.id;
+  // Remplacer l'élément existant par la nouvelle ligue sélectionnée
+  if (event.value) {
+    eventData.selectedLeague = [event.value]; // Remplacer par la nouvelle ligue
+    eventData.league = event.value.id;
   } else {
+    eventData.selectedLeague = [];
     eventData.league = null;
   }
   
@@ -1376,12 +1418,13 @@ async function searchTeam2(event, eventIndex, resetSearch = false) {
 function onTeam1Select(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
-  // Pour le mode multiple, utiliser le premier élément pour la logique métier
-  if (eventData.selectedTeam1 && eventData.selectedTeam1.length > 0) {
-    const firstTeam = eventData.selectedTeam1[0];
-    eventData.team1 = firstTeam.id;
-    console.log('✅ Équipe 1 sélectionnée pour événement', eventIndex, ':', firstTeam);
+  // Remplacer l'élément existant par la nouvelle équipe sélectionnée
+  if (event.value) {
+    eventData.selectedTeam1 = [event.value]; // Remplacer par la nouvelle équipe
+    eventData.team1 = event.value.id;
+    console.log('✅ Équipe 1 sélectionnée pour événement', eventIndex, ':', event.value);
   } else {
+    eventData.selectedTeam1 = [];
     eventData.team1 = null;
     console.log('✅ Équipe 1 désélectionnée pour événement', eventIndex);
   }
@@ -1401,12 +1444,13 @@ function onTeam1Select(event, eventIndex) {
 function onTeam2Select(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
-  // Pour le mode multiple, utiliser le premier élément pour la logique métier
-  if (eventData.selectedTeam2 && eventData.selectedTeam2.length > 0) {
-    const firstTeam = eventData.selectedTeam2[0];
-    eventData.team2 = firstTeam.id;
-    console.log('✅ Équipe 2 sélectionnée pour événement', eventIndex, ':', firstTeam);
+  // Remplacer l'élément existant par la nouvelle équipe sélectionnée
+  if (event.value) {
+    eventData.selectedTeam2 = [event.value]; // Remplacer par la nouvelle équipe
+    eventData.team2 = event.value.id;
+    console.log('✅ Équipe 2 sélectionnée pour événement', eventIndex, ':', event.value);
   } else {
+    eventData.selectedTeam2 = [];
     eventData.team2 = null;
     console.log('✅ Équipe 2 désélectionnée pour événement', eventIndex);
   }
@@ -1685,10 +1729,13 @@ function handleStakeInput(event) {
 /**
  * Gérer la saisie de la cote d'événement pour remplacer immédiatement les virgules par des points
  * @param {Event} event - Événement d'input
+ * @param {number} eventIndex - Index de l'événement
  */
-function handleEventOddsInput(event) {
+function handleEventOddsInput(event, eventIndex) {
   let inputValue = event.target.value;
-  console.log('handleEventOddsInput - Valeur tapée:', inputValue);
+  console.log('handleEventOddsInput - Valeur tapée:', inputValue, 'pour événement', eventIndex);
+  
+  const eventData = eventCards.value[eventIndex];
   
   // Remplacer immédiatement toutes les virgules par des points
   const normalizedValue = inputValue.replace(/,/g, '.');
@@ -1707,14 +1754,14 @@ function handleEventOddsInput(event) {
     event.target.setSelectionRange(cursorPosition, cursorPosition);
     
     // Mettre à jour le v-model
-    currentEvent.value.odds = normalizedValue;
+    eventData.odds = normalizedValue;
     console.log('handleEventOddsInput - Remplacement terminé, nouvelle valeur:', event.target.value);
     return;
   }
   
   // Vérifier que la valeur est un nombre réel valide
   if (normalizedValue === '' || normalizedValue === '.') {
-    currentEvent.value.odds = null;
+    eventData.odds = null;
     // Recalculer la cote globale même avec une valeur vide
     calculateGlobalOdds();
     return;
@@ -1723,7 +1770,7 @@ function handleEventOddsInput(event) {
   // Validation du format nombre réel
   const numericValue = parseFloat(normalizedValue);
   if (!isNaN(numericValue) && isFinite(numericValue) && numericValue > 0) {
-    currentEvent.value.odds = numericValue;
+    eventData.odds = numericValue;
   } else {
     // Si la valeur n'est pas valide, on garde la dernière valeur valide
     console.warn('Valeur de cote d\'événement invalide:', normalizedValue);
@@ -1990,34 +2037,17 @@ async function onLeagueChange() {
  * Valider le formulaire
  */
 function validateForm() {
+  console.log('🔍 validateForm appelée');
   errors.value = {};
   
   if (!formData.value.bet_date) {
     errors.value.bet_date = 'La date du pari est requise';
   }
   
-  if (!formData.value.sport_id) {
-    errors.value.sport_id = 'Le sport est requis';
-  }
-  
-  // Validation des champs conditionnels
-  if (showSportFields.value) {
-    if (!formData.value.league) {
-      errors.value.league = 'La ligue est requise';
-    }
-    
-    if (!formData.value.team1) {
-      errors.value.team1 = 'L\'équipe 1 est requise';
-    }
-    
-    if (!formData.value.team2) {
-      errors.value.team2 = 'L\'équipe 2 est requise';
-    }
-    
-    if (formData.value.team1 === formData.value.team2) {
-      errors.value.team1 = 'Les deux équipes doivent être différentes';
-      errors.value.team2 = 'Les deux équipes doivent être différentes';
-    }
+  // Validation optionnelle des équipes (seulement si les deux sont remplies)
+  if (formData.value.team1 && formData.value.team2 && formData.value.team1 === formData.value.team2) {
+    errors.value.team1 = 'Les deux équipes doivent être différentes';
+    errors.value.team2 = 'Les deux équipes doivent être différentes';
   }
   
 
@@ -2030,41 +2060,62 @@ function validateForm() {
     errors.value.stake = 'La mise doit être supérieure à 0';
   }
   
-  return Object.keys(errors.value).length === 0;
+  const isValid = Object.keys(errors.value).length === 0;
+  console.log('📊 Erreurs de validation:', errors.value);
+  console.log('✅ Formulaire valide:', isValid);
+  return isValid;
 }
 
 /**
  * Soumettre le formulaire
  */
 async function submitForm() {
+  console.log('🔄 submitForm appelée');
+  console.log('📋 Données du formulaire:', formData.value);
+  console.log('✅ isFormValid:', isFormValid.value);
+  
   if (!validateForm()) {
+    console.log('❌ Validation échouée');
     return;
   }
   
+  console.log('✅ Validation réussie, début de l\'envoi');
   loading.value = true;
   
   try {
     // Préparer les données pour l'API
     const betData = {
       bet_date: formData.value.bet_date.toISOString().split('T')[0], // Format YYYY-MM-DD
-      sport_id: formData.value.sport_id,
-      league_id: formData.value.league,
-      team1_id: formData.value.team1,
-      team2_id: formData.value.team2,
-      bet_code: events.value.length > 0 ? `Pari combiné (${events.value.length} événements)` : currentEvent.value.description || 'Pari simple',
-      global_odds: formData.value.global_odds,
-      stake: formData.value.stake,
-      result: formData.value.result || 'pending'
+      bet_code: events.value.length > 0 ? `Pari combiné (${events.value.length} événements)` : (currentEvent.value.description || formData.value.description || 'Pari libre'),
+      global_odds: parseFloat(formData.value.global_odds),
+      stake: parseFloat(formData.value.stake),
+      stake_type: betTypeValue.value, // Type de mise: 'currency' ou 'percentage'
+      result: formData.value.result || 'pending',
+      events: eventCards.value.map(eventData => ({
+        id: eventData.id,
+        sport_id: eventData.sport_id,
+        country_id: eventData.country_id,
+        league_id: eventData.league,
+        team1_id: eventData.team1,
+        team2_id: eventData.team2,
+        description: eventData.description,
+        result: eventData.result,
+        odds: eventData.odds
+      })) // Array d'événements basé sur eventCards
     };
     
+    console.log('📤 Données envoyées à l\'API:', betData);
+    
     const response = await BetService.createBet(betData);
+    
+    console.log('📥 Réponse reçue de l\'API:', response);
     
     if (response.success) {
       toast.add({
         severity: 'success',
         summary: 'Succès',
-        detail: 'Pari ajouté avec succès',
-        life: 3000
+        detail: 'Pari ajouté avec succès - Données reçues: ' + JSON.stringify(response.data),
+        life: 5000
       });
       
       // Émettre l'événement pour informer le parent
@@ -2076,12 +2127,12 @@ async function submitForm() {
       throw new Error('Erreur lors de la création du pari');
     }
   } catch (error) {
-    console.error('Erreur lors de la création du pari:', error);
+    console.error('❌ Erreur lors de la création du pari:', error);
     toast.add({
       severity: 'error',
       summary: 'Erreur',
-      detail: 'Impossible de créer le pari',
-      life: 3000
+      detail: 'Impossible de créer le pari: ' + error.message,
+      life: 5000
     });
   } finally {
     loading.value = false;
@@ -2108,7 +2159,7 @@ function resetForm() {
     team2: null,
     global_odds: null,
     stake: null,
-    result: null
+    result: 'pending'
   };
   errors.value = {};
   availableLeagues.value = [];
@@ -2435,7 +2486,53 @@ function calculateGlobalResult() {
   }
 }
 
+/**
+ * Récupérer le capital actuel de l'utilisateur
+ */
+async function fetchCurrentCapital() {
+  try {
+    capitalLoading.value = true;
+    const response = await BetService.getCapitalEvolution();
+    
+    if (response.success && response.data) {
+      currentCapital.value = response.current_capital || response.initial_capital || 0;
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération du capital actuel:', error);
+    currentCapital.value = 0;
+  } finally {
+    capitalLoading.value = false;
+  }
+}
+
+/**
+ * Calculer la mise en pourcentage du capital
+ */
+function calculatePercentageStake() {
+  if (betTypeValue.value === 'percentage' && formData.value.stake && currentCapital.value > 0) {
+    const percentage = parseFloat(formData.value.stake);
+    if (!isNaN(percentage) && percentage > 0) {
+      calculatedStake.value = (currentCapital.value * percentage) / 100;
+      return;
+    }
+  }
+  calculatedStake.value = 0;
+}
+
 // Watchers
+// Surveiller le changement de type de mise pour récupérer le capital
+watch(betTypeValue, async (newValue) => {
+  if (newValue === 'percentage') {
+    await fetchCurrentCapital();
+  }
+  calculatePercentageStake();
+});
+
+// Surveiller les changements de la mise pour recalculer en mode pourcentage
+watch(() => formData.value.stake, () => {
+  calculatePercentageStake();
+});
+
 // Surveiller les changements dans les résultats des événements
 watch(
   () => [events.value.map(e => e.result), currentEvent.value.result],
@@ -2446,9 +2543,9 @@ watch(
 );
 
 // Lifecycle
-onMounted(() => {
-  loadSports();
-  loadCountries();
+onMounted(async () => {
+  await loadSports();
+  await loadCountries();
 });
 </script>
 

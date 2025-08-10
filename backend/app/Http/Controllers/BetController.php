@@ -442,13 +442,24 @@ class BetController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Validation des données principales du pari
         $validator = Validator::make($request->all(), [
             'bet_date' => 'required|date',
             'global_odds' => 'required|numeric|min:1',
             'bet_code' => 'required|string|max:256',
             'result' => 'nullable|in:won,lost,void,pending',
-            'sport_id' => 'required|exists:sports,id',
-            'stake' => 'required|numeric|min:0'
+            'stake' => 'required|numeric|min:0',
+            'stake_type' => 'required|in:currency,percentage',
+            // Validation du tableau d'événements
+            'events' => 'required|array|min:1',
+            'events.*.sport_id' => 'nullable|exists:sports,id',
+            'events.*.country_id' => 'nullable|exists:countries,id',
+            'events.*.league_id' => 'nullable|exists:leagues,id',
+            'events.*.team1_id' => 'nullable|exists:teams,id',
+            'events.*.team2_id' => 'nullable|exists:teams,id',
+            'events.*.description' => 'required|string|max:500',
+            'events.*.result' => 'nullable|in:won,lost,void,pending',
+            'events.*.odds' => 'nullable|numeric|min:1'
         ]);
 
         if ($validator->fails()) {
@@ -458,13 +469,44 @@ class BetController extends Controller
             ], 422);
         }
 
-        $data = $validator->validated();
-        $bet = Bet::create($data);
+        $validatedData = $validator->validated();
+        
+        // Extraire les données du pari (sans les événements)
+        $betData = [
+            'bet_date' => $validatedData['bet_date'],
+            'global_odds' => $validatedData['global_odds'],
+            'bet_code' => $validatedData['bet_code'],
+            'result' => $validatedData['result'] ?? 'pending',
+            'stake' => $validatedData['stake']
+        ];
+
+        // Créer le pari
+        $bet = Bet::create($betData);
+
+        // Créer et associer les événements
+        $eventIds = [];
+        foreach ($validatedData['events'] as $eventData) {
+            // Créer l'événement avec les données reçues
+            $event = \App\Models\Event::create([
+                'team1_id' => $eventData['team1_id'],
+                'team2_id' => $eventData['team2_id'],
+                'league_id' => $eventData['league_id'],
+                'type' => $eventData['description'], // Utiliser la description comme type
+                'market' => $eventData['description'], // Utiliser la description comme marché
+                'odd' => $eventData['odds'],
+                'event_date' => $validatedData['bet_date'] // Utiliser la date du pari
+            ]);
+            
+            $eventIds[] = $event->id;
+        }
+
+        // Associer les événements au pari via la table pivot
+        $bet->events()->attach($eventIds);
 
         return response()->json([
             'success' => true,
             'message' => 'Pari créé avec succès',
-            'data' => $bet->load('sport')
+            'data' => $bet->load(['sport', 'events.team1', 'events.team2', 'events.league.country'])
         ], 201);
     }
 
