@@ -14,7 +14,8 @@ class Sport extends Model
         'name',
         'description',
         'slug',
-        'img'
+        'img',
+        'sofascore_id'
     ];
 
     // Relations
