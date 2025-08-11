@@ -9,33 +9,35 @@ use App\Models\League;
 use App\Models\Country;
 use App\Models\Sport;
 
-class ImportFootballLeagues extends Command
+class ImportSportLeagues extends Command
 {
     /**
      * Le nom et la signature de la commande console.
      *
      * @var string
      */
-    protected $signature = 'football:import-leagues {--force : Forcer l\'import même si la ligue existe}';
+    protected $signature = 'sport:import-leagues {sport_slug} {--force : Forcer l\'import même si la ligue existe}';
 
     /**
      * La description de la commande console.
      *
      * @var string
      */
-    protected $description = 'Importe les pays et leurs ligues de football depuis l\'API Sofascore';
+    protected $description = 'Importe les pays et leurs ligues pour un sport donné depuis l\'API Sofascore';
 
     /**
      * Exécuter la commande console.
      */
     public function handle()
     {
-        $this->info('🚀 Début de l\'importation des ligues de football...');
+        $sportSlug = $this->argument('sport_slug');
+        
+        $this->info("🚀 Début de l'importation des ligues pour le sport: {$sportSlug}...");
         
         try {
             // Récupérer tous les pays/catégories depuis l'API pour obtenir l'ID du sport
             $this->info('🌍 Récupération des pays et catégories...');
-            $countries = $this->fetchCountries();
+            $countries = $this->fetchCountries($sportSlug);
             
             if (empty($countries)) {
                 $this->error('❌ Aucune catégorie récupérée depuis l\'API');
@@ -43,22 +45,20 @@ class ImportFootballLeagues extends Command
             }
             
             // Récupérer l'ID Sofascore du sport depuis la première catégorie
-            $footballSofascoreId = $countries[0]['sport']['id'] ?? null;
-            if (!$footballSofascoreId) {
-                $this->error('❌ ID Sofascore du sport Football non trouvé dans l\'API');
+            $sportSofascoreId = $countries[0]['sport']['id'] ?? null;
+            if (!$sportSofascoreId) {
+                $this->error("❌ ID Sofascore du sport {$sportSlug} non trouvé dans l'API");
                 return Command::FAILURE;
             }
             
-            // Récupérer le sport Football par son sofascore_id
-            $footballSport = Sport::where('sofascore_id', $footballSofascoreId)->first();
-            if (!$footballSport) {
-                $this->error("❌ Sport Football non trouvé (sofascore_id: {$footballSofascoreId})");
+            // Récupérer le sport par son sofascore_id
+            $sport = Sport::where('sofascore_id', $sportSofascoreId)->first();
+            if (!$sport) {
+                $this->error("❌ Sport {$sportSlug} non trouvé en base (sofascore_id: {$sportSofascoreId})");
                 return Command::FAILURE;
             }
             
-            $this->info("⚽ Sport trouvé: {$footballSport->name} (ID: {$footballSport->id}, Sofascore ID: {$footballSport->sofascore_id})");
-            
-
+            $this->info("🏆 Sport trouvé: {$sport->name} (ID: {$sport->id}, Sofascore ID: {$sport->sofascore_id})");
             
             $this->info("📋 " . count($countries) . " pays trouvés");
             
@@ -76,7 +76,8 @@ class ImportFootballLeagues extends Command
             
             foreach ($countries as $countryData) {
                 try {
-                    $this->line("\n🏴 Traitement du pays: {$countryData['name']} ({$countryData['alpha2']})");
+                    $alpha2 = $countryData['alpha2'] ?? 'N/A';
+            $this->line("\n🏴 Traitement du pays: {$countryData['name']} ({$alpha2})");
                     
                     // Vérifier si le pays existe en base
                     $country = $this->findOrCreateCountry($countryData);
@@ -102,7 +103,7 @@ class ImportFootballLeagues extends Command
                     
                     // Traiter chaque ligue
                     foreach ($leagues as $leagueData) {
-                        $result = $this->processLeague($leagueData, $country, $footballSport);
+                        $result = $this->processLeague($leagueData, $country, $sport);
                         $stats[$result]++;
                     }
                     
@@ -113,6 +114,7 @@ class ImportFootballLeagues extends Command
                     $stats['errors']++;
                     Log::error('Erreur lors du traitement du pays', [
                         'country' => $countryData,
+                        'sport_slug' => $sportSlug,
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
@@ -141,7 +143,9 @@ class ImportFootballLeagues extends Command
             $this->info("📈 Taux de succès: {$successRate}%");
             
             // Log final
-            Log::info('Importation des ligues de football terminée', [
+            Log::info('Importation des ligues terminée', [
+                'sport_slug' => $sportSlug,
+                'sport_id' => $sport->id,
                 'countries_processed' => $stats['countries_processed'],
                 'leagues_created' => $stats['leagues_created'],
                 'leagues_updated' => $stats['leagues_updated'],
@@ -155,7 +159,8 @@ class ImportFootballLeagues extends Command
             
         } catch (\Exception $e) {
             $this->error('❌ Erreur générale: ' . $e->getMessage());
-            Log::error('Erreur lors de l\'importation des ligues de football', [
+            Log::error('Erreur lors de l\'importation des ligues', [
+                'sport_slug' => $sportSlug,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -164,9 +169,9 @@ class ImportFootballLeagues extends Command
     }
     
     /**
-     * Récupérer tous les pays/catégories depuis l'API
+     * Récupérer tous les pays/catégories depuis l'API pour un sport donné
      */
-    private function fetchCountries()
+    private function fetchCountries($sportSlug)
     {
         try {
             $this->line('   🌐 Connexion à l\'API Sofascore...');
@@ -177,12 +182,13 @@ class ImportFootballLeagues extends Command
                     'Accept' => 'application/json',
                     'Referer' => 'https://www.sofascore.com/'
                 ])
-                ->get('https://www.sofascore.com/api/v1/sport/football/categories');
+                ->get("https://www.sofascore.com/api/v1/sport/{$sportSlug}/categories");
             $this->line('   📡 Réponse API reçue avec le statut: ' . $response->status());
             
             if (!$response->successful()) {
                 $this->error('   ❌ Erreur lors de la récupération des pays: ' . $response->status());
                 Log::error('Échec de la récupération des pays', [
+                    'sport_slug' => $sportSlug,
                     'status' => $response->status(),
                     'body' => $response->body()
                 ]);
@@ -193,7 +199,10 @@ class ImportFootballLeagues extends Command
             
             if (!isset($data['categories']) || !is_array($data['categories'])) {
                 $this->error('   ❌ Format de données invalide reçu de l\'API');
-                Log::error('Format de données pays invalide', ['data_keys' => array_keys($data)]);
+                Log::error('Format de données pays invalide', [
+                    'sport_slug' => $sportSlug,
+                    'data_keys' => array_keys($data)
+                ]);
                 return [];
             }
             
@@ -202,6 +211,7 @@ class ImportFootballLeagues extends Command
         } catch (\Exception $e) {
             $this->error('   ❌ Erreur lors de la récupération des pays: ' . $e->getMessage());
             Log::error('Erreur lors de la récupération des pays', [
+                'sport_slug' => $sportSlug,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
