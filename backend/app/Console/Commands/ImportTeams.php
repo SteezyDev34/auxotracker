@@ -15,7 +15,7 @@ class ImportTeams extends Command
      *
      * @var string
      */
-    protected $signature = 'teams:import {debut=1} {fin=500000} {--force : Forcer l\'importation même si l\'équipe existe déjà}';
+    protected $signature = 'teams:import {debut=14411} {fin=500000} {--force : Forcer l\'importation même si l\'équipe existe déjà} {--delay=0 : Délai en secondes entre chaque requête API}';
 
     /**
      * La description de la commande console.
@@ -46,10 +46,12 @@ class ImportTeams extends Command
         $debut = (int) $this->argument('debut');
         $fin = (int) $this->argument('fin');
         $force = $this->option('force');
+        $delay = (int) $this->option('delay');
 
         $this->line("🚀 Début de l'importation des équipes");
         $this->line("📊 Plage d'IDs: {$debut} à {$fin}");
         $this->line("🔄 Mode force: " . ($force ? 'Activé' : 'Désactivé'));
+        $this->line("⏱️  Délai entre requêtes: {$delay} seconde(s)");
         $this->line("");
 
         $total = $fin - $debut + 1;
@@ -67,8 +69,10 @@ class ImportTeams extends Command
                 
                 $progressBar->advance();
                 
-                // Pause pour éviter de surcharger l'API
-                usleep(100000); // 100ms
+                // Appliquer le délai configuré entre les requêtes
+                if ($delay > 0) {
+                    sleep($delay);
+                }
                 
             } catch (\Exception $e) {
                 $this->stats['errors']++;
@@ -92,27 +96,18 @@ class ImportTeams extends Command
     private function processTeam($teamId, $force)
     {
         try {
-            Log::info("🔍 Début du traitement de l'équipe", ['sofascore_id' => $teamId]);
-            
             // Vérifier d'abord si l'équipe existe déjà en base pour éviter les appels API inutiles
             $existingTeam = Team::where('sofascore_id', $teamId)->first();
             
             if ($existingTeam && !$force) {
-                Log::info("⏭️ Équipe déjà existante, ignorée", [
-                    'sofascore_id' => $teamId,
-                    'team_name' => $existingTeam->name,
-                    'team_id' => $existingTeam->id
-                ]);
                 $this->stats['teams_skipped']++;
                 return;
             }
             
             // Récupérer les données de l'équipe depuis l'API
-            Log::info("🌐 Récupération des données depuis l'API Sofascore", ['sofascore_id' => $teamId]);
             $teamData = $this->fetchTeamData($teamId);
             
             if (!$teamData) {
-                Log::warning("❌ Aucune donnée récupérée pour l'équipe", ['sofascore_id' => $teamId]);
                 return;
             }
 
@@ -120,15 +115,14 @@ class ImportTeams extends Command
             $name = $teamData['team']['name'] ?? null;
             $slug = $teamData['team']['slug'] ?? null;
             $shortName = $teamData['team']['shortName'] ?? null;
+            
+            // Essayer d'abord avec uniqueTournament, puis avec primaryUniqueTournament si vide
             $uniqueTournamentId = $teamData['team']['tournament']['uniqueTournament']['id'] ?? null;
-
-            Log::info("📋 Données extraites de l'équipe", [
-                'sofascore_id' => $teamId,
-                'name' => $name,
-                'slug' => $slug,
-                'short_name' => $shortName,
-                'tournament_id' => $uniqueTournamentId
-            ]);
+            $uniqueTournamentName = $teamData['team']['tournament']['uniqueTournament']['name'] ?? null;
+            if (!$uniqueTournamentId) {
+                $uniqueTournamentId = $teamData['team']['primaryUniqueTournament']['id'] ?? null;
+                $uniqueTournamentName = $teamData['team']['primaryUniqueTournament']['name'] ?? null;
+            }
 
             if (!$name || !$slug || !$uniqueTournamentId) {
                 Log::warning("⚠️ Données incomplètes pour l'équipe", [
@@ -143,28 +137,24 @@ class ImportTeams extends Command
                 return;
             }
 
-            // Vérifier si la ligue existe en base de données
-            Log::info("🔍 Recherche de la ligue associée", [
-                'tournament_sofascore_id' => $uniqueTournamentId
-            ]);
-            
-            $league = League::where('sofascore_id', $uniqueTournamentId)->first();
+            // Vérifier si la ligue existe en base de données (par sofascore_id et nom)
+            $league = League::where(function($query) use ($uniqueTournamentId, $uniqueTournamentName) {
+                $query->where('sofascore_id', $uniqueTournamentId);
+                if ($uniqueTournamentName) {
+                    $query->orWhere('name', $uniqueTournamentName);
+                }
+            })->first();
             
             if (!$league) {
                 Log::warning("🏆 Ligue non trouvée en base de données", [
                     'sofascore_id' => $teamId,
                     'team_name' => $name,
-                    'tournament_sofascore_id' => $uniqueTournamentId
+                    'tournament_sofascore_id' => $uniqueTournamentId,
+                    'tournament_name' => $uniqueTournamentName
                 ]);
                 $this->stats['league_not_found']++;
                 return;
             }
-            
-            Log::info("✅ Ligue trouvée", [
-                'league_id' => $league->id,
-                'league_name' => $league->name,
-                'tournament_sofascore_id' => $uniqueTournamentId
-            ]);
 
             // Vérification supplémentaire des doublons par nom et slug dans la même ligue
             $duplicateByName = Team::where('name', $name)
@@ -205,38 +195,11 @@ class ImportTeams extends Command
             ];
 
             if ($existingTeam) {
-                Log::info("🔄 Mise à jour de l'équipe existante", [
-                    'team_id' => $existingTeam->id,
-                    'sofascore_id' => $teamId,
-                    'old_name' => $existingTeam->name,
-                    'new_name' => $name,
-                    'league_id' => $league->id
-                ]);
-                
                 $existingTeam->update($teamAttributes);
                 $this->stats['teams_updated']++;
-                
-                Log::info("✅ Équipe mise à jour avec succès", [
-                    'team_id' => $existingTeam->id,
-                    'sofascore_id' => $teamId,
-                    'name' => $name
-                ]);
             } else {
-                Log::info("➕ Création d'une nouvelle équipe", [
-                    'sofascore_id' => $teamId,
-                    'name' => $name,
-                    'league_id' => $league->id,
-                    'league_name' => $league->name
-                ]);
-                
                 $newTeam = Team::create($teamAttributes);
                 $this->stats['teams_created']++;
-                
-                Log::info("✅ Équipe créée avec succès", [
-                    'team_id' => $newTeam->id,
-                    'sofascore_id' => $teamId,
-                    'name' => $name
-                ]);
             }
 
         } catch (\Exception $e) {
@@ -256,10 +219,6 @@ class ImportTeams extends Command
     {
         try {
             $url = "https://www.sofascore.com/api/v1/team/{$teamId}";
-            Log::debug("🌐 Appel API Sofascore", [
-                'url' => $url,
-                'team_id' => $teamId
-            ]);
             
             $response = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -267,18 +226,30 @@ class ImportTeams extends Command
                 'Referer' => 'https://www.sofascore.com/'
             ])->timeout(10)->get($url);
 
-            Log::debug("📡 Réponse API reçue", [
-                'team_id' => $teamId,
-                'status_code' => $response->status(),
-                'response_size' => strlen($response->body())
-            ]);
-
             if (!$response->successful()) {
-                if ($response->status() === 404) {
-                    Log::debug("🔍 Équipe non trouvée (404)", [
+                if ($response->status() === 403) {
+                    $responseBody = $response->json();
+                    $challengeType = $responseBody['error']['reason'] ?? 'unknown';
+                    
+                    $this->error("🚨 ERREUR 403 - Accès interdit pour l'équipe ID: {$teamId}");
+                    $this->error("🔍 Type de challenge détecté: {$challengeType}");
+                    $this->error("💡 Suggestions:");
+                    $this->error("   - Attendre quelques minutes avant de relancer");
+                    $this->error("   - Utiliser un VPN ou changer d'IP");
+                    $this->error("   - Réduire la fréquence des requêtes");
+                    $this->error("🛑 Arrêt du script en raison de l'erreur 403");
+                    
+                    Log::error('🚨 Erreur 403 - Challenge détecté', [
                         'team_id' => $teamId,
-                        'url' => $url
+                        'status' => $response->status(),
+                        'url' => $url,
+                        'challenge_type' => $challengeType,
+                        'response_body' => $responseBody
                     ]);
+                    exit(1);
+                }
+                
+                if ($response->status() === 404) {
                     return null;
                 }
                 
@@ -287,7 +258,7 @@ class ImportTeams extends Command
                     'team_id' => $teamId,
                     'status' => $response->status(),
                     'url' => $url,
-                    'body' => substr($response->body(), 0, 500) // Limiter la taille du log
+                    'body' => substr($response->body(), 0, 500)
                 ]);
                 return null;
             }
@@ -303,13 +274,6 @@ class ImportTeams extends Command
                 ]);
                 return null;
             }
-
-            Log::debug("✅ Données d'équipe récupérées avec succès", [
-                'team_id' => $teamId,
-                'team_name' => $data['team']['name'] ?? 'N/A',
-                'team_slug' => $data['team']['slug'] ?? 'N/A',
-                'tournament_id' => $data['team']['tournament']['uniqueTournament']['id'] ?? 'N/A'
-            ]);
 
             return $data;
 

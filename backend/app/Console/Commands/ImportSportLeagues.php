@@ -64,6 +64,7 @@ class ImportSportLeagues extends Command
             
             $stats = [
                 'countries_processed' => 0,
+                'countries_ignored' => 0,
                 'leagues_created' => 0,
                 'leagues_updated' => 0,
                 'leagues_skipped' => 0,
@@ -83,8 +84,13 @@ class ImportSportLeagues extends Command
                     $country = $this->findOrCreateCountry($countryData);
                     
                     if (!$country) {
-                        $this->line("   ⚠️  Pays non trouvé en base: {$countryData['name']}");
-                        $stats['errors']++;
+                        // Vérifier si c'est un pays ignoré (comme "In Progress") ou une vraie erreur
+                        if (isset($countryData['name']) && $countryData['name'] === 'In Progress') {
+                            $stats['countries_ignored']++;
+                        } else {
+                            $this->line("   ⚠️  Pays non trouvé en base: {$countryData['name']}");
+                            $stats['errors']++;
+                        }
                         continue;
                     }
                     
@@ -131,6 +137,7 @@ class ImportSportLeagues extends Command
             $this->newLine();
             $this->info('📊 === Statistiques d\'importation ===');
             $this->info("🌍 Pays traités: {$stats['countries_processed']}");
+            $this->info("⏭️  Pays ignorés: {$stats['countries_ignored']}");
             $this->info("✅ Ligues créées: {$stats['leagues_created']}");
             $this->info("🔄 Ligues mises à jour: {$stats['leagues_updated']}");
             $this->info("⏭️  Ligues ignorées: {$stats['leagues_skipped']}");
@@ -147,6 +154,7 @@ class ImportSportLeagues extends Command
                 'sport_slug' => $sportSlug,
                 'sport_id' => $sport->id,
                 'countries_processed' => $stats['countries_processed'],
+                'countries_ignored' => $stats['countries_ignored'],
                 'leagues_created' => $stats['leagues_created'],
                 'leagues_updated' => $stats['leagues_updated'],
                 'leagues_skipped' => $stats['leagues_skipped'],
@@ -280,6 +288,18 @@ class ImportSportLeagues extends Command
     private function findOrCreateCountry($countryData)
     {
         try {
+            // Ignorer les pays "In Progress"
+            if (isset($countryData['name']) && $countryData['name'] === 'In Progress') {
+                $this->line("     ⏭️  Pays ignoré: {$countryData['name']} (statut temporaire)");
+                Log::info('Pays "In Progress" ignoré', [
+                    'country_name' => $countryData['name'],
+                    'alpha2' => $countryData['alpha2'] ?? null,
+                    'slug' => $countryData['slug'] ?? null,
+                    'sofascore_id' => $countryData['id']
+                ]);
+                return null;
+            }
+            
             $this->line("     🔍 Recherche du pays: {$countryData['name']}");
             
             $country = null;

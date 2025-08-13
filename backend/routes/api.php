@@ -7,6 +7,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\TeamLogoController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\CountryController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,10 +30,11 @@ Route::get('/test', function () {
     ]);
 });
 
-// Routes d'authentification (sans middleware pour le dev)
+// Routes d'authentification
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user']);
 
 // Routes des paris (sans authentification temporairement)
 Route::get('/bets/stats', [BetController::class, 'stats']);
@@ -86,3 +88,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('events', EventController::class);
 });
 */
+
+Route::middleware('auth:sanctum')->post('/user/avatar', [UserController::class, 'updateAvatar']);
+

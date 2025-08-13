@@ -18,7 +18,13 @@ class User extends Authenticatable
      * @var array<int, string>
      */
 
-    protected $fillable = ['username', 'email', 'password'];
+    protected $fillable = [
+        'username',
+        'email',
+        'password',
+        'user_profile_picture',
+        // ...autres champs si besoin
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -39,4 +45,11 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function getAvatarUrl()
+    {
+        return $this->user_profile_picture
+            ? asset('storage/avatar/' . $this->user_profile_picture)
+            : asset('storage/avatar/user.jpg');
+    }
 }

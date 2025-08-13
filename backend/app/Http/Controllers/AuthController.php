@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
+    /**
+     * Connexion de l'utilisateur et génération du token d'authentification
+     */
     public function login(Request $request)
     {
         // Validation des données
@@ -18,13 +21,28 @@ class AuthController extends Controller
 
         // Tentative de connexion de l'utilisateur
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            return response()->json(['success' => true]);
+            $user = Auth::user();
+            
+            // Supprimer les anciens tokens
+            $user->tokens()->delete();
+            
+            // Créer un nouveau token
+            $token = $user->createToken('auth-token')->plainTextToken;
+            
+            return response()->json([
+                'success' => true,
+                'token' => $token,
+                'user' => $user
+            ]);
         }
 
-        return response()->json(['success' => false]);
+        return response()->json(['success' => false, 'message' => 'Identifiants incorrects'], 401);
     }
 
 
+    /**
+     * Inscription d'un nouvel utilisateur
+     */
     public function register(Request $request)
     {
         $request->validate([
@@ -47,6 +65,26 @@ class AuthController extends Controller
         ]);
 
         return response()->json(['message' => 'Inscription réussie'], 201);
+    }
+
+    /**
+     * Déconnexion de l'utilisateur et suppression du token
+     */
+    public function logout(Request $request)
+    {
+        if ($request->user()) {
+            $request->user()->currentAccessToken()->delete();
+        }
+        
+        return response()->json(['success' => true, 'message' => 'Déconnexion réussie']);
+    }
+
+    /**
+     * Récupérer les informations de l'utilisateur connecté
+     */
+    public function user(Request $request)
+    {
+        return response()->json($request->user());
     }
 
 }
