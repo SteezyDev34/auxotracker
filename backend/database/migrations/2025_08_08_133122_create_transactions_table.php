@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transactions', function (Blueprint $table) {
-            $table->id();
-            $table->enum('type', ['deposit', 'withdraw'])->comment('Type de transaction: dépôt ou retrait');
-            $table->decimal('amount', 10, 2)->comment('Montant de la transaction');
-            $table->date('transaction_date')->comment('Date de la transaction');
-            $table->string('description')->nullable()->comment('Description optionnelle');
-            $table->string('method')->nullable()->comment('Méthode de paiement (carte, virement, etc.)');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('transactions')) {
+            Schema::create('transactions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->foreignId('bookmaker_id')->constrained()->onDelete('cascade');
+                $table->string('type');
+                $table->decimal('amount', 8, 2);
+                $table->datetime('transaction_date');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

@@ -85,9 +85,10 @@ watch(
 );
 </script>
 <template>
+            <CapitalEvolutionChart />
     <div class="grid grid-cols-12 gap-8">
         <div class="col-span-12 xl:col-span-12">
-            <CapitalEvolutionChart />
+            
         </div>
         <!-- Widget des statistiques masqué temporairement -->
         <!-- <div class="col-span-12 xl:col-span-12">

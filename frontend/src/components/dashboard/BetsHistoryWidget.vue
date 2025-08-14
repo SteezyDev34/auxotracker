@@ -171,13 +171,13 @@ function getResultIcon(result) {
       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
       </svg>`;
-    case 'pending': 
-      return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
-        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,6A1,1 0 0,1 13,7V12.41L15.18,14.59A1,1 0 0,1 14.59,16L12,13.41V7A1,1 0 0,1 12,6Z"/>
-      </svg>`;
     case 'void': 
        return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
          <path d="M4,11H20V13H4V11Z"/>
+       </svg>`;
+    case 'pending':
+       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
+         <path d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.24,7.76C15.07,6.58 13.53,6 12,6V12L7.76,16.24C10.1,18.58 13.9,18.58 16.24,16.24C18.59,13.9 18.59,10.1 16.24,7.76Z"/>
        </svg>`;
     case 'refunded': 
       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">

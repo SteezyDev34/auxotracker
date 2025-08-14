@@ -16,7 +16,7 @@ class ImportSportLeagues extends Command
      *
      * @var string
      */
-    protected $signature = 'sport:import-leagues {sport_slug} {--force : Forcer l\'import même si la ligue existe}';
+    protected $signature = 'sport:import-leagues {sport_slug} {--force : Forcer l\'import même si la ligue existe} {--no-cache : Ne pas utiliser le cache}';
 
     /**
      * La description de la commande console.
@@ -179,19 +179,206 @@ class ImportSportLeagues extends Command
     /**
      * Récupérer tous les pays/catégories depuis l'API pour un sport donné
      */
+    /**
+     * Liste des User-Agents pour la rotation
+     */
+    private $userAgents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+        'Mozilla/5.0 (iPad; CPU OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59'
+    ];
+    
+    /**
+     * Obtenir un User-Agent aléatoire
+     */
+    private function getRandomUserAgent()
+    {
+        return $this->userAgents[array_rand($this->userAgents)];
+    }
+    
+    /**
+     * Ajouter un délai aléatoire pour éviter la détection
+     */
+    private function addRandomDelay()
+    {
+        // Délai aléatoire entre 1 et 3 secondes
+        $delay = rand(1000, 3000);
+        usleep($delay * 1000); // usleep prend des microsecondes
+        return $delay / 1000; // Retourne le délai en secondes
+    }
+    
+    /**
+     * Répertoire de cache pour les réponses API
+     */
+    private $cacheDir = 'storage/app/sofascore_cache';
+    
+    /**
+     * Vérifie si le cache doit être utilisé
+     */
+    private function shouldUseCache()
+    {
+        return !$this->option('no-cache');
+    }
+    
+    /**
+     * Génère une clé de cache à partir d'une URL
+     */
+    private function getCacheKey($url)
+    {
+        return md5($url);
+    }
+    
+    /**
+     * Vérifie si une réponse est en cache et valide
+     */
+    private function getCachedResponse($url)
+    {
+        if (!$this->shouldUseCache()) {
+            return null;
+        }
+        
+        $cacheKey = $this->getCacheKey($url);
+        $cachePath = storage_path($this->cacheDir . '/' . $cacheKey . '.json');
+        
+        if (!file_exists($cachePath)) {
+            return null;
+        }
+        
+        // Vérifier si le cache est encore valide (24 heures)
+        $cacheTime = filemtime($cachePath);
+        $cacheAge = time() - $cacheTime;
+        $cacheValidityPeriod = 24 * 60 * 60; // 24 heures en secondes
+        
+        if ($cacheAge > $cacheValidityPeriod) {
+            $this->line("   🕒 Cache expiré (âge: " . round($cacheAge / 3600, 1) . " heures)");
+            return null;
+        }
+        
+        $this->line("   📂 Utilisation de la réponse en cache (âge: " . round($cacheAge / 60, 1) . " minutes)");
+        $cachedData = json_decode(file_get_contents($cachePath), true);
+        
+        // Créer une réponse simulée
+        $response = new \Illuminate\Http\Client\Response(new \GuzzleHttp\Psr7\Response(
+            $cachedData['status'],
+            $cachedData['headers'],
+            json_encode($cachedData['body'])
+        ));
+        
+        return $response;
+    }
+    
+    /**
+     * Sauvegarde une réponse en cache
+     */
+    private function cacheResponse($url, $response)
+    {
+        if (!$this->shouldUseCache() || !$response->successful()) {
+            return;
+        }
+        
+        $cacheKey = $this->getCacheKey($url);
+        $cacheDir = storage_path($this->cacheDir);
+        
+        // Créer le répertoire de cache s'il n'existe pas
+        if (!file_exists($cacheDir)) {
+            mkdir($cacheDir, 0755, true);
+        }
+        
+        $cachePath = $cacheDir . '/' . $cacheKey . '.json';
+        
+        $dataToCache = [
+            'url' => $url,
+            'status' => $response->status(),
+            'headers' => $response->headers(),
+            'body' => $response->json(),
+            'cached_at' => time()
+        ];
+        
+        file_put_contents($cachePath, json_encode($dataToCache, JSON_PRETTY_PRINT));
+        $this->line("   💾 Réponse mise en cache");
+    }
+    
+    /**
+     * Effectue une requête HTTP avec retry et backoff exponentiel
+     */
+    private function makeRequestWithRetry($url, $maxRetries = 3)
+    {
+        // Vérifier si la réponse est en cache
+        $cachedResponse = $this->getCachedResponse($url);
+        if ($cachedResponse) {
+            return $cachedResponse;
+        }
+        
+        $this->line("   🌐 Requête API en direct...");
+        
+        $attempt = 0;
+        $response = null;
+        $success = false;
+        
+        while (!$success && $attempt < $maxRetries) {
+            $attempt++;
+            
+            // Ajouter un délai exponentiel à partir de la deuxième tentative
+            if ($attempt > 1) {
+                $backoffDelay = pow(2, $attempt - 1) + rand(1, 1000) / 1000;
+                $this->line("   🔄 Tentative {$attempt}/{$maxRetries} après {$backoffDelay} secondes...");
+                sleep($backoffDelay);
+            } else {
+                $this->line("   🔄 Tentative {$attempt}/{$maxRetries}...");
+            }
+            
+            // Ajouter un délai aléatoire
+            $delay = $this->addRandomDelay();
+            
+            // Obtenir un User-Agent aléatoire
+            $userAgent = $this->getRandomUserAgent();
+            $this->line("   🔄 Utilisation du User-Agent: " . substr($userAgent, 0, 30) . "...");
+            
+            try {
+                $response = Http::timeout(30)
+                    ->withHeaders([
+                        'User-Agent' => $userAgent,
+                        'Accept' => 'application/json, text/plain, */*',
+                        'Accept-Language' => 'fr,fr-FR;q=0.9,en-US;q=0.8,en;q=0.7',
+                        'Origin' => 'https://www.sofascore.com',
+                        'Referer' => 'https://www.sofascore.com/',
+                        'Sec-Fetch-Dest' => 'empty',
+                        'Sec-Fetch-Mode' => 'cors',
+                        'Sec-Fetch-Site' => 'same-origin',
+                        'Cache-Control' => 'no-cache',
+                        'Pragma' => 'no-cache'
+                    ])
+                    ->get($url);
+                
+                $this->line("   📡 Réponse API reçue avec le statut: " . $response->status());
+                
+                // Si la réponse est réussie, on sort de la boucle
+                if ($response->successful()) {
+                    $success = true;
+                    // Mettre en cache la réponse réussie
+                    $this->cacheResponse($url, $response);
+                } else {
+                    $this->line("   ⚠️ Échec de la requête (statut {$response->status()}), nouvelle tentative...");
+                }
+            } catch (\Exception $e) {
+                $this->line("   ⚠️ Exception lors de la requête: {$e->getMessage()}");
+            }
+        }
+        
+        return $response;
+    }
+    
     private function fetchCountries($sportSlug)
     {
         try {
             $this->line('   🌐 Connexion à l\'API Sofascore...');
             
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept' => 'application/json',
-                    'Referer' => 'https://www.sofascore.com/'
-                ])
-                ->get("https://www.sofascore.com/api/v1/sport/{$sportSlug}/categories");
-            $this->line('   📡 Réponse API reçue avec le statut: ' . $response->status());
+            $url = "https://www.sofascore.com/api/v1/sport/{$sportSlug}/categories";
+            $response = $this->makeRequestWithRetry($url);
             
             if (!$response->successful()) {
                 $this->error('   ❌ Erreur lors de la récupération des pays: ' . $response->status());
@@ -235,15 +422,8 @@ class ImportSportLeagues extends Command
         try {
             $this->line("     🔍 Récupération des ligues pour le pays ID: {$countryId}");
             
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept' => 'application/json',
-                    'Referer' => 'https://www.sofascore.com/'
-                ])
-                ->get("https://www.sofascore.com/api/v1/category/{$countryId}/unique-tournaments");
-            
-            $this->line('     📡 Réponse ligues reçue avec le statut: ' . $response->status());
+            $url = "https://www.sofascore.com/api/v1/category/{$countryId}/unique-tournaments";
+            $response = $this->makeRequestWithRetry($url);
             
             if (!$response->successful()) {
                 $this->line("     ⚠️  Erreur lors de la récupération des ligues: {$response->status()}");

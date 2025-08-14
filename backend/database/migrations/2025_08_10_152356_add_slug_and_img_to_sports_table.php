@@ -11,17 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sports', function (Blueprint $table) {
-            // Ajouter le champ slug s'il n'existe pas
-            if (!Schema::hasColumn('sports', 'slug')) {
-                $table->string('slug')->nullable()->after('name')->comment('Slug généré à partir du nom du sport');
-            }
-            
-            // Ajouter le champ img s'il n'existe pas
-            if (!Schema::hasColumn('sports', 'img')) {
-                $table->string('img')->nullable()->after('slug')->comment('Nom du fichier image SVG');
-            }
-        });
+        if (Schema::hasTable('sports')) {
+            Schema::table('sports', function (Blueprint $table) {
+                if (!Schema::hasColumn('sports', 'slug')) {
+                    $table->string('slug')->unique()->after('name');
+                }
+                if (!Schema::hasColumn('sports', 'img')) {
+                    $table->string('img')->nullable()->after('slug');
+                }
+            });
+        }
     }
 
     /**

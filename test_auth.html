@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Authentification</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test d'Authentification</h1>
+        
+        <h2>1. Connexion</h2>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="test@example.com">
+        </div>
+        <div class="form-group">
+            <label for="password">Mot de passe:</label>
+            <input type="password" id="password" value="password123">
+        </div>
+        <button onclick="login()">Se connecter</button>
+        
+        <h2>2. Test Upload Avatar</h2>
+        <div class="form-group">
+            <label for="avatar">Choisir un avatar:</label>
+            <input type="file" id="avatar" accept="image/*">
+        </div>
+        <button onclick="uploadAvatar()">Uploader Avatar</button>
+        
+        <h2>3. Informations utilisateur</h2>
+        <button onclick="getUserInfo()">Récupérer infos utilisateur</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        let authToken = localStorage.getItem('token');
+        
+        function showResult(message, isSuccess = true) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.innerHTML = message;
+        }
+        
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.token) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    showResult(`✅ Connexion réussie !<br>Token: ${authToken.substring(0, 20)}...`);
+                } else {
+                    showResult(`❌ Échec de la connexion: ${data.message || 'Erreur inconnue'}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Erreur de connexion: ${error.message}`, false);
+            }
+        }
+        
+        async function uploadAvatar() {
+            const fileInput = document.getElementById('avatar');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showResult('❌ Veuillez sélectionner un fichier', false);
+                return;
+            }
+            
+            if (!authToken) {
+                showResult('❌ Veuillez vous connecter d\'abord', false);
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('avatar', file);
+            
+            try {
+                const response = await fetch(`${API_BASE}/user/avatar`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult(`✅ Avatar uploadé avec succès !<br>URL: ${data.avatar_url}`);
+                } else {
+                    showResult(`❌ Échec de l'upload: ${data.message || 'Erreur inconnue'}<br>Status: ${response.status}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Erreur d'upload: ${error.message}`, false);
+            }
+        }
+        
+        async function getUserInfo() {
+            if (!authToken) {
+                showResult('❌ Veuillez vous connecter d\'abord', false);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/user`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Informations utilisateur récupérées !<br>Email: ${data.email}<br>Username: ${data.username}`);
+                } else {
+                    showResult(`❌ Échec de récupération: ${data.message || 'Erreur inconnue'}<br>Status: ${response.status}`, false);
+                }
+            } catch (error) {
+                showResult(`❌ Erreur de récupération: ${error.message}`, false);
+            }
+        }
+        
+        // Afficher le token actuel s'il existe
+        if (authToken) {
+            showResult(`🔑 Token existant trouvé: ${authToken.substring(0, 20)}...`);
+        }
+    </script>
+</body>
+</html>

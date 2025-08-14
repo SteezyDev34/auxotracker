@@ -14,7 +14,7 @@ class ImportBasketballLeagues extends Command
     /**
      * Nom et signature de la commande
      */
-    protected $signature = 'basketball:import-leagues {--force : Forcer l\'importation même si des ligues existent déjà}';
+    protected $signature = 'basketball:import-leagues {--force : Forcer l\'importation même si des ligues existent déjà} {--no-cache : Ne pas utiliser le cache}';
 
     /**
      * Description de la commande
@@ -25,18 +25,40 @@ class ImportBasketballLeagues extends Command
      * URL de base de l'API Sofascore
      */
     private const SOFASCORE_BASE_URL = 'https://www.sofascore.com/api/v1';
+    
+    /**
+     * Liste des User-Agents pour la rotation
+     */
+    private const USER_AGENTS = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+        'Mozilla/5.0 (iPad; CPU OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36 OPR/78.0.4093.112',
+    ];
+    
+    /**
+     * Répertoire de cache pour les réponses API
+     */
+    private $cacheDir;
 
     /**
      * Exécuter la commande
      */
     public function handle()
     {
+        // Initialiser le répertoire de cache
+        $this->setCacheDirectory();
+        
         $this->info('🏀 Début de l\'importation des ligues de basketball...');
         
         try {
             // Récupérer les catégories (pays) de basketball
             $this->line('📡 Récupération des catégories de basketball...');
-            $categoriesResponse = Http::get(self::SOFASCORE_BASE_URL . '/sport/basketball/categories');
+            $categoriesResponse = $this->makeRequestWithRetry(self::SOFASCORE_BASE_URL . '/sport/basketball/categories');
             
             if (!$categoriesResponse->successful()) {
                 $this->error('❌ Erreur lors de la récupération des catégories: ' . $categoriesResponse->status());
@@ -95,7 +117,7 @@ class ImportBasketballLeagues extends Command
                 
                 // Récupérer les ligues pour ce pays
                 $this->line("     🔍 Récupération des ligues pour le pays ID: {$categoryData['id']}");
-                $leaguesResponse = Http::get(self::SOFASCORE_BASE_URL . "/category/{$categoryData['id']}/unique-tournaments");
+                $leaguesResponse = $this->makeRequestWithRetry(self::SOFASCORE_BASE_URL . "/category/{$categoryData['id']}/unique-tournaments");
                 
                 if (!$leaguesResponse->successful()) {
                     $this->line("     ❌ Erreur lors de la récupération des ligues: {$leaguesResponse->status()}");
@@ -295,5 +317,179 @@ class ImportBasketballLeagues extends Command
             ]);
             return null;
         }
+    }
+    
+    /**
+     * Définit le répertoire de cache pour les réponses API
+     */
+    private function setCacheDirectory()
+    {
+        $this->cacheDir = storage_path('app/cache/sofascore/basketball');
+        
+        if (!file_exists($this->cacheDir)) {
+            mkdir($this->cacheDir, 0755, true);
+        }
+    }
+    
+    /**
+     * Vérifie si le cache doit être utilisé
+     */
+    private function shouldUseCache()
+    {
+        return !$this->option('no-cache');
+    }
+    
+    /**
+     * Génère une clé de cache pour une URL
+     */
+    private function generateCacheKey($url)
+    {
+        return md5($url);
+    }
+    
+    /**
+     * Récupère une réponse mise en cache
+     */
+    private function getCachedResponse($url)
+    {
+        if (!$this->shouldUseCache()) {
+            return null;
+        }
+        
+        $cacheKey = $this->generateCacheKey($url);
+        $cacheFile = $this->cacheDir . '/' . $cacheKey . '.json';
+        
+        if (file_exists($cacheFile)) {
+            $cacheData = json_decode(file_get_contents($cacheFile), true);
+            
+            // Vérifier si le cache est encore valide (24 heures)
+            if (isset($cacheData['timestamp']) && (time() - $cacheData['timestamp']) < 86400) {
+                $this->line("     📦 Utilisation de la réponse en cache pour: " . basename($url));
+                
+                // Recréer une réponse HTTP à partir des données en cache
+                $response = Http::response(
+                    $cacheData['body'],
+                    $cacheData['status'],
+                    $cacheData['headers']
+                );
+                
+                return $response;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Sauvegarde une réponse en cache
+     */
+    private function cacheResponse($url, $response)
+    {
+        if (!$this->shouldUseCache() || !$response->successful()) {
+            return;
+        }
+        
+        $cacheKey = $this->generateCacheKey($url);
+        $cacheFile = $this->cacheDir . '/' . $cacheKey . '.json';
+        
+        $cacheData = [
+            'timestamp' => time(),
+            'url' => $url,
+            'status' => $response->status(),
+            'headers' => $response->headers(),
+            'body' => $response->body(),
+        ];
+        
+        file_put_contents($cacheFile, json_encode($cacheData));
+        $this->line("     💾 Réponse mise en cache pour: " . basename($url));
+    }
+    
+    /**
+     * Effectue une requête HTTP avec rotation de User-Agent, délais aléatoires et retry
+     */
+    private function makeRequestWithRetry($url, $maxRetries = 3)
+    {
+        // Vérifier d'abord si nous avons une réponse en cache
+        $cachedResponse = $this->getCachedResponse($url);
+        if ($cachedResponse) {
+            return $cachedResponse;
+        }
+        
+        $attempt = 0;
+        $lastException = null;
+        
+        while ($attempt < $maxRetries) {
+            try {
+                // Ajouter un délai aléatoire pour éviter la détection de bot
+                $delay = rand(1000, 3000);
+                usleep($delay * 1000); // Convertir en microsecondes
+                
+                // Sélectionner un User-Agent aléatoire
+                $userAgent = self::USER_AGENTS[array_rand(self::USER_AGENTS)];
+                
+                $this->line("     🔄 Tentative de requête #" . ($attempt + 1) . " pour: " . basename($url));
+                
+                // Effectuer la requête avec des en-têtes améliorés
+                $response = Http::timeout(30)
+                    ->withHeaders([
+                        'User-Agent' => $userAgent,
+                        'Accept' => 'application/json, text/plain, */*',
+                        'Accept-Language' => 'fr,fr-FR;q=0.9,en-US;q=0.8,en;q=0.7',
+                        'Origin' => 'https://www.sofascore.com',
+                        'Referer' => 'https://www.sofascore.com/basketball',
+                        'Sec-Fetch-Dest' => 'empty',
+                        'Sec-Fetch-Mode' => 'cors',
+                        'Sec-Fetch-Site' => 'same-origin',
+                        'Cache-Control' => 'no-cache',
+                        'Pragma' => 'no-cache',
+                    ])
+                    ->get($url);
+                
+                // Si la requête a réussi, mettre en cache et retourner la réponse
+                if ($response->successful()) {
+                    $this->cacheResponse($url, $response);
+                    return $response;
+                }
+                
+                // Si nous avons une erreur 403, augmenter le délai et réessayer
+                if ($response->status() === 403) {
+                    $this->line("     ⚠️ Erreur 403 reçue, nouvelle tentative avec délai plus long...");
+                    $attempt++;
+                    // Backoff exponentiel
+                    $backoffDelay = pow(2, $attempt) * 1000;
+                    usleep($backoffDelay * 1000);
+                    continue;
+                }
+                
+                // Pour les autres erreurs, retourner la réponse telle quelle
+                return $response;
+                
+            } catch (\Exception $e) {
+                $lastException = $e;
+                $this->line("     ⚠️ Erreur lors de la requête: {$e->getMessage()}");
+                $attempt++;
+                
+                // Backoff exponentiel
+                $backoffDelay = pow(2, $attempt) * 1000;
+                usleep($backoffDelay * 1000);
+            }
+        }
+        
+        // Si toutes les tentatives ont échoué, créer une réponse d'erreur
+        $this->error("     ❌ Toutes les tentatives ont échoué pour: " . basename($url));
+        
+        if ($lastException) {
+            return Http::response(
+                json_encode(['error' => $lastException->getMessage()]),
+                500,
+                ['Content-Type' => 'application/json']
+            );
+        }
+        
+        return Http::response(
+            json_encode(['error' => 'Maximum retry attempts reached']),
+            500,
+            ['Content-Type' => 'application/json']
+        );
     }
 }

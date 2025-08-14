@@ -24,9 +24,22 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'username' => fake()->userName(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'user_lastname' => fake()->lastName(),
+            'user_firstname' => fake()->firstName(),
+            'user_profile_picture' => 'user.png',
+            'user_banner_picture' => 'cover.jpg',
+            'user_level' => 'debutant',
+            'user_birthdate' => fake()->date(),
+            'user_language' => fake()->randomElement(['fr', 'en']),
+            'user_currency' => fake()->randomElement(['EUR', 'USD']),
+            'user_sort_bets_by' => null,
+            'user_welcome_page' => '1',
+            'user_bookmaker_list' => null,
+            'user_sport_list' => null,
+            'role' => 'user',
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];

@@ -62,6 +62,7 @@ const showInPlayStakeInfo = ref(false)
 const showDepositInfo = ref(false)
 const showWithdrawInfo = ref(false);
 const showMaxWinStreakInfo = ref(false);
+const showWinStreakInfo = ref(false);
 const showMaxLoseStreakInfo = ref(false);
 const showAvgStakeInfo = ref(false);
 const showMaxStakeInfo = ref(false);
@@ -78,7 +79,7 @@ const allPopupRefs = [
   showPendingBetsInfo, showCancelledBetsInfo, showInitialCapitalInfo, showCurrentCapitalInfo,
   showProfitInfo, showRoiInfo, showProgressionInfo, showWinRateInfo, showDrawdownInfo,
   showTotalStakeInfo, showInPlayStakeInfo, showDepositInfo, showWithdrawInfo,
-  showMaxWinStreakInfo, showMaxLoseStreakInfo, showAvgStakeInfo,
+  showMaxWinStreakInfo, showWinStreakInfo, showMaxLoseStreakInfo, showAvgStakeInfo,
   showMaxStakeInfo,
   showMinStakeInfo,
   showAvgOddsInfo, showBiggestWonOddsInfo, showSmallestWonOddsInfo, showBiggestProfitInfo, showBiggestLossInfo
@@ -443,7 +444,7 @@ watch(filters, loadAll, { deep: true });
     </div>
     <div class="col-span-12 md:col-span-2 card p-4 relative stats-card-container">
       <div class="text-muted-color text-sm flex items-center gap-2">
-        Paris en cours
+        Paris en attente
         <i class="pi pi-info-circle text-xs cursor-pointer hover:text-primary" 
            @click="showPendingBetsInfo = !showPendingBetsInfo"
            v-tooltip.top="'Cliquez pour plus d\'informations'"></i>
@@ -455,9 +456,9 @@ watch(filters, loadAll, { deep: true });
            class="absolute z-10 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm max-w-xs"
            style="top: 100%; left: 0;"
            @click.stop>
-        <div class="font-semibold mb-1">Paris en cours</div>
+        <div class="font-semibold mb-1">Paris en attente</div>
         <div class="text-gray-600">
-          Nombre de paris qui sont encore en attente de résultat.
+          Nombre de paris dont le résultat n'est pas encore connu ou en cours de traitement.
         </div>
         <div class="absolute -top-2 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
         <button @click="showPendingBetsInfo = false" 
@@ -468,24 +469,24 @@ watch(filters, loadAll, { deep: true });
     </div>
     <div class="col-span-12 md:col-span-2 card p-4 relative stats-card-container">
       <div class="text-muted-color text-sm flex items-center gap-2">
-        Paris annulé
+        Séries gagnantes
         <i class="pi pi-info-circle text-xs cursor-pointer hover:text-primary" 
-           @click="showCancelledBetsInfo = !showCancelledBetsInfo"
+           @click="showWinStreakInfo = !showWinStreakInfo"
            v-tooltip.top="'Cliquez pour plus d\'informations'"></i>
       </div>
-      <div class="text-2xl font-semibold">{{ computedStats.pendingBets }}</div>
+      <div class="text-2xl font-semibold">{{ computedStats.maxWinStreak }}</div>
       
       <!-- Popup d'information -->
-      <div v-if="showCancelledBetsInfo" 
+      <div v-if="showWinStreakInfo" 
            class="absolute z-10 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm max-w-xs"
            style="top: 100%; left: 0;"
            @click.stop>
-        <div class="font-semibold mb-1">Paris annulé</div>
+        <div class="font-semibold mb-1">Séries gagnantes</div>
         <div class="text-gray-600">
-          Nombre de paris qui ont été annulés avant le début de l'événement.
+          Nombre maximum de paris gagnés consécutivement sur la période sélectionnée.
         </div>
         <div class="absolute -top-2 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
-        <button @click="showCancelledBetsInfo = false" 
+        <button @click="showWinStreakInfo = false" 
                 class="absolute top-1 right-1 text-gray-400 hover:text-gray-600 text-xs">
           <i class="pi pi-times"></i>
         </button>

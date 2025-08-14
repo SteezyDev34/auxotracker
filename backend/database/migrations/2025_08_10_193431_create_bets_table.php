@@ -11,16 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bets', function (Blueprint $table) {
-            $table->id();
-            $table->date('bet_date');
-            $table->decimal('global_odds', 8, 2);
-            $table->string('bet_code');
-            $table->enum('result', ['won', 'lost', 'void', 'pending'])->default('pending');
-            $table->foreignId('sport_id')->constrained()->onDelete('cascade');
-            $table->decimal('stake', 10, 2);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('bets')) {
+            Schema::create('bets', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->foreignId('bookmaker_id')->constrained()->onDelete('cascade');
+                $table->foreignId('sport_id')->constrained()->onDelete('cascade');
+                $table->string('type');
+                $table->string('status');
+                $table->decimal('stake', 8, 2);
+                $table->decimal('profit', 8, 2)->nullable();
+                $table->decimal('odd', 8, 2);
+                $table->datetime('bet_date');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

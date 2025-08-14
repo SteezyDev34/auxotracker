@@ -102,7 +102,8 @@ class BetController extends Controller
             AVG(global_odds) as average_odds,
             COUNT(CASE WHEN result = "won" THEN 1 END) as won_bets,
             COUNT(CASE WHEN result = "lost" THEN 1 END) as lost_bets,
-            COUNT(CASE WHEN result = "pending" OR result IS NULL THEN 1 END) as pending_bets
+            COUNT(CASE WHEN result = "pending" OR result IS NULL THEN 1 END) as pending_bets,
+
         ')->first();
 
         $winRate = $stats->total_bets > 0 ? ($stats->won_bets / $stats->total_bets) * 100 : 0;
@@ -382,7 +383,7 @@ class BetController extends Controller
         } elseif ($bet->result === 'void') {
             return 0.0;
         }
-        return 0.0; // pending ou null
+        return 0.0;
     }
 
     /**

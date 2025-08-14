@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sports', function (Blueprint $table) {
-            // Ajouter le champ sofascore_id s'il n'existe pas
-            if (!Schema::hasColumn('sports', 'sofascore_id')) {
+        if (Schema::hasTable('sports') && !Schema::hasColumn('sports', 'sofascore_id')) {
+            Schema::table('sports', function (Blueprint $table) {
                 $table->string('sofascore_id')->nullable()->after('img')->comment('ID Sofascore du sport');
-            }
-        });
+            });
+        }
     }
 
     /**

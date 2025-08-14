@@ -116,7 +116,31 @@ const router = createRouter({
                     path: '/documentation',
                     name: 'documentation',
                     component: () => import('@/views/pages/Documentation.vue')
-                }
+                },
+                {
+                    path: '/ajouter-pari',
+                    name: 'ajouterPari',
+                    component: () => import('@/components/add-bet/AddBetForm.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: '/mes-paris',
+                    name: 'mesParis',
+                    component: () => import('@/components/dashboard/BetsHistoryWidget.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: '/profile/bookmakers',
+                    name: 'profileBookmakers',
+                    component: () => import('@/views/profile/bookmakers.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: '/profile/bankrolls',
+                    name: 'profileBankrolls',
+                    component: () => import('@/views/profile/bankrolls.vue'),
+                    meta: { requiresAuth: true }
+                },
             ]
         },
         {
@@ -155,7 +179,7 @@ const router = createRouter({
     ]
 });
 // ➤ Vérifier l'authentification avant de charger une route
-/* router.beforeEach((to, from, next) => {
+/*  router.beforeEach((to, from, next) => {
     const isAuthenticated = !!localStorage.getItem('token'); // Vérifie si un token est stocké
 
     if (to.meta.requiresAuth && !isAuthenticated) {

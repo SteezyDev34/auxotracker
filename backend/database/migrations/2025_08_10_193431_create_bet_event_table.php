@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bet_event', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('bet_id')->constrained()->onDelete('cascade');
-            $table->foreignId('event_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
-            
-            // Index unique pour éviter les doublons
-            $table->unique(['bet_id', 'event_id']);
-        });
+        if (!Schema::hasTable('bet_event')) {
+            Schema::create('bet_event', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('bet_id')->constrained()->onDelete('cascade');
+                $table->foreignId('event_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                
+                // Index unique pour éviter les doublons
+                $table->unique(['bet_id', 'event_id']);
+            });
+        }
     }
 
     /**

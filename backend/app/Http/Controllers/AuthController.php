@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
+
 class AuthController extends Controller
 {
     /**
@@ -21,6 +23,7 @@ class AuthController extends Controller
 
         // Tentative de connexion de l'utilisateur
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            /** @var \App\Models\User $user */
             $user = Auth::user();
             
             // Supprimer les anciens tokens
@@ -68,16 +71,18 @@ class AuthController extends Controller
     }
 
     /**
-     * Déconnexion de l'utilisateur et suppression du token
-     */
-    public function logout(Request $request)
-    {
-        if ($request->user()) {
-            $request->user()->currentAccessToken()->delete();
-        }
-        
-        return response()->json(['success' => true, 'message' => 'Déconnexion réussie']);
-    }
+      * Déconnexion de l'utilisateur et suppression du token
+      */
+     public function logout(Request $request)
+     {
+         /** @var \App\Models\User $user */
+         $user = $request->user();
+         if ($user) {
+             $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
+         }
+         
+         return response()->json(['success' => true, 'message' => 'Déconnexion réussie']);
+     }
 
     /**
      * Récupérer les informations de l'utilisateur connecté

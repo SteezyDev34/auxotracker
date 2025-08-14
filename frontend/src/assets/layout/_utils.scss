@@ -8,12 +8,8 @@
 .card {
     background: var(--surface-card);
     padding: 2rem;
-    margin-bottom: 2rem;
+    margin-bottom: 0.5rem;
     border-radius: var(--content-border-radius);
-
-    &:last-child {
-        margin-bottom: 0;
-    }
 }
 
 @media (max-width: 768px) {

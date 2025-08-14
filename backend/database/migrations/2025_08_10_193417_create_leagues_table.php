@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('leagues', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->foreignId('country_id')->constrained()->onDelete('cascade');
-            $table->foreignId('sport_id')->constrained()->onDelete('cascade');
-            $table->string('slug')->unique();
-            $table->string('img')->nullable();
-            $table->string('sofascore_id')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('leagues')) {
+            Schema::create('leagues', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('slug')->unique();
+                $table->string('img')->nullable();
+                $table->string('sofascore_id')->nullable();
+                $table->foreignId('sport_id')->constrained()->onDelete('cascade');
+                $table->foreignId('country_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

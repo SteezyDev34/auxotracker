@@ -13,12 +13,19 @@ const model = ref([
         items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
     },
     {
+        label: 'Paris',
+        items: [
+            { label: 'Mes paris', icon: 'pi pi-fw pi-list', to: '/mes-paris' },
+            { label: 'Ajouter un pari', icon: 'pi pi-fw pi-plus', to: '/ajouter-pari' }
+        ]
+    },
+    {
         label: 'Mon Profil',
         items: [
             { label: 'Mes informations', icon: 'pi pi-fw pi-user', to: '/profile/mes-informations' },
-            { label: 'Mes Bookmakers', icon: 'pi pi-fw pi-wallet', to: '/uikit/input' },
+            { label: 'Mes Bookmakers', icon: 'pi pi-fw pi-wallet', to: '/profile/bookmakers' },
             { label: 'Mes Sports', icon: 'pi pi-fw pi-star', to: '/profil/inf' },
-            { label: 'Mes Bankrolls', icon: 'pi pi-fw pi-dollar', to: '/uikit/input' },
+            { label: 'Mes Bankrolls', icon: 'pi pi-fw pi-dollar', to: '/profile/bankrolls' },
             { label: 'Mes Tipsters', icon: 'pi pi-fw pi-users', to: '/uikit/input' },
 
         ]

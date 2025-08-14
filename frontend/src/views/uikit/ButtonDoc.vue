@@ -1,5 +1,8 @@
 <script setup>
 import { ref } from 'vue';
+import Button from 'primevue/button';
+import ButtonGroup from 'primevue/buttongroup';
+import SplitButton from 'primevue/splitbutton';
 
 const items = ref([
     {

@@ -781,17 +781,16 @@ const formData = ref({
   team2: null,
   global_odds: null,
   stake: null,
-  result: 'pending'
+  result: 'void'
 });
 
 
 
 // Options pour le résultat
 const resultOptions = [
-  { label: 'En attente', value: 'pending' },
+  { label: 'Annulé', value: 'void' },
   { label: 'Gagné', value: 'won' },
-  { label: 'Perdu', value: 'lost' },
-  { label: 'Annulé', value: 'void' }
+  { label: 'Perdu', value: 'lost' }
 ];
 
 // Computed

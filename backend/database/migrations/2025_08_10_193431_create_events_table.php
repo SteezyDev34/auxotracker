@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('team1_id')->constrained('teams')->onDelete('cascade');
-            $table->foreignId('team2_id')->constrained('teams')->onDelete('cascade');
-            $table->foreignId('league_id')->constrained()->onDelete('cascade');
-            $table->string('type');
-            $table->string('market');
-            $table->decimal('odd', 8, 2);
-            $table->datetime('event_date');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('events')) {
+            Schema::create('events', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('team1_id')->constrained('teams')->onDelete('cascade');
+                $table->foreignId('team2_id')->constrained('teams')->onDelete('cascade');
+                $table->foreignId('league_id')->constrained()->onDelete('cascade');
+                $table->string('type');
+                $table->string('market');
+                $table->decimal('odd', 8, 2);
+                $table->datetime('event_date');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

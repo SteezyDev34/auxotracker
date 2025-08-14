@@ -112,7 +112,6 @@ class Bet extends Model
             'won' => 'success',
             'lost' => 'danger',
             'void' => 'secondary',
-            'pending' => 'warning',
             default => 'info'
         };
     }
@@ -150,4 +149,4 @@ class Bet extends Model
     {
         return $this->sport ? $this->sport->name : 'Sport inconnu';
     }
-} 
+}

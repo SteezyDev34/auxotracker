@@ -82,9 +82,9 @@ watch(
 </script>
 
 <template>
-    <Fluid class="grid grid-cols-12 gap-8">
-        <div class="col-span-12 xl:col-span-12">
-            <div class="card">
+    <Fluid class="flex flex-col md:flex-row gap-8">
+        <div class="md:w-1/2">
+            <div class="card flex flex-col gap-4">
                 <Chart type="line" :data="lineData" :options="lineOptions" class="w-full"></Chart>
             </div>
         </div>

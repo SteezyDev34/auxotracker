@@ -8,6 +8,9 @@ use App\Http\Controllers\TeamLogoController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\BookmakerController;
+use App\Http\Controllers\UserBankrollController;
+use App\Http\Controllers\UserBookmakerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -90,4 +93,24 @@ Route::middleware('auth:sanctum')->group(function () {
 */
 
 Route::middleware('auth:sanctum')->post('/user/avatar', [UserController::class, 'updateAvatar']);
+Route::middleware('auth:sanctum')->delete('/user/avatar', [UserController::class, 'deleteAvatar']);
+Route::middleware('auth:sanctum')->post('/user/settings', [UserController::class, 'updateSettings']);
+
+// Routes pour les bookmakers
+Route::get('/bookmakers', [BookmakerController::class, 'index']);
+Route::get('/bookmakers/{id}', [BookmakerController::class, 'show']);
+
+// Routes protégées pour les bankrolls et bookmakers utilisateur
+Route::middleware('auth:sanctum')->group(function () {
+    // Routes pour les bankrolls de l'utilisateur
+    Route::apiResource('bankrolls', UserBankrollController::class);
+    
+    // Routes pour les associations utilisateur-bookmaker
+    Route::apiResource('user-bookmakers', UserBookmakerController::class);
+    
+    // Routes admin pour la gestion des bookmakers (à protéger davantage si nécessaire)
+    Route::post('/bookmakers', [BookmakerController::class, 'store']);
+    Route::put('/bookmakers/{id}', [BookmakerController::class, 'update']);
+    Route::delete('/bookmakers/{id}', [BookmakerController::class, 'destroy']);
+});
 

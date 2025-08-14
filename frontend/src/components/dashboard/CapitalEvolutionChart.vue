@@ -1,5 +1,5 @@
 <template>
-    <div class="card">
+    <div class="card gap-2">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-semibold">Évolution du capital</h3>
             <div class="flex gap-2">
@@ -153,15 +153,14 @@
                 />
             </div>
         </div>
-
+        </div>
         <!-- Statistiques -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-            <div class="text-center p-3 bg-white rounded-lg shadow-sm border border-gray-100">
+         <div class="grid grid-cols-12 gap-2 lg:gap-8 text-center">
+            <div class="card col-span-6 lg:col-span-6 xl:col-span-3">
                 <div class="text-2xl font-bold text-blue-600">{{ formatCurrency(currentCapital) }}</div>
-                <div class="text-sm text-gray-600">Capital actuel</div>
+                <div class="text-sm">Capital actuel</div>
             </div>
-            <div class="text-center p-3 rounded-lg shadow-sm border border-gray-100"
-            :class="totalProfit < 0 ? 'bg-white' : 'bg-white'">
+            <div class="card col-span-6 lg:col-span-3 xl:col-span-3">
                 <div 
                     class="text-2xl font-bold"
                     :class="totalProfit < 0 ? 'text-red-600' : 'text-green-600'"
@@ -170,8 +169,7 @@
                 </div>
                 <div class="text-sm text-gray-600">Profit total</div>
             </div>
-            <div class="text-center p-3 bg-white rounded-lg shadow-sm border border-gray-100"
-            :class="profitPercentage < 0 ? 'bg-white' : 'bg-white'">
+            <div class="card col-span-6 lg:col-span-3 xl:col-span-3">
                 <div 
                     class="text-2xl font-bold"
                     :class="profitPercentage < 0 ? 'text-red-600' : 'text-green-600'"
@@ -180,12 +178,11 @@
                 </div>
                 <div class="text-sm text-gray-600">Rendement</div>
             </div>
-            <div class="text-center p-3 bg-white rounded-lg shadow-sm border border-gray-100">
+            <div class="card col-span-6 lg:col-span-3 xl:col-span-3">
                 <div class="text-2xl font-bold text-blue-600">{{ totalBets }}</div>
                 <div class="text-sm text-gray-600">Total paris</div>
             </div>
         </div>
-    </div>
 </template>
 
 <script setup>
@@ -554,13 +551,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.card {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    border: 1px solid #f3f4f6;
-}
 
 .field label {
     color: #374151;
