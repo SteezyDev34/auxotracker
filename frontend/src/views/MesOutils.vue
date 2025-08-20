@@ -2,7 +2,10 @@
 import { ref } from 'vue';
 import Card from 'primevue/card';
 import Fluid from 'primevue/fluid';
-import TabView from 'primevue/tabview';
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 
 // Import des composants calculateurs
@@ -12,7 +15,7 @@ import TauxRetourJoueur from '@/components/calculators/TauxRetourJoueur.vue';
 import Dutching from '@/components/calculators/Dutching.vue';
 
 // Onglet actif par défaut
-const activeTab = ref(0);
+const activeTab = ref('0');
 </script>
 
 <template>
@@ -32,23 +35,31 @@ const activeTab = ref(0);
             <!-- Onglets pour les différents calculateurs -->
             <Card>
                 <template #content>
-                    <TabView v-model:activeIndex="activeTab">
-                        <TabPanel header="Remboursé si Nul">
-                            <RembourseSiNul />
-                        </TabPanel>
-                        
-                        <TabPanel header="Double Chance">
-                            <DoubleChance />
-                        </TabPanel>
-                        
-                        <TabPanel header="Taux de Retour Joueur">
-                            <TauxRetourJoueur />
-                        </TabPanel>
-                        
-                        <TabPanel header="Dutching">
-                            <Dutching />
-                        </TabPanel>
-                    </TabView>
+                    <Tabs v-model="activeTab">
+                        <TabList>
+                            <Tab value="0">Remboursé si Nul</Tab>
+                            <Tab value="1">Double Chance</Tab>
+                            <Tab value="2">Taux de Retour Joueur</Tab>
+                            <Tab value="3">Dutching</Tab>
+                        </TabList>
+                        <TabPanels>
+                            <TabPanel value="0">
+                                <RembourseSiNul />
+                            </TabPanel>
+                            
+                            <TabPanel value="1">
+                                <DoubleChance />
+                            </TabPanel>
+                            
+                            <TabPanel value="2">
+                                <TauxRetourJoueur />
+                            </TabPanel>
+                            
+                            <TabPanel value="3">
+                                <Dutching />
+                            </TabPanel>
+                        </TabPanels>
+                    </Tabs>
                 </template>
             </Card>
         </div>

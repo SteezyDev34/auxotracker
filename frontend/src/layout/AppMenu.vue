@@ -40,6 +40,12 @@ const model = ref([
         ]
     },
     {
+        label: 'Simulateur',
+        items: [
+            { label: 'Martingale', icon: 'pi pi-fw pi-chart-line', to: '/simulateur/martingale' }
+        ]
+    },
+    {
         label: 'UI Components',
         items: [
             { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout' },

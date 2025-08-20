@@ -183,6 +183,12 @@ const router = createRouter({
                     component: () => import('@/components/calculators/Dutching.vue'),
                     meta: { requiresAuth: true }
                 },
+                {
+                    path: '/simulateur/martingale',
+                    name: 'martingale',
+                    component: () => import('@/views/Martingale.vue'),
+                    meta: { requiresAuth: true }
+                },
             ]
         },
         {
