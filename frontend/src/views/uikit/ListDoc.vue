@@ -1,6 +1,12 @@
 <script setup>
 import { ProductService } from '@/service/ProductService';
 import { onMounted, ref } from 'vue';
+import DataView from 'primevue/dataview';
+import SelectButton from 'primevue/selectbutton';
+import Tag from 'primevue/tag';
+import Button from 'primevue/button';
+import PickList from 'primevue/picklist';
+import OrderList from 'primevue/orderlist';
 
 const products = ref(null);
 const picklistProducts = ref(null);

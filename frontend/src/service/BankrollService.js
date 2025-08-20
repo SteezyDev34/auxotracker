@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.auxotracker.lan/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL + '/api' || 'https://api.auxotracker.lan/api';
 
 export const BankrollService = {
     // Récupérer toutes les bankrolls de l'utilisateur
@@ -144,6 +144,103 @@ export const BankrollService = {
             return data.user_bookmakers.filter(bookmaker => bookmaker.users_bankrolls_id === bankrollId);
         } catch (error) {
             console.error(`Erreur lors de la récupération des bookmakers pour la bankroll ${bankrollId}:`, error);
+            throw error;
+        }
+    },
+
+    // Récupérer la liste de tous les bookmakers disponibles
+    async getBookmakers() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/bookmakers`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.bookmakers || data;
+        } catch (error) {
+            console.error('Erreur lors de la récupération des bookmakers:', error);
+            throw error;
+        }
+    },
+
+    // Associer un bookmaker à une bankroll
+    async createUserBookmaker(userBookmakerData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user-bookmakers`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(userBookmakerData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Erreur lors de l\'association du bookmaker:', error);
+            throw error;
+        }
+    },
+
+    // Mettre à jour une association utilisateur-bookmaker
+    async updateUserBookmaker(userBookmakerId, userBookmakerData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user-bookmakers/${userBookmakerId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(userBookmakerData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour de l\'association:', error);
+            throw error;
+        }
+    },
+
+    // Supprimer une association utilisateur-bookmaker
+    async deleteUserBookmaker(userBookmakerId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user-bookmakers/${userBookmakerId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Erreur lors de la suppression de l\'association:', error);
             throw error;
         }
     }

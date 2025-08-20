@@ -36,7 +36,7 @@ const apiStats = ref({
   total_losses: 0,
   total_profit_loss: 0,
   average_odds: 0,
-  won_bets: 0,
+  win_bets: 0,
   lost_bets: 0,
   pending_bets: 0,
   win_rate: 0,
@@ -45,7 +45,7 @@ const apiStats = ref({
 
 // Variables pour contrôler l'affichage des popups d'information
 const showTotalBetsInfo = ref(false);
-const showWonBetsInfo = ref(false);
+const showWinBetsInfo = ref(false);
 const showLostBetsInfo = ref(false);
 const showVoidBetsInfo = ref(false);
 const showPendingBetsInfo = ref(false);
@@ -68,21 +68,21 @@ const showAvgStakeInfo = ref(false);
 const showMaxStakeInfo = ref(false);
 const showMinStakeInfo = ref(false);
 const showAvgOddsInfo = ref(false);
-const showBiggestWonOddsInfo = ref(false);
-const showSmallestWonOddsInfo = ref(false);
+const showBiggestWinOddsInfo = ref(false);
+const showSmallestWinOddsInfo = ref(false);
 const showBiggestProfitInfo = ref(false);
 const showBiggestLossInfo = ref(false);
 
 // Liste de toutes les variables de popup
 const allPopupRefs = [
-  showTotalBetsInfo, showWonBetsInfo, showLostBetsInfo, showVoidBetsInfo,
+  showTotalBetsInfo, showWinBetsInfo, showLostBetsInfo, showVoidBetsInfo,
   showPendingBetsInfo, showCancelledBetsInfo, showInitialCapitalInfo, showCurrentCapitalInfo,
   showProfitInfo, showRoiInfo, showProgressionInfo, showWinRateInfo, showDrawdownInfo,
   showTotalStakeInfo, showInPlayStakeInfo, showDepositInfo, showWithdrawInfo,
   showMaxWinStreakInfo, showWinStreakInfo, showMaxLoseStreakInfo, showAvgStakeInfo,
   showMaxStakeInfo,
   showMinStakeInfo,
-  showAvgOddsInfo, showBiggestWonOddsInfo, showSmallestWonOddsInfo, showBiggestProfitInfo, showBiggestLossInfo
+  showAvgOddsInfo, showBiggestWinOddsInfo, showSmallestWinOddsInfo, showBiggestProfitInfo, showBiggestLossInfo
 ];
 
 // Gestionnaire pour fermer les popups en cliquant en dehors
@@ -112,7 +112,7 @@ onUnmounted(() => {
 const apiDetailedStats = ref({
   in_play_stake: null,
   max_stake: null,
-  biggest_won_odds: null,
+  biggest_win_odds: null,
   biggest_profit: null,
   biggest_loss: null,
   max_win_streak: null,
@@ -278,10 +278,10 @@ const computedStats = computed(() => {
 
     const totalBets = Number(s.total_bets) || 0;
     
-    const won = s.won_bets || 0;
+    const win = s.win_bets || 0;
     const lost = s.lost_bets || 0;
   const pending = s.pending_bets || 0;
-  const voided = Math.max(totalBets - won - lost - pending, 0);
+  const voided = Math.max(totalBets - win - lost - pending, 0);
 
   const initial = c.initial_capital || props.initialCapital;
   const current = c.current_capital || initial;
@@ -300,7 +300,7 @@ const computedStats = computed(() => {
     drawdown,
     initialCapital: initial,
     currentCapital: current,
-    wonBets: won,
+    winBets: win,
     lostBets: lost,
     voidBets: voided,
     pendingBets: pending,
@@ -315,8 +315,8 @@ const computedStats = computed(() => {
     maxStake: Number(d.max_stake) || 0,
     minStake: Number(d.min_stake) || 0,
     avgOdds: Number(s.average_odds) || 0,
-    biggestWonOdds: Number(d.biggest_won_odds) || 0,
-    smallestWonOdds: Number(d.smallest_won_odds) || 0,
+    biggestWinOdds: Number(d.biggest_win_odds) || 0,
+    smallestWinOdds: Number(d.smallest_win_odds) || 0,
     biggestProfit: Number(d.biggest_profit) || 0,
     biggestLoss: Number(d.biggest_loss) || 0
   };
@@ -371,13 +371,13 @@ watch(filters, loadAll, { deep: true });
       <div class="text-muted-color text-sm flex items-center gap-2">
         Paris gagnants
         <i class="pi pi-info-circle text-xs cursor-pointer hover:text-primary" 
-           @click="showWonBetsInfo = !showWonBetsInfo"
+           @click="showWinBetsInfo = !showWinBetsInfo"
            v-tooltip.top="'Cliquez pour plus d\'informations'"></i>
       </div>
-      <div class="text-2xl font-semibold">{{ computedStats.wonBets }}</div>
+      <div class="text-2xl font-semibold">{{ computedStats.winBets }}</div>
       
       <!-- Popup d'information -->
-      <div v-if="showWonBetsInfo" 
+      <div v-if="showWinBetsInfo" 
            class="absolute z-10 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm max-w-xs"
            style="top: 100%; left: 0;"
            @click.stop>
@@ -386,7 +386,7 @@ watch(filters, loadAll, { deep: true });
           Nombre de paris qui ont été gagnés sur la période sélectionnée.
         </div>
         <div class="absolute -top-2 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
-        <button @click="showWonBetsInfo = false" 
+        <button @click="showWinBetsInfo = false" 
                 class="absolute top-1 right-1 text-gray-400 hover:text-gray-600 text-xs">
           <i class="pi pi-times"></i>
         </button>
@@ -937,13 +937,13 @@ watch(filters, loadAll, { deep: true });
       <div class="text-muted-color text-sm flex items-center gap-2">
         Plus grosse cote gagnée
         <i class="pi pi-info-circle text-xs cursor-pointer hover:text-primary" 
-           @click="showBiggestWonOddsInfo = !showBiggestWonOddsInfo"
+           @click="showBiggestWinOddsInfo = !showBiggestWinOddsInfo"
            v-tooltip.top="'Cliquez pour plus d\'informations'"></i>
       </div>
-      <div class="text-2xl font-semibold">{{ computedStats.biggestWonOdds ?? '—' }}</div>
+      <div class="text-2xl font-semibold">{{ computedStats.biggestWinOdds ?? '—' }}</div>
       
       <!-- Popup d'information -->
-      <div v-if="showBiggestWonOddsInfo" 
+      <div v-if="showBiggestWinOddsInfo" 
            class="absolute z-10 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm max-w-xs"
            style="top: 100%; left: 0;"
            @click.stop>
@@ -952,7 +952,7 @@ watch(filters, loadAll, { deep: true });
           La cote la plus élevée sur laquelle vous avez gagné durant la période sélectionnée.
         </div>
         <div class="absolute -top-2 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
-        <button @click="showBiggestWonOddsInfo = false" 
+        <button @click="showBiggestWinOddsInfo = false" 
                 class="absolute top-1 right-1 text-gray-400 hover:text-gray-600 text-xs">
           <i class="pi pi-times"></i>
         </button>
@@ -962,13 +962,13 @@ watch(filters, loadAll, { deep: true });
       <div class="text-muted-color text-sm flex items-center gap-2">
         Plus petite cote gagnée
         <i class="pi pi-info-circle text-xs cursor-pointer hover:text-primary" 
-           @click="showSmallestWonOddsInfo = !showSmallestWonOddsInfo"
+           @click="showSmallestWinOddsInfo = !showSmallestWinOddsInfo"
            v-tooltip.top="'Cliquez pour plus d\'informations'"></i>
       </div>
-      <div class="text-2xl font-semibold">{{ computedStats.smallestWonOdds ?? '—' }}</div>
+      <div class="text-2xl font-semibold">{{ computedStats.smallestWinOdds ?? '—' }}</div>
       
       <!-- Popup d'information -->
-      <div v-if="showSmallestWonOddsInfo" 
+      <div v-if="showSmallestWinOddsInfo" 
            class="absolute z-10 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm max-w-xs"
            style="top: 100%; left: 0;"
            @click.stop>
@@ -977,7 +977,7 @@ watch(filters, loadAll, { deep: true });
           La cote la plus faible sur laquelle vous avez gagné durant la période sélectionnée.
         </div>
         <div class="absolute -top-2 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
-        <button @click="showSmallestWonOddsInfo = false" 
+        <button @click="showSmallestWinOddsInfo = false" 
                 class="absolute top-1 right-1 text-gray-400 hover:text-gray-600 text-xs">
           <i class="pi pi-times"></i>
         </button>

@@ -23,11 +23,20 @@ const model = ref([
         label: 'Mon Profil',
         items: [
             { label: 'Mes informations', icon: 'pi pi-fw pi-user', to: '/profile/mes-informations' },
-            { label: 'Mes Bookmakers', icon: 'pi pi-fw pi-wallet', to: '/profile/bookmakers' },
-            { label: 'Mes Sports', icon: 'pi pi-fw pi-star', to: '/profil/inf' },
+            { label: 'Mes Sports', icon: 'pi pi-fw pi-star', to: '/profile/sports' },
             { label: 'Mes Bankrolls', icon: 'pi pi-fw pi-dollar', to: '/profile/bankrolls' },
-            { label: 'Mes Tipsters', icon: 'pi pi-fw pi-users', to: '/uikit/input' },
+            { label: 'Mes Tipsters', icon: 'pi pi-fw pi-users', to: '/profile/tipsters' },
 
+        ]
+    },
+    {
+        label: 'Mes Outils',
+        items: [
+            { label: 'Tous les calculateurs', icon: 'pi pi-fw pi-calculator', to: '/mes-outils' },
+            { label: 'Remboursé si Nul', icon: 'pi pi-fw pi-shield', to: '/mes-outils/rembourse-si-nul' },
+            { label: 'Double Chance', icon: 'pi pi-fw pi-copy', to: '/mes-outils/double-chance' },
+            { label: 'Taux de Retour Joueur', icon: 'pi pi-fw pi-percentage', to: '/mes-outils/taux-retour-joueur' },
+            { label: 'Dutching', icon: 'pi pi-fw pi-sitemap', to: '/mes-outils/dutching' }
         ]
     },
     {

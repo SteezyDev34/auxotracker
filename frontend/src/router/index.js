@@ -21,6 +21,12 @@ const router = createRouter({
                     meta: { requiresAuth: true }
                 },
                 {
+                    path: '/profile/sports',
+                    name: 'profilSports',
+                    component: () => import('@/views/profile/sports.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
                     path: '/profil/inf',
                     name: 'profilInf',
                     component: () => import('@/views/profile/infos.vue'),
@@ -139,6 +145,42 @@ const router = createRouter({
                     path: '/profile/bankrolls',
                     name: 'profileBankrolls',
                     component: () => import('@/views/profile/bankrolls.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: '/profile/tipsters',
+                    name: 'profileTipsters',
+                    component: () => import('@/views/profile/tipsters.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: '/mes-outils',
+                    name: 'mesOutils',
+                    component: () => import('@/views/MesOutils.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: '/mes-outils/rembourse-si-nul',
+                    name: 'rembourseSiNul',
+                    component: () => import('@/components/calculators/RembourseSiNul.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: '/mes-outils/double-chance',
+                    name: 'doubleChance',
+                    component: () => import('@/components/calculators/DoubleChance.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: '/mes-outils/taux-retour-joueur',
+                    name: 'tauxRetourJoueur',
+                    component: () => import('@/components/calculators/TauxRetourJoueur.vue'),
+                    meta: { requiresAuth: true }
+                },
+                {
+                    path: '/mes-outils/dutching',
+                    name: 'dutching',
+                    component: () => import('@/components/calculators/Dutching.vue'),
                     meta: { requiresAuth: true }
                 },
             ]

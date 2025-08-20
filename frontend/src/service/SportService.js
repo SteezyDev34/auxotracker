@@ -213,5 +213,33 @@ export const SportService = {
             console.error('Erreur lors de la recherche des équipes:', error);
             throw error;
         }
+    },
+
+    /**
+     * Récupérer les pays qui ont des ligues pour un sport donné
+     * @param {number} sportId - ID du sport
+     * @returns {Promise<Array>} Liste des pays avec des ligues pour ce sport
+     */
+    async getCountriesBySport(sportId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/sports/${sportId}/countries`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            return result.data || [];
+        } catch (error) {
+            console.error('Erreur lors de la récupération des pays par sport:', error);
+            throw error;
+        }
     }
 };

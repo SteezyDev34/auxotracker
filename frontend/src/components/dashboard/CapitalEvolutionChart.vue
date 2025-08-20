@@ -543,10 +543,15 @@ watch([selectedBetTypes, selectedSports, selectedBookmakers, selectedTipsters], 
     updateChartData();
 }, { deep: true });
 
-// Initialisation
-onMounted(async () => {
+// Fonction d'initialisation asynchrone
+async function initializeChart() {
     await loadFilterOptions();
     await updateChartData();
+}
+
+// Initialisation
+onMounted(() => {
+    initializeChart();
 });
 </script>
 
@@ -565,4 +570,4 @@ onMounted(async () => {
     background-color: #f3f4f6;
     border-color: #9ca3af;
 }
-</style> 
+</style>

@@ -1,483 +1,289 @@
 <template>
-  <div class="grid">
-    <div class="col-12">
-      <div class="card">
-        <h5>Mes Bankrolls</h5>
-        <p>Gérez vos bankrolls pour suivre vos investissements sur différents bookmakers.</p>
-
-        <!-- Formulaire d'ajout de bankroll -->
-        <div class="card mb-4">
-          <h6>Ajouter une nouvelle bankroll</h6>
-          <div class="formgrid grid">
-            <div class="field col-12 md:col-4">
-              <label for="bankroll_name">Nom de la bankroll</label>
-              <InputText 
-                id="bankroll_name" 
-                v-model="newBankroll.bankroll_name" 
-                class="w-full"
-                :class="{ 'p-invalid': v$.newBankroll.bankroll_name.$invalid && submitted }"
-              />
-              <small v-if="v$.newBankroll.bankroll_name.$invalid && submitted" class="p-error">Veuillez entrer un nom pour la bankroll</small>
+    <Toast />
+    <Fluid>
+        <div class="flex flex-col gap-8">
+            <!-- En-tête de la page -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Mes Bankrolls</h1>
+                    <p class="text-gray-600 dark:text-gray-300 mt-2">Gérez vos bankrolls et suivez vos performances</p>
+                </div>
+                <Button 
+                    label="Ajouter une bankroll" 
+                    icon="pi pi-plus" 
+                    @click="openBankrollDialog()" 
+                    class="w-full md:w-auto"
+                />
             </div>
 
-            <div class="field col-12 md:col-4">
-              <label for="start_amount">Montant initial</label>
-              <InputNumber 
-                id="start_amount" 
-                v-model="newBankroll.bankroll_start_amount" 
-                mode="currency" 
-                currency="EUR" 
-                locale="fr-FR"
-                class="w-full"
-                :class="{ 'p-invalid': v$.newBankroll.bankroll_start_amount.$invalid && submitted }"
-              />
-              <small v-if="v$.newBankroll.bankroll_start_amount.$invalid && submitted" class="p-error">Veuillez entrer un montant initial valide</small>
+            <!-- Composant des bankrolls -->
+            <div class="bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg">
+                <div class="p-6">
+                    <BankrollCard 
+                        :bankrolls="bankrolls" 
+                        :api-base-url="apiBaseUrl"
+                        :loading="loading"
+                        :error="error"
+                        @edit-bankroll="openBankrollDialog"
+                        @delete-bankroll="deleteBankroll"
+                        @create-bankroll="openBankrollDialog"
+                        @reload-bankrolls="loadBankrolls"
+                    />
+                </div>
             </div>
-
-            <div class="field col-12 md:col-4">
-              <label for="actual_amount">Montant actuel</label>
-              <InputNumber 
-                id="actual_amount" 
-                v-model="newBankroll.bankroll_actual_amount" 
-                mode="currency" 
-                currency="EUR" 
-                locale="fr-FR"
-                class="w-full"
-                :class="{ 'p-invalid': v$.newBankroll.bankroll_actual_amount.$invalid && submitted }"
-              />
-              <small v-if="v$.newBankroll.bankroll_actual_amount.$invalid && submitted" class="p-error">Veuillez entrer un montant actuel valide</small>
-            </div>
-
-            <div class="field col-12">
-              <label for="description">Description</label>
-              <Textarea 
-                id="description" 
-                v-model="newBankroll.bankroll_description" 
-                rows="3" 
-                class="w-full"
-              />
-            </div>
-
-            <div class="field col-12">
-              <Button label="Ajouter" icon="pi pi-plus" @click="addBankroll" :loading="loading" />
-            </div>
-          </div>
         </div>
+    </Fluid>
 
-        <!-- Liste des bankrolls -->
-        <DataTable 
-          :value="bankrolls" 
-          :paginator="true" 
-          :rows="10"
-          :rowsPerPageOptions="[5, 10, 25, 50]"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-          currentPageReportTemplate="{first} à {last} sur {totalRecords} bankrolls"
-          responsiveLayout="scroll"
-          stripedRows
-          :loading="loading"
-          v-model:filters="filters"
-          filterDisplay="menu"
-          :globalFilterFields="['bankroll_name']"
-        >
-          <template #header>
-            <div class="flex justify-content-between">
-              <Button type="button" icon="pi pi-filter-slash" label="Effacer" class="p-button-outlined" @click="clearFilter()" />
-              <span class="p-input-icon-left">
-                <i class="pi pi-search" />
-                <InputText v-model="filters['global'].value" placeholder="Rechercher..." />
-              </span>
+    <!-- Dialog pour ajouter/modifier une bankroll -->
+    <Dialog v-model:visible="showBankrollDialog" :header="editingBankroll ? 'Modifier la bankroll' : 'Ajouter une bankroll'" :modal="true" class="w-full max-w-2xl">
+        <div class="flex flex-col gap-4">
+            <div>
+                <label class="block text-sm font-medium mb-2">Nom de la bankroll *</label>
+                <InputText v-model="newBankroll.name" placeholder="Ex: Bankroll Principale" class="w-full" />
             </div>
-          </template>
-
-          <Column field="bankroll_name" header="Nom" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-              <InputText v-model="filterModel.value" @input="filterCallback()" placeholder="Rechercher par nom" class="p-column-filter" />
-            </template>
-          </Column>
-
-          <Column field="bankroll_start_amount" header="Montant initial" sortable>
-            <template #body="{ data }">
-              {{ formatCurrency(data.bankroll_start_amount) }}
-            </template>
-          </Column>
-
-          <Column field="bankroll_actual_amount" header="Montant actuel" sortable>
-            <template #body="{ data }">
-              {{ formatCurrency(data.bankroll_actual_amount) }}
-            </template>
-          </Column>
-
-          <Column field="profit" header="Profit/Perte" sortable>
-            <template #body="{ data }">
-              <span :class="getProfitClass(data)">
-                {{ formatCurrency(data.bankroll_actual_amount - data.bankroll_start_amount) }}
-              </span>
-            </template>
-          </Column>
-
-          <Column field="bookmakers_count" header="Bookmakers" sortable>
-            <template #body="{ data }">
-              <Tag :value="data.bookmakers_count || 0" severity="info" />
-            </template>
-          </Column>
-
-          <Column field="created_at" header="Date de création" sortable>
-            <template #body="{ data }">
-              {{ formatDate(data.created_at) }}
-            </template>
-          </Column>
-
-          <Column header="Actions" :exportable="false" style="min-width: 8rem">
-            <template #body="{ data }">
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="editBankroll(data)" />
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="confirmDeleteBankroll(data)" />
-            </template>
-          </Column>
-        </DataTable>
-      </div>
-    </div>
-
-    <!-- Dialog d'édition -->
-    <Dialog v-model:visible="editDialog" header="Modifier la bankroll" :modal="true" class="p-fluid" :style="{ width: '450px' }">
-      <div class="field">
-        <label for="edit_name">Nom de la bankroll</label>
-        <InputText 
-          id="edit_name" 
-          v-model="editingBankroll.bankroll_name" 
-          class="w-full"
-          :class="{ 'p-invalid': v$.editingBankroll.bankroll_name.$invalid && editSubmitted }"
-        />
-        <small v-if="v$.editingBankroll.bankroll_name.$invalid && editSubmitted" class="p-error">Veuillez entrer un nom pour la bankroll</small>
-      </div>
-
-      <div class="field">
-        <label for="edit_start_amount">Montant initial</label>
-        <InputNumber 
-          id="edit_start_amount" 
-          v-model="editingBankroll.bankroll_start_amount" 
-          mode="currency" 
-          currency="EUR" 
-          locale="fr-FR"
-          class="w-full"
-          :class="{ 'p-invalid': v$.editingBankroll.bankroll_start_amount.$invalid && editSubmitted }"
-        />
-        <small v-if="v$.editingBankroll.bankroll_start_amount.$invalid && editSubmitted" class="p-error">Veuillez entrer un montant initial valide</small>
-      </div>
-
-      <div class="field">
-        <label for="edit_actual_amount">Montant actuel</label>
-        <InputNumber 
-          id="edit_actual_amount" 
-          v-model="editingBankroll.bankroll_actual_amount" 
-          mode="currency" 
-          currency="EUR" 
-          locale="fr-FR"
-          class="w-full"
-          :class="{ 'p-invalid': v$.editingBankroll.bankroll_actual_amount.$invalid && editSubmitted }"
-        />
-        <small v-if="v$.editingBankroll.bankroll_actual_amount.$invalid && editSubmitted" class="p-error">Veuillez entrer un montant actuel valide</small>
-      </div>
-
-      <div class="field">
-        <label for="edit_description">Description</label>
-        <Textarea 
-          id="edit_description" 
-          v-model="editingBankroll.bankroll_description" 
-          rows="3" 
-          class="w-full"
-        />
-      </div>
-
-      <template #footer>
-        <Button label="Annuler" icon="pi pi-times" class="p-button-text" @click="hideEditDialog" />
-        <Button label="Enregistrer" icon="pi pi-check" class="p-button-text" @click="updateBankroll" :loading="loading" />
-      </template>
+            <div>
+                <label class="block text-sm font-medium mb-2">Description</label>
+                <Textarea v-model="newBankroll.description" placeholder="Description de votre bankroll" class="w-full" rows="3" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Montant de départ *</label>
+                <InputNumber v-model="newBankroll.startAmount" mode="currency" currency="EUR" locale="fr-FR" class="w-full" />
+            </div>
+        </div>
+        
+        <template #footer>
+            <div class="flex justify-end gap-2">
+                <Button label="Annuler" severity="secondary" @click="closeBankrollDialog" />
+                <Button :label="editingBankroll ? 'Modifier' : 'Créer'" @click="saveBankroll" :loading="saving" />
+            </div>
+        </template>
     </Dialog>
 
     <!-- Dialog de confirmation de suppression -->
-    <Dialog v-model:visible="deleteDialog" :style="{ width: '450px' }" header="Confirmation" :modal="true">
-      <div class="confirmation-content">
-        <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
-        <span>Êtes-vous sûr de vouloir supprimer <b>{{ editingBankroll.bankroll_name }}</b> ?</span>
-      </div>
-      <template #footer>
-        <Button label="Non" icon="pi pi-times" class="p-button-text" @click="deleteDialog = false" />
-        <Button label="Oui" icon="pi pi-check" class="p-button-text" @click="deleteBankroll" :loading="loading" />
-      </template>
+    <Dialog v-model:visible="showDeleteDialog" header="Confirmer la suppression" :modal="true" class="w-full max-w-md">
+        <div class="flex items-center gap-4">
+            <i class="pi pi-exclamation-triangle text-orange-500 text-2xl"></i>
+            <div>
+                <p class="font-medium">Êtes-vous sûr de vouloir supprimer cette bankroll ?</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Cette action est irréversible.</p>
+            </div>
+        </div>
+        
+        <template #footer>
+            <div class="flex justify-end gap-2">
+                <Button label="Annuler" severity="secondary" @click="showDeleteDialog = false" />
+                <Button label="Supprimer" severity="danger" @click="confirmDeleteBankroll" :loading="deleting" />
+            </div>
+        </template>
     </Dialog>
-  </div>
 </template>
 
-<script>
-import { ref, onMounted, reactive } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import { FilterMatchMode } from '@primevue/core/api';
-import { useVuelidate } from '@vuelidate/core';
-import { required, minValue } from '@vuelidate/validators';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { BankrollService } from '../../service/BankrollService';
-import { BookmakerService } from '../../service/BookmakerService';
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import Toast from 'primevue/toast'
+import Fluid from 'primevue/fluid'
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
+import InputNumber from 'primevue/inputnumber'
+import BankrollCard from '@/components/BankrollCard.vue'
+import { BankrollService } from '@/service/BankrollService.js'
 
-export default {
-  setup() {
-    const toast = useToast();
-    const loading = ref(false);
-    const bankrolls = ref([]);
-    const editDialog = ref(false);
-    const deleteDialog = ref(false);
-    const submitted = ref(false);
-    const editSubmitted = ref(false);
+// Configuration de l'API
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan'
+const toast = useToast()
 
-    // Filtres pour le DataTable
-    const filters = ref({
-      global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-      'bankroll_name': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-    });
+// États réactifs
+const bankrolls = ref([])
+const loading = ref(false)
+const error = ref(null)
+const saving = ref(false)
+const deleting = ref(false)
 
-    // Modèle pour une nouvelle bankroll
-    const newBankroll = reactive({
-      bankroll_name: '',
-      bankroll_start_amount: 0,
-      bankroll_actual_amount: 0,
-      bankroll_description: null
-    });
+// États des dialogs
+const showBankrollDialog = ref(false)
+const showDeleteDialog = ref(false)
+const editingBankroll = ref(null)
+const bankrollToDelete = ref(null)
 
-    // Modèle pour l'édition d'une bankroll
-    const editingBankroll = reactive({
-      id: null,
-      bankroll_name: '',
-      bankroll_start_amount: 0,
-      bankroll_actual_amount: 0,
-      bankroll_description: null,
-      bookmakers_count: 0
-    });
+// Formulaire de bankroll
+const newBankroll = ref({
+    name: '',
+    description: '',
+    startAmount: 0
+})
 
-    // Règles de validation
-    const rules = {
-      newBankroll: {
-        bankroll_name: { required },
-        bankroll_start_amount: { required, minValue: minValue(0) },
-        bankroll_actual_amount: { required, minValue: minValue(0) }
-      },
-      editingBankroll: {
-        bankroll_name: { required },
-        bankroll_start_amount: { required, minValue: minValue(0) },
-        bankroll_actual_amount: { required, minValue: minValue(0) }
-      }
-    };
+/**
+ * Charge la liste des bankrolls depuis l'API
+ */
+const loadBankrolls = async () => {
+    loading.value = true
+    error.value = null
+    
+    try {
+        const response = await BankrollService.getBankrolls()
+        bankrolls.value = response || []
+    } catch (err) {
+        console.error('Erreur lors du chargement des bankrolls:', err)
+        error.value = 'Impossible de charger les bankrolls. Veuillez réessayer.'
+        toast.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Impossible de charger les bankrolls',
+            life: 3000
+        })
+    } finally {
+        loading.value = false
+    }
+}
 
-    const v$ = useVuelidate(rules, { newBankroll, editingBankroll });
-
-    // Chargement des données
-    onMounted(() => {
-      loadBankrolls();
-    });
-
-    // Fonction pour charger les bankrolls
-    const loadBankrolls = async () => {
-      try {
-        loading.value = true;
-        const response = await BankrollService.getBankrolls();
-        // Ajouter le nombre de bookmakers associés à chaque bankroll
-        bankrolls.value = await Promise.all(response.bankrolls.map(async (bankroll) => {
-          try {
-            const bookmakers = await BookmakerService.getUserBookmakers();
-            const count = bookmakers.filter(b => b.users_bankrolls_id === bankroll.id).length;
-            return { ...bankroll, bookmakers_count: count };
-          } catch (error) {
-            console.error('Erreur lors du comptage des bookmakers:', error);
-            return { ...bankroll, bookmakers_count: 0 };
-          }
-        }));
-      } catch (error) {
-        console.error('Erreur lors du chargement des bankrolls:', error);
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les bankrolls', life: 3000 });
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    // Fonctions pour gérer les bankrolls
-    const addBankroll = async () => {
-      submitted.value = true;
-      const isValid = await v$.value.newBankroll.$validate();
-
-      if (!isValid) {
-        return;
-      }
-
-      try {
-        loading.value = true;
-        const response = await BankrollService.createBankroll(newBankroll);
-        bankrolls.value.push({ ...response.bankroll, bookmakers_count: 0 });
-        toast.add({ severity: 'success', summary: 'Succès', detail: 'Bankroll créée avec succès', life: 3000 });
-        resetNewBankroll();
-        submitted.value = false;
-      } catch (error) {
-        console.error('Erreur lors de la création de la bankroll:', error);
-        if (error.message) {
-          toast.add({ severity: 'error', summary: 'Erreur', detail: error.message, life: 3000 });
-        } else {
-          toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de créer la bankroll', life: 3000 });
+/**
+ * Ouvre le dialog pour créer ou modifier une bankroll
+ * @param {Object|null} bankroll - Bankroll à modifier (null pour création)
+ */
+const openBankrollDialog = (bankroll = null) => {
+    editingBankroll.value = bankroll
+    
+    if (bankroll) {
+        // Mode édition
+        newBankroll.value = {
+            name: bankroll.bankroll_name || bankroll.name || '',
+            description: bankroll.bankroll_description || bankroll.comment || '',
+            startAmount: parseFloat(bankroll.bankroll_start_amount) || 0
         }
-      } finally {
-        loading.value = false;
-      }
-    };
+    } else {
+        // Mode création
+        newBankroll.value = {
+            name: '',
+            description: '',
+            startAmount: 0
+        }
+    }
+    
+    showBankrollDialog.value = true
+}
 
-    const editBankroll = (data) => {
-      editingBankroll.id = data.id;
-      editingBankroll.bankroll_name = data.bankroll_name;
-      editingBankroll.bankroll_start_amount = data.bankroll_start_amount;
-      editingBankroll.bankroll_actual_amount = data.bankroll_actual_amount;
-      editingBankroll.bankroll_description = data.bankroll_description;
-      editingBankroll.bookmakers_count = data.bookmakers_count;
-      editDialog.value = true;
-    };
+/**
+ * Ferme le dialog de bankroll
+ */
+const closeBankrollDialog = () => {
+    showBankrollDialog.value = false
+    editingBankroll.value = null
+    newBankroll.value = {
+        name: '',
+        description: '',
+        startAmount: 0
+    }
+}
 
-    const updateBankroll = async () => {
-      editSubmitted.value = true;
-      const isValid = await v$.value.editingBankroll.$validate();
-
-      if (!isValid) {
-        return;
-      }
-
-      try {
-        loading.value = true;
+/**
+ * Sauvegarde une bankroll (création ou modification)
+ */
+const saveBankroll = async () => {
+    if (!newBankroll.value.name || newBankroll.value.startAmount <= 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Attention',
+            detail: 'Veuillez remplir tous les champs obligatoires',
+            life: 3000
+        })
+        return
+    }
+    
+    saving.value = true
+    
+    try {
         const bankrollData = {
-          bankroll_name: editingBankroll.bankroll_name,
-          bankroll_start_amount: editingBankroll.bankroll_start_amount,
-          bankroll_actual_amount: editingBankroll.bankroll_actual_amount,
-          bankroll_description: editingBankroll.bankroll_description
-        };
+            bankroll_name: newBankroll.value.name,
+            bankroll_description: newBankroll.value.description,
+            bankroll_start_amount: newBankroll.value.startAmount
+        }
         
-        const response = await BankrollService.updateBankroll(editingBankroll.id, bankrollData);
-
-        const index = bankrolls.value.findIndex(item => item.id === editingBankroll.id);
-        if (index !== -1) {
-          bankrolls.value[index] = { 
-            ...response.bankroll, 
-            bookmakers_count: editingBankroll.bookmakers_count 
-          };
-        }
-
-        toast.add({ severity: 'success', summary: 'Succès', detail: 'Bankroll mise à jour avec succès', life: 3000 });
-        hideEditDialog();
-      } catch (error) {
-        console.error('Erreur lors de la mise à jour de la bankroll:', error);
-        if (error.message) {
-          toast.add({ severity: 'error', summary: 'Erreur', detail: error.message, life: 3000 });
+        if (editingBankroll.value) {
+            // Modification
+            await BankrollService.updateBankroll(editingBankroll.value.id, bankrollData)
+            toast.add({
+                severity: 'success',
+                summary: 'Succès',
+                detail: 'Bankroll modifiée avec succès',
+                life: 3000
+            })
         } else {
-          toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de mettre à jour la bankroll', life: 3000 });
+            // Création
+            await BankrollService.createBankroll(bankrollData)
+            toast.add({
+                severity: 'success',
+                summary: 'Succès',
+                detail: 'Bankroll créée avec succès',
+                life: 3000
+            })
         }
-      } finally {
-        loading.value = false;
-      }
-    };
+        
+        closeBankrollDialog()
+        await loadBankrolls()
+    } catch (err) {
+        console.error('Erreur lors de la sauvegarde:', err)
+        toast.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Impossible de sauvegarder la bankroll',
+            life: 3000
+        })
+    } finally {
+        saving.value = false
+    }
+}
 
-    const confirmDeleteBankroll = (data) => {
-      editingBankroll.id = data.id;
-      editingBankroll.bankroll_name = data.bankroll_name;
-      editingBankroll.bookmakers_count = data.bookmakers_count;
-      deleteDialog.value = true;
-    };
+/**
+ * Ouvre le dialog de confirmation de suppression
+ * @param {Object} bankroll - Bankroll à supprimer
+ */
+const deleteBankroll = (bankroll) => {
+    bankrollToDelete.value = bankroll
+    showDeleteDialog.value = true
+}
 
-    const deleteBankroll = async () => {
-      try {
-        loading.value = true;
-        await BankrollService.deleteBankroll(editingBankroll.id);
-        bankrolls.value = bankrolls.value.filter(item => item.id !== editingBankroll.id);
-        toast.add({ severity: 'success', summary: 'Succès', detail: 'Bankroll supprimée avec succès', life: 3000 });
-        deleteDialog.value = false;
-      } catch (error) {
-        console.error('Erreur lors de la suppression de la bankroll:', error);
-        if (error.message) {
-          toast.add({ severity: 'error', summary: 'Erreur', detail: error.message, life: 3000 });
-        } else {
-          toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de supprimer la bankroll', life: 3000 });
-        }
-      } finally {
-        loading.value = false;
-      }
-    };
+/**
+ * Confirme et exécute la suppression d'une bankroll
+ */
+const confirmDeleteBankroll = async () => {
+    if (!bankrollToDelete.value) return
+    
+    deleting.value = true
+    
+    try {
+        await BankrollService.deleteBankroll(bankrollToDelete.value.id)
+        toast.add({
+            severity: 'success',
+            summary: 'Succès',
+            detail: 'Bankroll supprimée avec succès',
+            life: 3000
+        })
+        
+        showDeleteDialog.value = false
+        bankrollToDelete.value = null
+        await loadBankrolls()
+    } catch (err) {
+        console.error('Erreur lors de la suppression:', err)
+        toast.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Impossible de supprimer la bankroll',
+            life: 3000
+        })
+    } finally {
+        deleting.value = false
+    }
+}
 
-    // Fonctions utilitaires
-    const resetNewBankroll = () => {
-      newBankroll.bankroll_name = '';
-      newBankroll.bankroll_start_amount = 0;
-      newBankroll.bankroll_actual_amount = 0;
-      newBankroll.bankroll_description = null;
-    };
-
-    const hideEditDialog = () => {
-      editDialog.value = false;
-      editSubmitted.value = false;
-    };
-
-    const clearFilter = () => {
-      filters.value = {
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        'bankroll_name': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-      };
-    };
-
-    const formatCurrency = (value) => {
-      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
-    };
-
-    const formatDate = (value) => {
-      if (!value) return '';
-      return format(new Date(value), 'dd MMMM yyyy', { locale: fr });
-    };
-
-    const getProfitClass = (data) => {
-      const profit = data.bankroll_actual_amount - data.bankroll_start_amount;
-      if (profit > 0) return 'text-green-500 font-bold';
-      if (profit < 0) return 'text-red-500 font-bold';
-      return '';
-    };
-
-    return {
-      loading,
-      bankrolls,
-      newBankroll,
-      editingBankroll,
-      editDialog,
-      deleteDialog,
-      filters,
-      submitted,
-      editSubmitted,
-      v$,
-      addBankroll,
-      editBankroll,
-      updateBankroll,
-      confirmDeleteBankroll,
-      deleteBankroll,
-      hideEditDialog,
-      clearFilter,
-      formatCurrency,
-      formatDate,
-      getProfitClass
-    };
-  }
-};
+// Chargement initial des données
+onMounted(() => {
+    loadBankrolls()
+})
 </script>
 
 <style scoped>
-.p-button {
-  margin-right: 0.5rem;
-}
-
-.p-datatable-header {
-  display: flex;
-  justify-content: space-between;
-}
-
-.confirmation-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Styles spécifiques à la vue si nécessaire */
 </style>

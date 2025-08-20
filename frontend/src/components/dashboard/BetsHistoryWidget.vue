@@ -62,7 +62,7 @@ const betsByMonth = computed(() => {
     grouped[monthKey].totalStake += parseFloat(bet.stake || 0);
     
     // Calculer le profit/perte
-    if (bet.result === 'won') {
+    if (bet.result === 'win') {
       grouped[monthKey].totalProfit += (parseFloat(bet.stake) * parseFloat(bet.global_odds)) - parseFloat(bet.stake);
     } else if (bet.result === 'lost') {
       grouped[monthKey].totalProfit -= parseFloat(bet.stake);
@@ -150,20 +150,21 @@ function toggleBetEvents(betId) {
 
 // Obtenir la couleur de la barre pour le résultat du pari
 function getResultBarColor(result) {
+  console.log(result)
   switch (result) {
-    case 'won': return 'bg-green-500';
-    case 'lost': return 'bg-red-500';
-    case 'pending': return 'bg-gray-300';
-    case 'void': return 'bg-gray-500';
-    case 'refunded': return 'bg-blue-500';
-    default: return 'bg-gray-400';
+    case 'win': return 'bg-green-500 dark:bg-green-400';
+    case 'lost': return 'bg-red-500 dark:bg-red-400';
+    case 'pending': return 'bg-surface-300 dark:bg-surface-600';
+    case 'void': return 'bg-surface-500 dark:bg-surface-400';
+    case 'refunded': return 'bg-primary-500 dark:bg-primary-400';
+    default: return 'bg-surface-400 dark:bg-surface-500';
   }
 }
 
 // Obtenir l'icône SVG pour le résultat du pari
 function getResultIcon(result) {
   switch (result) {
-    case 'won': 
+    case 'win': 
       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
       </svg>`;
@@ -192,7 +193,7 @@ function getResultIcon(result) {
 
 // Calculer le profit/perte d'un pari
 function calculateProfitLoss(bet) {
-  if (bet.result === 'won') {
+  if (bet.result === 'win') {
     return (parseFloat(bet.stake) * parseFloat(bet.global_odds)) - parseFloat(bet.stake);
   } else if (bet.result === 'lost') {
     return -parseFloat(bet.stake);
@@ -433,6 +434,30 @@ function getCountryInfo(bet) {
   };
 }
 
+// Obtenir les classes CSS pour le résultat du pari (compatible mode sombre)
+function getResultClass(result) {
+  switch (result) {
+    case 'win': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200';
+    case 'lost': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
+    case 'pending': return 'bg-surface-100 dark:bg-surface-800 text-surface-800 dark:text-surface-200';
+    case 'void': return 'bg-surface-100 dark:bg-surface-800 text-surface-800 dark:text-surface-200';
+    case 'refunded': return 'bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200';
+    default: return 'bg-surface-100 dark:bg-surface-800 text-surface-800 dark:text-surface-200';
+  }
+}
+
+// Obtenir le label du résultat
+function getResultLabel(result) {
+  switch (result) {
+    case 'win': return 'Gagné';
+    case 'lost': return 'Perdu';
+    case 'pending': return 'En cours';
+    case 'void': return 'Annulé';
+    case 'refunded': return 'Remboursé';
+    default: return 'Inconnu';
+  }
+}
+
 // Obtenir les informations du marché depuis l'événement
 function getMarketInfo(bet) {
   if (bet.events && bet.events.length > 0) {
@@ -525,7 +550,7 @@ onMounted(loadBets);
         <!-- En-tête du mois -->
         <div 
           @click="toggleMonth(month.key)"
-          class="flex items-center justify-between p-4 bg-surface-50 hover:bg-surface-100 rounded-lg cursor-pointer transition-colors border-2 border-surface-200 hover:border-surface-300"
+          class="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg cursor-pointer transition-colors border-2 border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600"
         >
           <div class="flex items-center gap-3">
             <i :class="expandedMonths.has(month.key) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="text-sm"></i>
@@ -534,7 +559,7 @@ onMounted(loadBets);
             </div>
           </div>
           <div class="text-right">
-            <div class="text-lg font-semibold" :class="month.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'">
+            <div class="text-lg font-semibold" :class="month.totalProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
               {{ month.totalProfit >= 0 ? '+' : '' }}{{ month.totalProfit.toFixed(2) }}€
             </div>
           </div>
@@ -544,11 +569,11 @@ onMounted(loadBets);
         <div v-if="expandedMonths.has(month.key)" class="ml-2 mt-3 space-y-4">
           <div v-for="week in getBetsByWeek(month.bets)" :key="week.key">
             <!-- En-tête de la semaine (sans accordéon) -->
-            <div class="p-3 bg-surface-50 rounded-lg mb-3">
+            <div class="p-3 bg-surface-50 dark:bg-surface-800 rounded-lg mb-3">
               <div class="flex items-center gap-2">
                 <i class="pi pi-calendar text-sm text-muted-color"></i>
                 <div>
-                  <h6 class="font-medium text-sm">{{ week.label }}</h6>
+                  <h6 class="font-medium text-sm text-surface-900 dark:text-surface-100">{{ week.label }}</h6>
                 </div>
               </div>
             </div>
@@ -557,33 +582,37 @@ onMounted(loadBets);
             <div class="ml-2 space-y-3">
               <div v-for="day in getBetsByDay(week.bets)" :key="day.key">
                 <!-- En-tête du jour -->
-                <div class="text-sm font-medium text-muted-color mb-2 capitalize">{{ day.label }}</div>
+                <div class="text-sm font-medium text-surface-700 dark:text-surface-300 mb-2 capitalize">{{ day.label }}</div>
                 
                 <!-- Paris du jour -->
                 <div class="space-y-2 mb-4">
                   <div 
                     v-for="bet in day.bets" 
                     :key="bet.id"
-                    class="flex bg-white border border-surface-200 rounded-lg hover:shadow-sm transition-shadow"
+                    class="flex bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg hover:shadow-sm transition-shadow"
                   >
                     <!-- Contenu principal -->
-                    <div class="flex-1 p-3">
+                    <div class="flex-1 p-3 relative">
+                      <!-- ID du pari en badge -->
+                      <div class="absolute top-2 right-2 bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300 text-xs px-2 py-1 rounded-full font-mono">
+                        #{{ bet.id }}
+                      </div>
                       <!-- Événements du pari -->
                       <div v-if="bet.events && bet.events.length > 0" class="mb-3">
                         <!-- Si un seul événement -->
-                        <div v-if="bet.events.length === 1" class="bg-gray-50 rounded-lg p-3">
+                        <div v-if="bet.events.length === 1" class="bg-surface-50 dark:bg-surface-800 rounded-lg p-3">
                           <div class="event-card text-center">
                             <!-- Informations sport, pays et ligue -->
                             <div class="flex items-center justify-center gap-2 mb-2">
                               <div v-html="getCountryInfo(bet).html"></div>
                               <!-- Nom de la ligue -->
                               <div v-if="bet.events[0].league" class="flex items-center gap-1">
-                                <span class="text-xs text-gray-500">{{ bet.events[0].league.name }}</span>
+                                <span class="text-xs text-surface-500 dark:text-surface-400">{{ bet.events[0].league.name }}</span>
                               </div>
                             </div>
                             <!-- Logo des équipes -->
                             <div v-if="bet.events[0].team1 && bet.events[0].team2" class="flex items-center justify-center gap-2 mb-2">
-                              <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                              <div class="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300">
                                 <img 
                                   v-if="bet.events[0].team1.img" 
                                   :src="getTeamLogoUrl(bet.events[0].team1)" 
@@ -593,10 +622,10 @@ onMounted(loadBets);
                                 />
                                 <span v-if="!bet.events[0].team1.img" class="text-xs">{{ bet.events[0].team1.name.charAt(0) }}</span>
                               </div>
-                              <span class="text-sm font-medium">{{ bet.events[0].team1.name }}</span>
-                              <span class="text-xs text-gray-500"> - </span>
-                              <span class="text-sm font-medium">{{ bet.events[0].team2.name }}</span>
-                              <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                              <span class="text-sm font-medium text-surface-800 dark:text-surface-200">{{ bet.events[0].team1.name }}</span>
+                              <span class="text-xs text-surface-500 dark:text-surface-400"> - </span>
+                              <span class="text-sm font-medium text-surface-800 dark:text-surface-200">{{ bet.events[0].team2.name }}</span>
+                              <div class="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300">
                                 <img 
                                   v-if="bet.events[0].team2.img" 
                                   :src="getTeamLogoUrl(bet.events[0].team2)" 
@@ -607,7 +636,7 @@ onMounted(loadBets);
                                 <span v-if="!bet.events[0].team2.img" class="text-xs">{{ bet.events[0].team2.name.charAt(0) }}</span>
                               </div>
                             </div>
-                            <div class="text-xs text-gray-600 mb-2">
+                            <div class="text-xs text-surface-600 dark:text-surface-400 mb-2">
                               {{ bet.events[0].market || bet.events[0].type || 'Marché non spécifié' }}
                             </div>
 
@@ -618,12 +647,12 @@ onMounted(loadBets);
                         <div v-else class="space-y-2">
                           <div 
                             @click="toggleBetEvents(bet.id)"
-                            class="bg-blue-50 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors"
+                            class="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-3 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
                           >
                             <div class="flex items-center justify-between">
                               <div class="flex items-center gap-2">
-                                <i :class="expandedBets.has(bet.id) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="text-sm text-blue-600"></i>
-                                <span class="text-sm font-medium text-blue-800">
+                                <i :class="expandedBets.has(bet.id) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="text-sm text-primary-600 dark:text-primary-400"></i>
+                                <span class="text-sm font-medium text-primary-800 dark:text-primary-200">
                                   Pari combiné - {{ bet.events.length }} événements
                                 </span>
                               </div>
@@ -635,21 +664,21 @@ onMounted(loadBets);
                             <div 
                               v-for="(event, index) in bet.events" 
                               :key="index"
-                              class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center"
+                              class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg p-3 text-center"
                             >
                               <!-- Informations sport, pays et ligue pour chaque événement -->
                                 <div class="flex items-center justify-center gap-2 mb-2">
                                   <div v-html="getCountryInfo({ events: [event] }).html"></div>
                                   <!-- Nom de la ligue -->
                                   <div v-if="event.league" class="flex items-center gap-1">
-                                    <span class="text-xs text-gray-500">{{ event.league.name }}</span>
+                                    <span class="text-xs text-surface-500 dark:text-surface-400">{{ event.league.name }}</span>
                                   </div>
                                 </div>
                               <div class="flex items-center justify-center mb-2">
                                 <div class="flex items-center gap-2">
                                   <!-- Logo des équipes -->
                                   <div v-if="event.team1 && event.team2" class="flex items-center gap-2">
-                                    <div class="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                                    <div class="w-5 h-5 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300">
                                       <img 
                                         v-if="event.team1.img" 
                                         :src="getTeamLogoUrl(event.team1)" 
@@ -659,10 +688,10 @@ onMounted(loadBets);
                                       />
                                       <span v-if="!event.team1.img" class="text-xs">{{ event.team1.name.charAt(0) }}</span>
                                     </div>
-                                    <span class="text-sm font-medium">{{ event.team1.name }}</span>
-                                    <span class="text-xs text-gray-500"> - </span>
-                                    <span class="text-sm font-medium">{{ event.team2.name }}</span>
-                                    <div class="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                                    <span class="text-sm font-medium text-surface-800 dark:text-surface-200">{{ event.team1.name }}</span>
+                                    <span class="text-xs text-surface-500 dark:text-surface-400"> - </span>
+                                    <span class="text-sm font-medium text-surface-800 dark:text-surface-200">{{ event.team2.name }}</span>
+                                    <div class="w-5 h-5 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300">
                                       <img 
                                         v-if="event.team2.img" 
                                         :src="getTeamLogoUrl(event.team2)" 
@@ -676,7 +705,7 @@ onMounted(loadBets);
                                 </div>
                               </div>
                               
-                              <div class="text-xs text-gray-600">
+                              <div class="text-xs text-surface-600 dark:text-surface-400">
                                 {{ event.market || event.type || 'Marché non spécifié' }}
                               </div>
                               <div v-if="event.odd" class="flex justify-end">
@@ -690,38 +719,39 @@ onMounted(loadBets);
                       <!-- Informations financières en grille 2x2 sur mobile -->
                       <div class="grid grid-cols-2 gap-2 md:flex md:gap-3 md:justify-center">
                         <!-- Carte Cote -->
-                        <div class="bg-gray-50 rounded-lg p-2 text-center">
-                          <div class="text-sm font-medium text-gray-900">{{ parseFloat(bet.global_odds).toFixed(3) }}</div>
-                          <div class="text-xs text-gray-500 mt-1">Cote</div>
+                        <div class="bg-surface-50 dark:bg-surface-800 rounded-lg p-2 text-center">
+                          <div class="text-sm font-medium text-surface-900 dark:text-surface-100">{{ parseFloat(bet.global_odds).toFixed(3) }}</div>
+                          <div class="text-xs text-surface-500 dark:text-surface-400 mt-1">Cote</div>
                         </div>
                         
                         <!-- Carte Mise -->
-                        <div class="bg-blue-50 rounded-lg p-2 text-center">
-                          <div class="text-sm font-medium text-blue-900">{{ parseFloat(bet.stake).toFixed(2) }}€</div>
-                          <div class="text-xs text-blue-600 mt-1">Mise</div>
+                        <div class="bg-surface-50 dark:bg-surface-800 rounded-lg p-2 text-center">
+                          <div class="text-sm font-medium text-surface-900 dark:text-surface-100">{{ parseFloat(bet.stake).toFixed(2) }}€</div>
+                          <div class="text-xs text-surface-500 dark:text-surface-400 mt-1">Mise</div>
                         </div>
                         
                         <!-- Carte Gain -->
-                        <div class="bg-purple-50 rounded-lg p-2 text-center">
-                          <div class="text-sm font-medium text-purple-900">{{ (parseFloat(bet.stake) * parseFloat(bet.global_odds)).toFixed(2) }}€</div>
-                          <div class="text-xs text-purple-600 mt-1">Gain</div>
+                        <div class="bg-purple-50 dark:bg-blue-900/20 rounded-lg p-2 text-center">
+                          <div class="text-sm font-medium text-blue-900 dark:text-purple-100">{{ (parseFloat(bet.stake) * parseFloat(bet.global_odds)).toFixed(2) }}€</div>
+                          <div class="text-xs text-blue-600 dark:text-blue-400 mt-1">Gain</div>
                         </div>
                         
                         <!-- Carte Bénéfice -->
-                        <div class="rounded-lg p-2 text-center" :class="calculateProfitLoss(bet) >= 0 ? 'bg-green-50' : 'bg-red-50'">
+                        <div class="rounded-lg p-2 text-center" :class="calculateProfitLoss(bet) >= 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'">
                           <div 
                             class="text-sm font-medium"
-                            :class="calculateProfitLoss(bet) >= 0 ? 'text-green-900' : 'text-red-900'"
+                            :class="calculateProfitLoss(bet) >= 0 ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'"
                           >
                             {{ calculateProfitLoss(bet).toFixed(2) }}€
                           </div>
-                          <div class="text-xs mt-1" :class="calculateProfitLoss(bet) >= 0 ? 'text-green-600' : 'text-red-600'">Bénéfice</div>
+                          <div class="text-xs mt-1" :class="calculateProfitLoss(bet) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">Bénéfice</div>
                         </div>
                       </div>
                     </div>
                     
                     <!-- Barre verticale colorée avec icône de résultat qui prend toute la hauteur -->
                     <div class="flex items-stretch">
+                      {{ bet.result }}
                       <div 
                         :class="getResultBarColor(bet.result)" 
                         class="w-4 min-h-full rounded-r-lg flex items-center justify-center relative"
@@ -750,12 +780,10 @@ onMounted(loadBets);
 </template>
 
 <style scoped>
-.card {
-  @apply bg-white rounded-lg shadow-sm border border-surface-200;
-}
+
 
 .card-header {
-  @apply p-3 border-b border-surface-200;
+  @apply p-3
 }
 
 /* Styles pour le bouton animé */

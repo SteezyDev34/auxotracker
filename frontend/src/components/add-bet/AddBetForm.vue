@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto p-6 max-w-4xl">
-    <h1 class="text-2xl font-bold mb-6 text-gray-800">
+    <h1 class="text-2xl font-bold mb-6">
       {{ events.length > 1 ? 'Ajouter un pari combiné' : 'Ajouter un pari simple' }}
     </h1>
     <form @submit.prevent="submitForm" class="space-y-4 mb-4">
@@ -19,9 +19,9 @@
       </div>
 
       <!-- Cards Événements -->
-      <div v-for="(eventData, eventIndex) in eventCards" :key="eventData.id" class="border rounded-lg p-4 bg-gray-50 mb-4">
+      <div v-for="(eventData, eventIndex) in eventCards" :key="eventData.id" class="border-surface-200 dark:border-surface-600 border rounded-lg p-4 mb-4">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-gray-800">Événement {{ eventIndex + 1 }}</h3>
+          <h3 class="text-lg font-semibold">Événement {{ eventIndex + 1 }}</h3>
           <Button 
             v-if="eventCards.length > 1"
             icon="pi pi-times" 
@@ -33,77 +33,73 @@
         
         <!-- Sport -->
         <div class="flex flex-col gap-2 mb-4">
-          <div class="relative">
-            <AutoComplete 
-              :id="`sport_${eventIndex}`" 
-              v-model="eventData.selectedSport" 
-              :suggestions="eventData.sportSearchResults || []" 
-              @complete="(event) => searchSports(event, eventIndex)"
-              @item-select="(event) => onSportSelect(event, eventIndex)"
-              @dropdown-click="() => onSportDropdownShow(eventIndex)"
-              optionLabel="name"
-              :placeholder="eventData.selectedSport && eventData.selectedSport.length > 0 ? '' : 'Sport'"
-              class="w-full max-w-full select-custom"
-              :class="{ 'p-invalid': errors[`sport_id_${eventIndex}`] }"
-              :loading="eventData.sportLoading"
-              panelClass="select-panel-custom"
-              @focus="() => searchSports({ query: '' }, eventIndex)"
-              :minLength="0"
-              selectionLimit="1"
-              dropdown
-              dropdownMode="blank"
-              multiple
-              display="chip"
-              aria-label="Rechercher et sélectionner un sport"
-              role="combobox"
-              aria-expanded="false"
-              aria-autocomplete="list"
-            >
-              <!-- Template pour afficher le sport sélectionné -->
-              <template #chip="slotProps">
-                <div class="flex items-center gap-2">
-                  <!-- Icône du sport sélectionné -->
-                  <img
-                    v-if="slotProps.value && slotProps.value.img"
-                    :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.value.img.replace('.png', '.svg')}`"
-                    :alt="slotProps.value.name"
-                    class="w-4 h-4 object-contain filter brightness-0"
-                    @error="$event.target.style.display='none'"
-                  />
-                  <div 
-                    v-else-if="slotProps.value"
-                    class="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600"
-                  >
-                    {{ slotProps.value.name ? slotProps.value.name.charAt(0).toUpperCase() : '?' }}
-                  </div>
-                  <!-- Nom du sport sélectionné -->
-                  <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
+          <label :for="`sport_${eventIndex}`" class="font-medium text-sm">Sport *</label>
+          <AutoComplete 
+            :id="`sport_${eventIndex}`" 
+            v-model="eventData.selectedSport" 
+            :suggestions="eventData.sportSearchResults || []" 
+            @complete="(event) => searchSports(event, eventIndex)"
+            @item-select="(event) => onSportSelect(event, eventIndex)"
+            optionLabel="name"
+            placeholder="Rechercher un sport"
+            class="w-full max-w-full select-custom"
+            :class="{ 'p-invalid': errors[`sport_id_${eventIndex}`] }"
+            :loading="eventData.sportLoading"
+            panelClass="select-panel-custom"
+            @show="() => onSportDropdownShow(eventIndex)"
+            @focus="() => onSportDropdownShow(eventIndex)"
+            :minLength="0"
+            dropdown
+            dropdownMode="blank"
+            aria-label="Rechercher et sélectionner un sport"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
+          >
+            <!-- Template pour afficher le sport sélectionné avec son icône -->
+            <template #value="slotProps">
+              <div v-if="slotProps.value" class="flex items-center gap-2">
+                <!-- Icône du sport sélectionné -->
+                <img
+                  v-if="slotProps.value.img"
+                  :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.value.img.replace('.png', '.svg')}`"
+                  :alt="slotProps.value.name"
+                  class="w-5 h-5 object-contain flex-shrink-0 filter brightness-0"
+                  @error="$event.target.style.display='none'"
+                />
+                <div 
+                  v-else
+                  class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600 flex-shrink-0"
+                >
+                  {{ slotProps.value.name ? slotProps.value.name.charAt(0).toUpperCase() : '?' }}
                 </div>
-              </template>
-              
-              <!-- Template pour les options du dropdown -->
-              <template #option="slotProps">
-                <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
-                  <!-- Icône du sport -->
-                  <img
-                    v-if="slotProps.option.img"
-                    :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.option.img.replace('.png', '.svg')}`"
-                    :alt="slotProps.option.name"
-                    class="w-5 h-5 object-contain flex-shrink-0 filter brightness-0"
-                    @error="$event.target.style.display='none'"
-                  />
-                  <div 
-                    v-else
-                    class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600 flex-shrink-0"
-                  >
-                    {{ slotProps.option.name ? slotProps.option.name.charAt(0).toUpperCase() : '?' }}
-                  </div>
-                  <!-- Nom du sport -->
-                  <span class="truncate">{{ slotProps.option.name }}</span>
+                <!-- Nom du sport sélectionné -->
+                <span>{{ slotProps.value.name }}</span>
+              </div>
+            </template>
+            
+            <!-- Template pour les options du dropdown -->
+            <template #option="slotProps">
+              <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
+                <!-- Icône du sport -->
+                <img
+                  v-if="slotProps.option.img"
+                  :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.option.img.replace('.png', '.svg')}`"
+                  :alt="slotProps.option.name"
+                  class="w-5 h-5 object-contain flex-shrink-0 filter brightness-0"
+                  @error="$event.target.style.display='none'"
+                />
+                <div 
+                  v-else
+                  class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600 flex-shrink-0"
+                >
+                  {{ slotProps.option.name ? slotProps.option.name.charAt(0).toUpperCase() : '?' }}
                 </div>
-              </template>
-            </AutoComplete>
-          </div>
+                <!-- Nom du sport -->
+                <span class="truncate">{{ slotProps.option.name }}</span>
+              </div>
+            </template>
+          </AutoComplete>
           <small v-if="errors[`sport_id_${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`sport_id_${eventIndex}`] }}</small>
         </div>
 
@@ -117,11 +113,14 @@
                 v-model="eventData.selectedCountry" 
                 :suggestions="eventData.countryFilteredResults || []" 
                 @complete="(event) => searchCountries(event, eventIndex)"
+                @focus="() => onCountryDropdownShow(eventIndex)"
                 @item-select="(event) => onCountrySelect(event, eventIndex)"
                 optionLabel="name"
                 :placeholder="eventData.selectedCountry && eventData.selectedCountry.length > 0 ? '' : 'Pays'"
                 class="w-full max-w-full select-custom"
                 :class="{ 'p-invalid': errors[`country_id_${eventIndex}`] }"
+                :loading="eventData.countryLoading"
+                :disabled="!eventData.sport_id"
                 :minLength="0"
                 dropdown
                 dropdownMode="blank"
@@ -489,7 +488,7 @@
                     Cote: {{ event.odds }}
                   </span>
                   <span v-if="event.result" class="font-medium" :class="{
-                    'text-green-600': event.result === 'won',
+                    'text-green-600': event.result === 'win',
                     'text-red-600': event.result === 'lost',
                     'text-yellow-600': event.result === 'pending',
                     'text-gray-600': event.result === 'void'
@@ -669,10 +668,14 @@ const toast = useToast();
 
 // Variables réactives
 const loading = ref(false);
-const sports = ref([]);
+const availableSports = ref([]); // Liste des sports disponibles
+const sportsLoading = ref(false); // État de chargement des sports
 const countries = ref([]);
 const allCountries = ref([]);
 const errors = ref({});
+
+// Cache pour les pays par sport
+const countriesBySportCache = ref(new Map());
 const eventOddsInput = ref(null);
 const availableLeagues = ref([]);
 const availableTeams = ref([]);
@@ -740,7 +743,7 @@ const eventCards = ref([
     description: '',
     result: null,
     odds: null,
-    selectedSport: [],
+    selectedSport: null,
     selectedCountry: [],
     selectedLeague: [],
     selectedTeam1: [],
@@ -748,6 +751,7 @@ const eventCards = ref([
     sportSearchResults: [],
     sportLoading: false,
     countryFilteredResults: [],
+    countryLoading: false,
     leagueSearchResults: [],
     leagueLoading: false,
     team1SearchResults: [],
@@ -789,7 +793,7 @@ const formData = ref({
 // Options pour le résultat
 const resultOptions = [
   { label: 'Annulé', value: 'void' },
-  { label: 'Gagné', value: 'won' },
+  { label: 'Gagné', value: 'win' },
   { label: 'Perdu', value: 'lost' }
 ];
 
@@ -828,33 +832,6 @@ const isFormValid = computed(() => {
 
 
 // Méthodes
-/**
- * Charger la liste des sports disponibles depuis l'API
- */
-async function loadSports() {
-  try {
-    sports.value = await SportService.getSports();
-  } catch (error) {
-    console.error('Erreur lors du chargement des sports:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Erreur',
-      detail: 'Impossible de charger les sports',
-      life: 3000
-    });
-    // Fallback vers des sports statiques en cas d'erreur
-    sports.value = [
-      { id: 1, name: 'Football' },
-      { id: 2, name: 'Basketball' },
-      { id: 3, name: 'Tennis' },
-      { id: 4, name: 'Hockey' },
-      { id: 5, name: 'Baseball' },
-      { id: 6, name: 'Volleyball' },
-      { id: 7, name: 'Rugby' },
-      { id: 8, name: 'Handball' }
-    ];
-  }
-}
 
 /**
  * Charger la liste des pays disponibles
@@ -939,63 +916,109 @@ async function loadTeamsByLeague(leagueId) {
 }
 
 /**
- * Rechercher des sports avec filtrage côté client
- * @param {Object} event - Événement de recherche contenant la query
+ * Charger les pays qui ont des ligues pour un sport spécifique
+ * @param {number} sportId - ID du sport
  * @param {number} eventIndex - Index de l'événement
  */
-async function searchSports(event, eventIndex) {
-  const eventData = eventCards.value[eventIndex];
-  const query = event.query || '';
-  
-  console.log('🔍 searchSports appelée avec:', {
-    query,
-    eventIndex
-  });
-  
-  // Initialiser les résultats si nécessaire
-  if (!eventData.sportSearchResults) {
-    eventData.sportSearchResults = [];
-  }
-  
+async function loadCountriesBySport(sportId, eventIndex) {
   try {
-    eventData.sportLoading = true;
-    console.log('⏳ Début de la requête API sports...');
+    const eventData = eventCards.value[eventIndex];
+    eventData.countryLoading = true;
     
-    // Récupérer tous les sports
-    const allSportsData = await SportService.getSports();
-    
-    console.log('📡 Réponse API sports reçue:', {
-      data: allSportsData,
-      dataLength: allSportsData?.length
-    });
-    
-    // Filtrer les sports selon la query
-    if (!query.trim().length) {
-      eventData.sportSearchResults = allSportsData || [];
-    } else {
-      eventData.sportSearchResults = (allSportsData || []).filter((sport) => {
-        return sport.name.toLowerCase().includes(query.toLowerCase());
-      });
+    // Vérifier si les pays sont déjà en cache pour ce sport
+    if (countriesBySportCache.value.has(sportId)) {
+      const cachedCountries = countriesBySportCache.value.get(sportId);
+      eventData.countryFilteredResults = [...cachedCountries];
+      console.log('✅ Pays récupérés depuis le cache pour le sport', sportId, ':', cachedCountries.length, 'pays');
+      return;
     }
     
-    console.log('📝 Résultats sports mis à jour pour événement', eventIndex);
+    // Charger depuis l'API si pas en cache
+    const countriesData = await SportService.getCountriesBySport(sportId);
     
-    console.log('✅ searchSports terminée:', {
-      totalResults: eventData.sportSearchResults.length,
-      eventIndex
-    });
+    // Mettre en cache les résultats
+    countriesBySportCache.value.set(sportId, countriesData);
+    
+    // Mettre à jour les pays disponibles pour cette carte d'événement
+    eventData.countryFilteredResults = [...countriesData];
+    
+    console.log('✅ Pays chargés depuis l\'API et mis en cache pour le sport', sportId, ':', countriesData.length, 'pays');
     
   } catch (error) {
-    console.error('❌ Erreur lors de la recherche des sports:', error);
+    console.error('Erreur lors du chargement des pays par sport:', error);
     toast.add({
       severity: 'error',
       summary: 'Erreur',
-      detail: 'Impossible de rechercher les sports',
+      detail: 'Impossible de charger les pays pour ce sport',
       life: 3000
     });
+    const eventData = eventCards.value[eventIndex];
+    eventData.countryFilteredResults = [];
   } finally {
-    eventData.sportLoading = false;
-    console.log('🏁 searchSports: loading terminé');
+    const eventData = eventCards.value[eventIndex];
+    eventData.countryLoading = false;
+  }
+}
+
+/**
+ * Charger tous les sports disponibles
+ */
+async function loadSports() {
+  console.log('🔍 Chargement des sports...');
+  
+  try {
+    sportsLoading.value = true;
+    
+    const sportsData = await SportService.getSports();
+    availableSports.value = sportsData;
+    
+    console.log('✅ Sports chargés avec succès:', sportsData.length, 'sports');
+    
+  } catch (error) {
+    console.error('❌ Erreur lors du chargement des sports:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Erreur',
+      detail: 'Impossible de charger les sports',
+      life: 3000
+    });
+    availableSports.value = [];
+  } finally {
+    sportsLoading.value = false;
+  }
+}
+
+/**
+ * Rechercher des sports avec filtrage
+ * @param {Object} event - Événement de recherche contenant la query
+ * @param {number} eventIndex - Index de l'événement
+ */
+function searchSports(event, eventIndex) {
+  const query = event.query || '';
+  const eventData = eventCards.value[eventIndex];
+  
+  setTimeout(() => {
+    if (!query.trim().length) {
+      eventData.sportSearchResults = [...availableSports.value];
+    } else {
+      eventData.sportSearchResults = availableSports.value.filter((sport) => {
+        return sport.name.toLowerCase().includes(query.toLowerCase());
+      });
+    }
+  }, 250);
+}
+
+/**
+ * Gérer l'affichage du dropdown des sports
+ * @param {number} eventIndex - Index de l'événement
+ */
+function onSportDropdownShow(eventIndex) {
+  console.log('🔽 Dropdown sports ouvert pour événement', eventIndex);
+  const eventData = eventCards.value[eventIndex];
+  
+  // Charger tous les sports si pas encore chargés
+  if (!eventData.sportSearchResults || eventData.sportSearchResults.length === 0) {
+    eventData.sportSearchResults = [...availableSports.value];
   }
 }
 
@@ -1007,13 +1030,13 @@ async function searchSports(event, eventIndex) {
 async function onSportSelect(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
-  // Remplacer l'élément existant par le nouveau sport sélectionné
+  // Gérer la sélection d'un sport unique
   if (event.value) {
-    eventData.selectedSport = [event.value]; // Remplacer par le nouveau sport
+    eventData.selectedSport = event.value; // Sport unique au lieu d'un tableau
     eventData.sport_id = event.value.id;
     console.log('✅ Sport sélectionné pour événement', eventIndex, ':', event.value);
   } else {
-    eventData.selectedSport = [];
+    eventData.selectedSport = null;
     eventData.sport_id = null;
     console.log('✅ Sport désélectionné pour événement', eventIndex);
   }
@@ -1038,8 +1061,10 @@ async function onSportSelect(event, eventIndex) {
   eventData.selectedTeam2 = [];
   eventData.team2SearchResults = [];
   
-  // Charger les équipes du sport sélectionné
+  // Charger les données du sport sélectionné
   if (eventData.sport_id) {
+    // Charger les pays qui ont des ligues pour ce sport
+    await loadCountriesBySport(eventData.sport_id, eventIndex);
     await loadTeamsBySport(eventData.sport_id);
     // Charger les premières ligues
     await searchLeagues({ query: '' }, eventIndex);
@@ -1061,7 +1086,27 @@ async function onSportChange(event, eventIndex) {
 }
 
 /**
- * Rechercher des pays avec filtrage côté client
+ * Gérer l'affichage du dropdown des pays
+ * @param {number} eventIndex - Index de l'événement
+ */
+function onCountryDropdownShow(eventIndex) {
+  console.log('🔽 Dropdown pays ouvert pour événement', eventIndex);
+  const eventData = eventCards.value[eventIndex];
+  
+  // Si aucun sport sélectionné, ne rien faire
+  if (!eventData.sport_id) {
+    return;
+  }
+  
+  // Charger les pays depuis le cache si disponibles
+  const cachedCountries = countriesBySportCache.value.get(eventData.sport_id) || [];
+  if (cachedCountries.length > 0 && (!eventData.countryFilteredResults || eventData.countryFilteredResults.length === 0)) {
+    eventData.countryFilteredResults = [...cachedCountries];
+  }
+}
+
+/**
+ * Rechercher des pays avec filtrage côté client utilisant le cache
  * @param {Object} event - Événement de recherche contenant la query
  * @param {number} eventIndex - Index de l'événement
  */
@@ -1069,11 +1114,22 @@ function searchCountries(event, eventIndex) {
   const query = event.query || '';
   const eventData = eventCards.value[eventIndex];
   
+  // Si aucun sport n'est sélectionné, ne pas afficher de pays
+  if (!eventData.sport_id) {
+    eventData.countryFilteredResults = [];
+    return;
+  }
+  
+  // Récupérer les pays depuis le cache pour ce sport
+  const cachedCountries = countriesBySportCache.value.get(eventData.sport_id) || [];
+  
   setTimeout(() => {
     if (!query.trim().length) {
-      eventData.countryFilteredResults = [...allCountries.value];
+      // Afficher tous les pays disponibles pour ce sport depuis le cache
+      eventData.countryFilteredResults = [...cachedCountries];
     } else {
-      eventData.countryFilteredResults = allCountries.value.filter((country) => {
+      // Filtrer les pays depuis le cache
+      eventData.countryFilteredResults = cachedCountries.filter((country) => {
         return country.name.toLowerCase().includes(query.toLowerCase());
       });
     }
@@ -1505,19 +1561,7 @@ function onTeam2DropdownShow(eventIndex) {
   }
 }
 
-/**
- * Gérer l'affichage du dropdown des sports
- * @param {number} eventIndex - Index de l'événement
- */
-function onSportDropdownShow(eventIndex) {
-  console.log('🔽 Dropdown sports ouvert pour événement', eventIndex);
-  
-  // Charger les sports si pas encore chargés pour cette card
-  const eventData = eventCards.value[eventIndex];
-  if (!eventData.sportSearchResults || eventData.sportSearchResults.length === 0) {
-    searchSports({ query: '' }, eventIndex);
-  }
-}
+
 
 /**
  * Gérer l'affichage du dropdown des ligues
@@ -2289,7 +2333,7 @@ function addEvent() {
  }
 
 /**
- * Ajouter une nouvelle card d'événement
+ * Ajouter une nouvelle card d'événement (optimisé)
  */
 function addEventCard() {
   const newEventCard = {
@@ -2302,7 +2346,7 @@ function addEventCard() {
     description: '',
     result: null,
     odds: null,
-    selectedSport: [],
+    selectedSport: null,
     selectedCountry: [],
     selectedLeague: [],
     selectedTeam1: [],
@@ -2310,6 +2354,7 @@ function addEventCard() {
     sportSearchResults: [],
     sportLoading: false,
     countryFilteredResults: [],
+    countryLoading: false,
     leagueSearchResults: [],
     leagueLoading: false,
     team1SearchResults: [],
@@ -2319,7 +2364,9 @@ function addEventCard() {
   };
   
   eventCards.value.push(newEventCard);
-  console.log('✅ Nouvelle card d\'événement ajoutée:', newEventCard);
+  console.log('✅ Nouvelle card d\'événement ajoutée:', {
+    cardId: newEventCard.id
+  });
 }
 
 /**
@@ -2422,7 +2469,7 @@ function calculateGlobalResult() {
   }
   
   let hasAllResults = true;
-  let hasWon = true;
+  let hasWin = true;
   let hasLost = false;
   let hasVoid = false;
   let hasPending = false;
@@ -2442,20 +2489,20 @@ function calculateGlobalResult() {
     switch (result) {
       case 'lost':
         hasLost = true;
-        hasWon = false;
+        hasWin = false;
         break;
       case 'void':
         hasVoid = true;
         break;
       case 'pending':
         hasPending = true;
-        hasWon = false;
+        hasWin = false;
         break;
-      case 'won':
+      case 'win':
         // Continue à vérifier les autres
         break;
       default:
-        hasWon = false;
+        hasWin = false;
     }
   });
   
@@ -2464,12 +2511,12 @@ function calculateGlobalResult() {
     formData.value.result = 'pending';
   } else if (hasLost) {
     formData.value.result = 'lost';
-  } else if (hasVoid && hasWon) {
-    formData.value.result = 'won'; // Si certains sont void mais les autres gagnés
+  } else if (hasVoid && hasWin) {
+    formData.value.result = 'win'; // Si certains sont void mais les autres gagnés
   } else if (hasVoid) {
     formData.value.result = 'void';
-  } else if (hasWon) {
-    formData.value.result = 'won';
+  } else if (hasWin) {
+    formData.value.result = 'win';
   }
 }
 
@@ -2529,10 +2576,37 @@ watch(
   { deep: true }
 );
 
-// Lifecycle
-onMounted(async () => {
+/**
+ * Charger les sports au moment de l'ouverture de la modal
+ * Cette méthode est appelée par AddBetDialog lors de l'ouverture
+ */
+async function loadSportsOnModalOpen() {
+  console.log('🚀 Chargement des sports au clic sur la modal');
+  
+  // Charger les sports si pas encore chargés
+  if (!availableSports.value || availableSports.value.length === 0) {
+    await loadSports();
+  } else {
+    console.log('📋 Sports déjà chargés (', availableSports.value.length, 'sports)');
+  }
+}
+
+// Exposer la méthode pour qu'elle soit accessible depuis le parent
+defineExpose({
+  loadSportsOnModalOpen
+});
+
+// Fonction d'initialisation asynchrone
+async function initializeComponent() {
+  // Charger les sports et les pays au montage
   await loadSports();
   await loadCountries();
+  console.log('✅ Sports et pays chargés au montage du composant');
+}
+
+// Lifecycle
+onMounted(() => {
+  initializeComponent();
 });
 </script>
 
