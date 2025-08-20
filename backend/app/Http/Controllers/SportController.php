@@ -229,4 +229,38 @@ class SportController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Récupérer les pays qui ont des ligues pour un sport spécifique
+     */
+    public function getCountriesBySport(Request $request, $sportId): JsonResponse
+    {
+        try {
+            $search = $request->get('search', '');
+            
+            $query = \App\Models\Country::whereHas('leagues', function($q) use ($sportId) {
+                $q->where('sport_id', $sportId);
+            })
+            ->select('id', 'name', 'code', 'slug')
+            ->orderBy('name');
+            
+            // Appliquer le filtre de recherche si fourni
+            if (!empty($search)) {
+                $query->where('name', 'LIKE', '%' . $search . '%');
+            }
+            
+            $countries = $query->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $countries
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des pays pour ce sport',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

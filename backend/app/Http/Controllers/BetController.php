@@ -92,21 +92,21 @@ class BetController extends Controller
         $stats = $query->selectRaw('
             COUNT(*) as total_bets,
             SUM(stake) as total_stake,
-            SUM(CASE WHEN result = "won" THEN (stake * global_odds - stake) ELSE 0 END) as total_wins,
+            SUM(CASE WHEN result = "win" THEN (stake * global_odds - stake) ELSE 0 END) as total_wins,
             SUM(CASE WHEN result = "lost" THEN -stake ELSE 0 END) as total_losses,
             SUM(CASE
-                WHEN result = "won" THEN (stake * global_odds - stake)
+                WHEN result = "win" THEN (stake * global_odds - stake)
                 WHEN result = "lost" THEN -stake
                 ELSE 0
             END) as total_profit_loss,
             AVG(global_odds) as average_odds,
-            COUNT(CASE WHEN result = "won" THEN 1 END) as won_bets,
+            COUNT(CASE WHEN result = "win" THEN 1 END) as win_bets,
             COUNT(CASE WHEN result = "lost" THEN 1 END) as lost_bets,
             COUNT(CASE WHEN result = "pending" OR result IS NULL THEN 1 END) as pending_bets,
 
         ')->first();
 
-        $winRate = $stats->total_bets > 0 ? ($stats->won_bets / $stats->total_bets) * 100 : 0;
+        $winRate = $stats->total_bets > 0 ? ($stats->win_bets / $stats->total_bets) * 100 : 0;
         $roi = $stats->total_stake > 0 ? ($stats->total_profit_loss / $stats->total_stake) * 100 : 0;
 
         return response()->json([
@@ -118,7 +118,7 @@ class BetController extends Controller
                 'total_losses' => $stats->total_losses,
                 'total_profit_loss' => $stats->total_profit_loss,
                 'average_odds' => $stats->average_odds,
-                'won_bets' => $stats->won_bets,
+                'win_bets' => $stats->win_bets,
                 'lost_bets' => $stats->lost_bets,
                 'pending_bets' => $stats->pending_bets,
                 'win_rate' => round($winRate, 2),
@@ -160,8 +160,8 @@ class BetController extends Controller
             $inPlayStake = $bets->where('result', 'pending')->sum('stake');
             $maxStake = $bets->max('stake');
             $minStake = $bets->min('stake');
-            $biggestWonOdds = $bets->where('result', 'won')->max('global_odds');
-            $smallestWonOdds = $bets->where('result', 'won')->min('global_odds');
+            $biggestWinOdds = $bets->where('result', 'win')->max('global_odds');
+            $smallestWinOdds = $bets->where('result', 'win')->min('global_odds');
             
             // Calcul du plus gros bénéfice et de la plus grosse perte
             $biggestProfit = 0;
@@ -186,8 +186,8 @@ class BetController extends Controller
                     'in_play_stake' => round($inPlayStake, 2),
                     'max_stake' => $maxStake ? round($maxStake, 2) : null,
                     'min_stake' => $minStake ? round($minStake, 2) : null,
-                    'biggest_won_odds' => $biggestWonOdds ? round($biggestWonOdds, 3) : null,
-                    'smallest_won_odds' => $smallestWonOdds ? round($smallestWonOdds, 3) : null,
+                    'biggest_win_odds' => $biggestWinOdds ? round($biggestWinOdds, 3) : null,
+                    'smallest_win_odds' => $smallestWinOdds ? round($smallestWinOdds, 3) : null,
                     'biggest_profit' => $biggestProfit > 0 ? round($biggestProfit, 2) : null,
                     'biggest_loss' => $biggestLoss < 0 ? round(abs($biggestLoss), 2) : null,
                     'max_win_streak' => $streaks['max_win_streak'],
@@ -218,11 +218,11 @@ class BetController extends Controller
         $tempWinStreak = 0;
         $tempLoseStreak = 0;
 
-        // Filtrer seulement les paris avec résultat défini (won/lost)
-        $settledBets = $bets->whereIn('result', ['won', 'lost']);
+        // Filtrer seulement les paris avec résultat défini (win/lost)
+        $settledBets = $bets->whereIn('result', ['win', 'lost']);
 
         foreach ($settledBets as $bet) {
-            if ($bet->result === 'won') {
+            if ($bet->result === 'win') {
                 $tempWinStreak++;
                 $tempLoseStreak = 0;
                 if ($tempWinStreak > $maxWinStreak) {
@@ -376,7 +376,7 @@ class BetController extends Controller
      */
     private function calculateBetProfitLoss($bet): float
     {
-        if ($bet->result === 'won') {
+        if ($bet->result === 'win') {
             return (float) (($bet->stake * $bet->global_odds) - $bet->stake);
         } elseif ($bet->result === 'lost') {
             return (float) (-$bet->stake);
@@ -448,7 +448,7 @@ class BetController extends Controller
             'bet_date' => 'required|date',
             'global_odds' => 'required|numeric|min:1',
             'bet_code' => 'required|string|max:256',
-            'result' => 'nullable|in:won,lost,void,pending',
+            'result' => 'nullable|in:win,lost,void,pending',
             'stake' => 'required|numeric|min:0',
             'stake_type' => 'required|in:currency,percentage',
             // Validation du tableau d'événements
@@ -459,7 +459,7 @@ class BetController extends Controller
             'events.*.team1_id' => 'nullable|exists:teams,id',
             'events.*.team2_id' => 'nullable|exists:teams,id',
             'events.*.description' => 'required|string|max:500',
-            'events.*.result' => 'nullable|in:won,lost,void,pending',
+            'events.*.result' => 'nullable|in:win,lost,void,pending',
             'events.*.odds' => 'nullable|numeric|min:1'
         ]);
 
@@ -531,7 +531,7 @@ class BetController extends Controller
             'bet_date' => 'sometimes|date',
             'global_odds' => 'sometimes|numeric|min:1',
             'bet_code' => 'sometimes|string|max:256',
-            'result' => 'nullable|in:won,lost,void,pending',
+            'result' => 'nullable|in:win,lost,void,pending',
             'sport_id' => 'sometimes|exists:sports,id',
             'stake' => 'sometimes|numeric|min:0'
         ]);

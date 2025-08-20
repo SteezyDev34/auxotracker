@@ -11,6 +11,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\BookmakerController;
 use App\Http\Controllers\UserBankrollController;
 use App\Http\Controllers\UserBookmakerController;
+use App\Http\Controllers\TipsterController;
+use App\Http\Controllers\UserSportPreferenceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -59,6 +61,7 @@ Route::get('/countries/search', [CountryController::class, 'search']);
 
 // Routes pour les sports, ligues et équipes
 Route::get('/sports', [SportController::class, 'index']);
+Route::get('/sports/{sportId}/countries', [SportController::class, 'getCountriesBySport']);
 Route::get('/sports/{sportId}/leagues', [SportController::class, 'getLeagues']);
 Route::get('/sports/{sportId}/leagues/search', [SportController::class, 'searchLeaguesBySport']);
 Route::get('/sports/{sportId}/teams', [SportController::class, 'getTeamsBySport']);
@@ -96,6 +99,14 @@ Route::middleware('auth:sanctum')->post('/user/avatar', [UserController::class, 
 Route::middleware('auth:sanctum')->delete('/user/avatar', [UserController::class, 'deleteAvatar']);
 Route::middleware('auth:sanctum')->post('/user/settings', [UserController::class, 'updateSettings']);
 
+// Routes pour les préférences sportives de l'utilisateur
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user/sports-preferences', [UserSportPreferenceController::class, 'index']);
+    Route::post('/user/sports-preferences', [UserSportPreferenceController::class, 'update']);
+    Route::get('/user/sports-preferences/favorites', [UserSportPreferenceController::class, 'favorites']);
+    Route::post('/user/sports-preferences/{sportId}/toggle-favorite', [UserSportPreferenceController::class, 'toggleFavorite']);
+});
+
 // Routes pour les bookmakers
 Route::get('/bookmakers', [BookmakerController::class, 'index']);
 Route::get('/bookmakers/{id}', [BookmakerController::class, 'show']);
@@ -107,6 +118,9 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Routes pour les associations utilisateur-bookmaker
     Route::apiResource('user-bookmakers', UserBookmakerController::class);
+    
+    // Routes pour les tipsters de l'utilisateur
+    Route::apiResource('tipsters', TipsterController::class);
     
     // Routes admin pour la gestion des bookmakers (à protéger davantage si nécessaire)
     Route::post('/bookmakers', [BookmakerController::class, 'store']);

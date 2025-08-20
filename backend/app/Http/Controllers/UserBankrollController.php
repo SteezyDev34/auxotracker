@@ -10,14 +10,16 @@ use Illuminate\Support\Facades\Validator;
 class UserBankrollController extends Controller
 {
     /**
-     * Affiche la liste des bankrolls de l'utilisateur connecté.
+     * Affiche la liste des bankrolls de l'utilisateur connecté avec leurs bookmakers.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
         $user = Auth::user();
-        $bankrolls = UserBankroll::where('user_id', $user->id)->get();
+        $bankrolls = UserBankroll::with(['userBookmakers.bookmaker'])
+            ->where('user_id', $user->id)
+            ->get();
 
         return response()->json(['bankrolls' => $bankrolls]);
     }
@@ -33,7 +35,7 @@ class UserBankrollController extends Controller
         $validator = Validator::make($request->all(), [
             'bankroll_name' => 'required|string|max:255',
             'bankroll_start_amount' => 'required|numeric|min:0',
-            'bankroll_actual_amount' => 'required|numeric|min:0',
+            'bankroll_benefits' => 'sometimes|numeric',
             'bankroll_description' => 'nullable|string',
         ]);
 
@@ -83,7 +85,7 @@ class UserBankrollController extends Controller
         $validator = Validator::make($request->all(), [
             'bankroll_name' => 'sometimes|required|string|max:255',
             'bankroll_start_amount' => 'sometimes|required|numeric|min:0',
-            'bankroll_actual_amount' => 'sometimes|required|numeric|min:0',
+            'bankroll_benefits' => 'sometimes|numeric',
             'bankroll_description' => 'nullable|string',
         ]);
 

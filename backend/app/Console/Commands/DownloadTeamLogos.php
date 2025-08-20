@@ -14,7 +14,7 @@ class DownloadTeamLogos extends Command
      *
      * @var string
      */
-    protected $signature = 'team:download-logos {team_id? : ID de l\'équipe spécifique à télécharger} {--force : Force le téléchargement même si le logo existe} {--empty-img : Ne traiter que les équipes avec le champ img vide} {--league= : ID de la ligue pour filtrer les équipes}';
+    protected $signature = 'team:download-logos {team_id? : ID de l\'équipe spécifique à télécharger} {--force : Force le téléchargement même si le logo existe} {--empty-img : Ne traiter que les équipes avec le champ img vide} {--league= : ID de la ligue pour filtrer les équipes} {--delay=1 : Délai en secondes entre chaque requête API (défaut: 1)}';
 
     /**
      * The console command description.
@@ -29,13 +29,16 @@ class DownloadTeamLogos extends Command
     public function handle(TeamLogoService $logoService)
     {
         $teamId = $this->argument('team_id');
+        $delay = (int) $this->option('delay');
+        
+        // Afficher les paramètres de configuration
+        $this->info('🚀 Début du téléchargement des logos d\'équipes...');
+        $this->info("⏱️  Délai configuré: {$delay} seconde(s) entre chaque requête");
         
         if ($teamId) {
             // Télécharger le logo d'une équipe spécifique
-            return $this->downloadSingleTeamLogo($logoService, $teamId);
+            return $this->downloadSingleTeamLogo($logoService, $teamId, $delay);
         }
-        
-        $this->info('Début du téléchargement des logos d\'équipes...');
         
         // Récupérer les équipes avec un sofascore_id
         $query = Team::whereNotNull('sofascore_id');
@@ -57,7 +60,7 @@ class DownloadTeamLogos extends Command
             $this->info("🏆 Filtrage activé: traitement uniquement des équipes de la ligue ID: {$leagueId}");
         }
         
-        $teams = $query->get();
+        $teams = $query->orderBy('id', 'desc')->get();
         
         if ($teams->isEmpty()) {
             $this->warn('Aucune équipe avec un sofascore_id trouvée.');
@@ -91,8 +94,10 @@ class DownloadTeamLogos extends Command
             
             $progressBar->advance();
             
-            // Pause pour éviter de surcharger l'API
-            usleep(500000); // 0.5 seconde
+            // Pause configurable pour éviter de surcharger l'API et les erreurs 403
+            if ($delay > 0) {
+                sleep($delay);
+            }
         }
         
         $progressBar->finish();
@@ -120,7 +125,7 @@ class DownloadTeamLogos extends Command
      * @param int $teamId
      * @return int
      */
-    private function downloadSingleTeamLogo(TeamLogoService $logoService, int $teamId): int
+    private function downloadSingleTeamLogo(TeamLogoService $logoService, int $teamId, int $delay = 1): int
     {
         $this->info("Téléchargement du logo pour l'équipe ID: {$teamId}");
         

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Tipster;
+use App\Models\UserSportPreference;
 
 class User extends Authenticatable
 {
@@ -110,5 +112,38 @@ class User extends Authenticatable
     public function bankrolls(): HasMany
     {
         return $this->hasMany(UserBankroll::class, 'user_id');
+    }
+
+    /**
+     * Obtenir les tipsters de l'utilisateur.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function tipsters(): HasMany
+    {
+        return $this->hasMany(Tipster::class, 'user_id');
+    }
+
+    /**
+     * Obtenir les préférences sportives de l'utilisateur.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function sportsPreferences(): HasMany
+    {
+        return $this->hasMany(UserSportPreference::class, 'user_id');
+    }
+
+    /**
+     * Obtenir les sports favoris de l'utilisateur ordonnés.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function favoriteSports(): HasMany
+    {
+        return $this->hasMany(UserSportPreference::class, 'user_id')
+            ->favorites()
+            ->ordered()
+            ->with('sport');
     }
 }

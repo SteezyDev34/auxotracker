@@ -30,6 +30,9 @@ class ImportSportLeagues extends Command
      */
     public function handle()
     {
+        // Initialiser le répertoire de cache
+        $this->setCacheDirectory();
+        
         $sportSlug = $this->argument('sport_slug');
         
         $this->info("🚀 Début de l'importation des ligues pour le sport: {$sportSlug}...");
@@ -214,7 +217,20 @@ class ImportSportLeagues extends Command
     /**
      * Répertoire de cache pour les réponses API
      */
-    private $cacheDir = 'storage/app/sofascore_cache';
+    private $cacheDir;
+    
+    /**
+     * Définit le répertoire de cache pour les réponses API
+     */
+    private function setCacheDirectory()
+    {
+        $sportSlug = $this->argument('sport_slug');
+        $this->cacheDir = storage_path('app/sofascore_cache/leagues_' . $sportSlug);
+        
+        if (!file_exists($this->cacheDir)) {
+            mkdir($this->cacheDir, 0755, true);
+        }
+    }
     
     /**
      * Vérifie si le cache doit être utilisé
@@ -242,31 +258,24 @@ class ImportSportLeagues extends Command
         }
         
         $cacheKey = $this->getCacheKey($url);
-        $cachePath = storage_path($this->cacheDir . '/' . $cacheKey . '.json');
+        $cachePath = $this->cacheDir . '/' . $cacheKey . '.json';
         
         if (!file_exists($cachePath)) {
             return null;
         }
         
-        // Vérifier si le cache est encore valide (24 heures)
-        $cacheTime = filemtime($cachePath);
-        $cacheAge = time() - $cacheTime;
-        $cacheValidityPeriod = 24 * 60 * 60; // 24 heures en secondes
-        
-        if ($cacheAge > $cacheValidityPeriod) {
-            $this->line("   🕒 Cache expiré (âge: " . round($cacheAge / 3600, 1) . " heures)");
-            return null;
-        }
-        
-        $this->line("   📂 Utilisation de la réponse en cache (âge: " . round($cacheAge / 60, 1) . " minutes)");
+        // Utiliser le cache sans vérification d'expiration
+        $this->line("   📂 Utilisation de la réponse en cache");
         $cachedData = json_decode(file_get_contents($cachePath), true);
         
         // Créer une réponse simulée
-        $response = new \Illuminate\Http\Client\Response(new \GuzzleHttp\Psr7\Response(
-            $cachedData['status'],
-            $cachedData['headers'],
-            json_encode($cachedData['body'])
-        ));
+        $response = new \Illuminate\Http\Client\Response(
+            new \GuzzleHttp\Psr7\Response(
+                $cachedData['status'],
+                $cachedData['headers'],
+                is_array($cachedData['body']) ? json_encode($cachedData['body']) : $cachedData['body']
+            )
+        );
         
         return $response;
     }
@@ -281,14 +290,7 @@ class ImportSportLeagues extends Command
         }
         
         $cacheKey = $this->getCacheKey($url);
-        $cacheDir = storage_path($this->cacheDir);
-        
-        // Créer le répertoire de cache s'il n'existe pas
-        if (!file_exists($cacheDir)) {
-            mkdir($cacheDir, 0755, true);
-        }
-        
-        $cachePath = $cacheDir . '/' . $cacheKey . '.json';
+        $cachePath = $this->cacheDir . '/' . $cacheKey . '.json';
         
         $dataToCache = [
             'url' => $url,
@@ -396,7 +398,8 @@ class ImportSportLeagues extends Command
                 $this->error('   ❌ Format de données invalide reçu de l\'API');
                 Log::error('Format de données pays invalide', [
                     'sport_slug' => $sportSlug,
-                    'data_keys' => array_keys($data)
+                    'data_keys' => is_array($data) ? array_keys($data) : 'not_an_array',
+                    'data_type' => gettype($data)
                 ]);
                 return [];
             }

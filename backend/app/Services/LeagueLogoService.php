@@ -173,10 +173,16 @@ class LeagueLogoService
             
             // Gestion spécifique des erreurs 403 et 404
             if (in_array($response->status(), [403, 404])) {
-                Log::info("Logo {$type} non disponible pour la ligue {$league->name} (HTTP {$response->status()})", [
+                Log::info("Logo {$type} non disponible pour la ligue {$league->name} (HTTP {$response->status()}) - Stratégie " . ($strategyIndex + 1), [
                     'sofascore_id' => $league->sofascore_id,
-                    'status' => $response->status()
+                    'status' => $response->status(),
+                    'headers_used' => array_keys($headers)
                 ]);
+                
+                // Attendre avant la prochaine tentative pour éviter les blocages
+                if ($strategyIndex < 2) { // Il y a 3 stratégies (index 0, 1, 2)
+                    sleep(3); // Délai plus long pour éviter les erreurs 403
+                }
                 return null;
             }
             

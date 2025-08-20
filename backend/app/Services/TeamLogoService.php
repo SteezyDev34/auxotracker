@@ -86,17 +86,17 @@ class TeamLogoService
                     return $logoPath;
                 }
                 
-                // Gestion spécifique des erreurs 403
-                if ($response->status() === 403) {
-                    Log::warning("Accès refusé (403) pour l'équipe {$team->name} - Stratégie " . ($index + 1), [
+                // Gestion spécifique des erreurs 403 et 404
+                if (in_array($response->status(), [403, 404])) {
+                    Log::info("Logo non disponible pour l'équipe {$team->name} (HTTP {$response->status()}) - Stratégie " . ($index + 1), [
                          'sofascore_id' => $team->sofascore_id,
                          'status' => $response->status(),
                          'headers_used' => array_keys($headers)
                      ]);
                     
-                    // Attendre avant la prochaine tentative
+                    // Attendre avant la prochaine tentative pour éviter les blocages
                     if ($index < count($strategies) - 1) {
-                        sleep(2);
+                        sleep(3); // Délai plus long pour éviter les erreurs 403
                     }
                     continue;
                 }

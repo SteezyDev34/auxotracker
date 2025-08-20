@@ -27,7 +27,7 @@ class UserBankroll extends Model
         'user_id',
         'bankroll_name',
         'bankroll_start_amount',
-        'bankroll_actual_amount',
+        'bankroll_benefits',
         'bankroll_description'
     ];
 
@@ -38,7 +38,7 @@ class UserBankroll extends Model
      */
     protected $casts = [
         'bankroll_start_amount' => 'decimal:2',
-        'bankroll_actual_amount' => 'decimal:2',
+        'bankroll_benefits' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

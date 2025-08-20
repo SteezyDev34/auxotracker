@@ -14,7 +14,7 @@ class DownloadLeagueLogos extends Command
      *
      * @var string
      */
-    protected $signature = 'league:download-logos {league_id? : ID de la ligue spécifique à télécharger} {--force : Force le téléchargement même si les logos existent} {--empty-img : Ne traiter que les ligues avec le champ img vide}';
+    protected $signature = 'league:download-logos {league_id? : ID de la ligue spécifique à télécharger} {--force : Force le téléchargement même si les logos existent} {--empty-img : Ne traiter que les ligues avec le champ img vide} {--delay=0 : Délai en secondes entre chaque requête API}';
 
     /**
      * The console command description.
@@ -29,13 +29,16 @@ class DownloadLeagueLogos extends Command
     public function handle(LeagueLogoService $logoService)
     {
         $leagueId = $this->argument('league_id');
+        $delay = (int) $this->option('delay');
+        
+        $this->line("🚀 Début du téléchargement des logos de ligues");
+        $this->line("⏱️  Délai entre requêtes: {$delay} seconde(s)");
+        $this->line("");
         
         if ($leagueId) {
             // Télécharger les logos d'une ligue spécifique
             return $this->downloadSingleLeagueLogos($logoService, $leagueId);
         }
-        
-        $this->info('Début du téléchargement des logos de ligues...');
         
         // Récupérer les ligues selon les critères
         $query = League::whereNotNull('sofascore_id');
@@ -110,7 +113,11 @@ class DownloadLeagueLogos extends Command
             $progressBar->advance();
             
             // Pause pour éviter de surcharger l'API
-            usleep(500000); // 0.5 seconde
+            if ($delay > 0) {
+                sleep($delay);
+            } else {
+                usleep(500000); // 0.5 seconde par défaut
+            }
         }
         
         $progressBar->finish();

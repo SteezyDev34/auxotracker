@@ -99,7 +99,8 @@ class Bet extends Model
                 // Pas de filtre de date
                 break;
             default:
-                $query->where('bet_date', '>=', $now->subDays(30));
+               // Pas de filtre de date
+               break;
         }
         
         return $query;
@@ -109,7 +110,7 @@ class Bet extends Model
     public function getStatusColorAttribute()
     {
         return match($this->result) {
-            'won' => 'success',
+            'win' => 'success',
             'lost' => 'danger',
             'void' => 'secondary',
             default => 'info'
@@ -135,7 +136,7 @@ class Bet extends Model
 
     public function calculateProfitLoss()
     {
-        if ($this->result === 'won') {
+        if ($this->result === 'win') {
             return ($this->stake * $this->global_odds) - $this->stake;
         } elseif ($this->result === 'lost') {
             return -$this->stake;

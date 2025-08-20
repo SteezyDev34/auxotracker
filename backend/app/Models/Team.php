@@ -17,7 +17,9 @@ class Team extends Model
         'slug',
         'img',
         'sofascore_id',
-        'league_id'
+        'league_id',
+        'gender',
+        'country_code'
     ];
 
     // Relations

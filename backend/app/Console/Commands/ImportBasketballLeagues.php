@@ -44,6 +44,11 @@ class ImportBasketballLeagues extends Command
      * Répertoire de cache pour les réponses API
      */
     private $cacheDir;
+    
+    /**
+     * Fichier de progression pour reprendre l'importation
+     */
+    private $progressFile;
 
     /**
      * Exécuter la commande
@@ -91,16 +96,39 @@ class ImportBasketballLeagues extends Command
             
             $this->info('📊 ' . count($categories) . ' catégories trouvées');
             
+            // Charger la progression existante
+            $progress = $this->loadProgress();
+            $processedCountries = [];
             $totalProcessed = 0;
             $totalCreated = 0;
             $totalUpdated = 0;
             $totalSkipped = 0;
             
+            if ($progress) {
+                $processedCountries = $progress['processed_countries'] ?? [];
+                $totalProcessed = $progress['stats']['totalProcessed'] ?? 0;
+                $totalCreated = $progress['stats']['totalCreated'] ?? 0;
+                $totalUpdated = $progress['stats']['totalUpdated'] ?? 0;
+                $totalSkipped = $progress['stats']['totalSkipped'] ?? 0;
+                
+                $this->info("📂 Progression trouvée: " . count($processedCountries) . " pays déjà traités (dernière mise à jour: {$progress['last_update']})");
+            }
+            
             // Barre de progression
             $progressBar = $this->output->createProgressBar(count($categories));
+            $progressBar->setProgress(count($processedCountries));
             $progressBar->start();
             
             foreach ($categories as $index => $categoryData) {
+                $countryId = $categoryData['id'];
+                
+                // Vérifier si ce pays a déjà été traité
+                if ($this->isCountryProcessed($countryId, $processedCountries)) {
+                    $progressBar->advance();
+                    $this->line("⏭️  Pays déjà traité: {$categoryData['name']} (ID: {$countryId})");
+                    continue;
+                }
+                
                 $progressBar->advance();
                 
                 $this->line("");
@@ -156,6 +184,17 @@ class ImportBasketballLeagues extends Command
                             break;
                     }
                 }
+                
+                // Marquer ce pays comme traité et sauvegarder la progression
+                $processedCountries[] = $countryId;
+                $stats = [
+                    'totalProcessed' => $totalProcessed,
+                    'totalCreated' => $totalCreated,
+                    'totalUpdated' => $totalUpdated,
+                    'totalSkipped' => $totalSkipped
+                ];
+                $this->saveProgress($processedCountries, $stats);
+                $this->line("💾 Progression sauvegardée pour le pays: {$categoryData['name']}");
             }
             
             $progressBar->finish();
@@ -180,6 +219,10 @@ class ImportBasketballLeagues extends Command
                 'total_updated' => $totalUpdated,
                 'total_skipped' => $totalSkipped
             ]);
+            
+            // Nettoyer le fichier de progression après succès
+            $this->clearProgress();
+            $this->line("🧹 Fichier de progression nettoyé.");
             
             return 0;
             
@@ -320,11 +363,12 @@ class ImportBasketballLeagues extends Command
     }
     
     /**
-     * Définit le répertoire de cache pour les réponses API
+     * Définit le répertoire de cache pour les réponses API et le fichier de progression
      */
     private function setCacheDirectory()
     {
-        $this->cacheDir = storage_path('app/cache/sofascore/basketball');
+        $this->cacheDir = storage_path('app/sofascore_cache');
+        $this->progressFile = storage_path('app/sofascore_cache/basketball_progress.json');
         
         if (!file_exists($this->cacheDir)) {
             mkdir($this->cacheDir, 0755, true);
@@ -348,6 +392,54 @@ class ImportBasketballLeagues extends Command
     }
     
     /**
+     * Sauvegarde la progression de l'importation
+     */
+    private function saveProgress($processedCountries, $stats)
+    {
+        $progressData = [
+            'timestamp' => time(),
+            'processed_countries' => $processedCountries,
+            'stats' => $stats,
+            'last_update' => date('Y-m-d H:i:s')
+        ];
+        
+        file_put_contents($this->progressFile, json_encode($progressData, JSON_PRETTY_PRINT));
+    }
+    
+    /**
+     * Charge la progression sauvegardée
+     */
+    private function loadProgress()
+    {
+        if (!file_exists($this->progressFile)) {
+            return null;
+        }
+        
+        $progressData = json_decode(file_get_contents($this->progressFile), true);
+        
+        // Utiliser la progression sans vérification d'expiration
+        return $progressData;
+    }
+    
+    /**
+     * Vérifie si un pays a déjà été traité
+     */
+    private function isCountryProcessed($countryId, $processedCountries)
+    {
+        return in_array($countryId, $processedCountries);
+    }
+    
+    /**
+     * Nettoie le fichier de progression
+     */
+    private function clearProgress()
+    {
+        if (file_exists($this->progressFile)) {
+            unlink($this->progressFile);
+        }
+    }
+    
+    /**
      * Récupère une réponse mise en cache
      */
     private function getCachedResponse($url)
@@ -362,15 +454,17 @@ class ImportBasketballLeagues extends Command
         if (file_exists($cacheFile)) {
             $cacheData = json_decode(file_get_contents($cacheFile), true);
             
-            // Vérifier si le cache est encore valide (24 heures)
-            if (isset($cacheData['timestamp']) && (time() - $cacheData['timestamp']) < 86400) {
+            // Utiliser le cache sans vérification d'expiration
+            if (isset($cacheData['timestamp'])) {
                 $this->line("     📦 Utilisation de la réponse en cache pour: " . basename($url));
                 
-                // Recréer une réponse HTTP à partir des données en cache
-                $response = Http::response(
-                    $cacheData['body'],
-                    $cacheData['status'],
-                    $cacheData['headers']
+                // Créer une réponse simulée avec les données en cache
+                $response = new \Illuminate\Http\Client\Response(
+                    new \GuzzleHttp\Psr7\Response(
+                        $cacheData['status'],
+                        $cacheData['headers'],
+                        $cacheData['body']
+                    )
                 );
                 
                 return $response;
