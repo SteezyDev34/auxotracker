@@ -19,7 +19,15 @@ class Team extends Model
         'sofascore_id',
         'league_id',
         'gender',
-        'country_code'
+        'country_code',
+        'date_of_birth',
+        'height',
+        'weight',
+        'playing_hand',
+        'backhand',
+        'birthplace',
+        'residence',
+        'coach'
     ];
 
     // Relations

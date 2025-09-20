@@ -1,0 +1,68 @@
+# Configuration Crontab pour l'importation automatique des joueurs de tennis
+# 
+# Format: minute heure jour mois jour_semaine commande
+# 
+# IMPORTANT: Remplacez /chemin/vers/votre/projet par le chemin réel vers votre projet
+# Exemple: /Users/steeven/PROJETS/WORKSPACE/NEW BET TRACKER/backend
+#
+# Pour installer cette configuration:
+# 1. Éditez ce fichier pour ajuster le chemin
+# 2. Exécutez: crontab tennis_import_crontab.txt
+#
+# Pour voir la configuration actuelle: crontab -l
+# Pour éditer manuellement: crontab -e
+
+# ============================================================================
+# OPTIONS DE FRÉQUENCE (décommentez celle que vous souhaitez utiliser)
+# ============================================================================
+
+# OPTION 0: Toutes les 5 minutes
+# Recommandé pour un environnement de développement ou test intensif
+*/1 * * * * cd ~/api.auxotracker && ./tennis_import_cron.sh
+
+# OPTION 1: Toutes les heures à la minute 15
+# Recommandé pour un environnement de développement ou test
+# 15 * * * * cd ~/api.auxotracker && ./tennis_import_cron.sh
+
+# OPTION 2: Toutes les 6 heures (à 00:15, 06:15, 12:15, 18:15)
+# Recommandé pour un environnement de production avec mise à jour fréquente
+# 15 */6 * * * cd ~/api.auxotracker && ./tennis_import_cron.sh
+
+# OPTION 3: Deux fois par jour (à 08:15 et 20:15)
+# Recommandé pour un environnement de production standard
+15 8,20 * * * cd ~/api.auxotracker && ./tennis_import_cron.sh
+
+# OPTION 4: Une fois par jour à 02:15 (pendant la nuit)
+# Recommandé pour minimiser l'impact sur les performances
+# 15 2 * * * cd ~/api.auxotracker && ./tennis_import_cron.sh
+
+# OPTION 5: Tous les jours ouvrables à 07:15 (du lundi au vendredi)
+# Recommandé si les données ne sont mises à jour que pendant la semaine
+# 15 7 * * 1-5 cd ~/api.auxotracker && ./tennis_import_cron.sh
+
+# ============================================================================
+# CONFIGURATION AVANCÉE
+# ============================================================================
+
+# Variables d'environnement pour le cron (optionnel)
+# PATH=/usr/local/bin:/usr/bin:/bin
+# SHELL=/bin/bash
+
+# Redirection des emails de cron vers un fichier (optionnel)
+# MAILTO=""
+
+# ============================================================================
+# NOTES IMPORTANTES
+# ============================================================================
+#
+# 1. Assurez-vous que PHP est accessible dans le PATH du cron
+# 2. Le script génère ses propres logs dans le dossier logs/
+# 3. Les anciens logs sont automatiquement nettoyés (30 jours)
+# 4. Le script utilise --force et --download-images par défaut
+# 5. Surveillez les logs pour détecter d'éventuels problèmes
+#
+# Commandes utiles:
+# - Voir les logs: tail -f /chemin/vers/projet/logs/tennis_import_cron_YYYYMMDD.log
+# - Tester le script: ./tennis_import_cron.sh
+# - Voir les tâches cron: crontab -l
+# - Supprimer toutes les tâches cron: crontab -r

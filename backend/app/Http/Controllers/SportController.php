@@ -205,7 +205,7 @@ class SportController extends Controller
             // Récupérer les résultats avec pagination
             $teams = $query->skip($offset)
                           ->take($limit)
-                          ->get(['id', 'name', 'nickname', 'img', 'league_id']);
+                          ->get(['id', 'name', 'nickname', 'img', 'league_id', 'sofascore_id']);
             
             // Déterminer s'il y a plus de résultats
             $hasMore = ($offset + $limit) < $total;

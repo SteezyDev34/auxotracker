@@ -1,0 +1,45 @@
+[2025-09-19 17:22:29] === DÉBUT DE L'IMPORTATION AUTOMATIQUE DES JOUEURS DE TENNIS ===
+[2025-09-19 17:22:29] Répertoire du projet: /Users/steeven/PROJETS/WORKSPACE/NEW BET TRACKER/backend
+[2025-09-19 17:22:29] Fichier de log: /Users/steeven/PROJETS/WORKSPACE/NEW BET TRACKER/backend/logs/tennis_import_cron_20250919.log
+[2025-09-19 17:22:29] Vérification de l'environnement PHP...
+PHP 8.1.13 (cli) (built: Dec  8 2022 20:54:05) (NTS)
+Copyright (c) The PHP Group
+Zend Engine v4.1.13, Copyright (c) Zend Technologies
+[2025-09-19 17:22:29] Démarrage de l'importation des joueurs depuis le cache...
+🚀 Démarrage de l'importation des joueurs depuis le cache...
+📋 Options:
+   - Forcer la mise à jour: Oui
+   - Limite: Aucune
+   - Télécharger les images: Oui
+📁 5 fichiers de cache trouvés
+🔄 Joueur mis à jour: Casper Ruud (ID: 119248)
+   📝 Détails mis à jour: birth_date: 1998-12-22, height: 1.83, weight: 81, plays: right-handed
+📸 Image téléchargée: Casper Ruud -> team_logos/84260.png
+🔄 Joueur mis à jour: Reilly Opelka (ID: 130400)
+   📝 Détails mis à jour: birth_date: 1997-08-28, height: 2.11, weight: 102, plays: right-handed
+📸 Image téléchargée: Reilly Opelka -> team_logos/84261.png
+🔄 Joueur mis à jour: Flavio Cobolli (ID: 273680)
+   📝 Détails mis à jour: birth_date: 2002-05-06, height: 1.83, weight: 74, plays: right-handed
+📸 Image téléchargée: Flavio Cobolli -> team_logos/84263.png
+🔄 Joueur mis à jour: Jakub Mensik (ID: 372312)
+   📝 Détails mis à jour: birth_date: 2005-09-01, height: 1.96, weight: 87, plays: right-handed
+📸 Image téléchargée: Jakub Mensik -> team_logos/83149.png
+🔄 Joueur mis à jour: Alex Michelsen (ID: 406728)
+   📝 Détails mis à jour: birth_date: 2004-08-25, height: 1.93, weight: 79, plays: right-handed
+📸 Image téléchargée: Alex Michelsen -> team_logos/84262.png
+
+📊 === STATISTIQUES FINALES ===
+📁 Fichiers de cache trouvés: 5
+📄 Fichiers de cache traités: 5
+👥 Joueurs traités: 5
+✅ Joueurs créés: 0
+🔄 Joueurs mis à jour: 5
+⏭️ Joueurs ignorés: 0
+🔄 Doublons détectés: 0
+❌ Erreurs: 0
+🎉 Importation terminée avec succès !
+[2025-09-19 17:22:31] ✅ Importation terminée avec succès
+[2025-09-19 17:22:31] Taille du fichier de log: 4.0K
+[2025-09-19 17:22:31] Nettoyage des anciens logs...
+[2025-09-19 17:22:31] === FIN DE L'IMPORTATION AUTOMATIQUE ===
+[2025-09-19 17:22:31] 

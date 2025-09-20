@@ -12,7 +12,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Importation des joueurs de tennis tous les jours à 1h40
+        $schedule->command('tennis:import-players --download-images')
+                 ->dailyAt('01:40')
+                 ->timezone('Europe/Paris')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/tennis-import.log'));
     }
 
     /**

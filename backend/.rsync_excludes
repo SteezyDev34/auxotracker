@@ -1,0 +1,103 @@
+# Contrôle de version
+.git/
+.gitattributes
+.gitignore
+
+# Dépendances de développement
+node_modules/
+vendor/
+
+# Fichiers de configuration d'environnement
+.env*
+!.env.example
+
+# Fichiers de développement et outils
+.editorconfig
+.eslintrc*
+.prettierrc*
+.stylelintrc*
+phpunit.xml
+phpcs.xml
+phpmd.xml
+.phpunit.result.cache
+.phpcs-cache
+
+# Fichiers de build et compilation
+*.scss
+*.sass
+*.less
+.sass-cache/
+mix-manifest.json
+webpack.mix.js
+vite.config.js
+vite.config.mjs
+postcss.config.js
+tailwind.config.js
+
+# Documentation et README
+*.md
+CHANGELOG*
+LICENSE*
+
+# Fichiers système
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.tmp
+*.temp
+
+# IDE et éditeurs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Scripts de déploiement et Docker
+!*.sh
+docker*
+Dockerfile*
+.dockerignore
+
+# Logs et cache
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+bootstrap/cache/
+*.log
+debug.log
+
+# Tests
+tests/
+.phpunit.result.cache
+coverage/
+
+# Fichiers de configuration CI/CD
+.travis.yml
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Fichiers temporaires et uploads de développement
+uploads/
+public/storage
+storage/app/public
+!storage/app/sofascore_cache
+
+# Configuration spécifique au développement
+.dploycnf
+.rsync_excludes
+
+# Fichiers de package managers
+package-lock.json
+yarn.lock
+composer.lock
+
+# Fichiers de configuration Vercel/Netlify
+vercel.json
+netlify.toml

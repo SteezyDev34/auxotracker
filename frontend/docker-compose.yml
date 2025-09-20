@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build:
-      context: ${DOCKER_DIR}/php82
+      context: ${DOCKER_DIR}/php74
     container_name: auxotracker
     restart: unless-stopped
     environment:
