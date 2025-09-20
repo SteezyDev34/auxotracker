@@ -1,0 +1,115 @@
+# Fichier de synchronisation pour l'initialisation du projet frontend Vue.js
+# Ce fichier est utilisé UNIQUEMENT pour la première synchronisation
+# Il inclut plus d'éléments que le fichier .rsync_excludes standard
+
+# Dossiers de dépendances (toujours exclus)
+node_modules/
+.pnp/
+.pnp.js
+
+# Dossiers de build et distribution (exclus car reconstruits sur le serveur)
+dist/
+build/
+.output/
+.nuxt/
+.next/
+
+# Fichiers de cache (exclus car régénérés)
+.cache/
+.parcel-cache/
+.vite/
+.turbo/
+
+# Fichiers de configuration locale sensibles
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Fichiers système (toujours exclus)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Contrôle de version (exclus car géré séparément)
+.git/
+.svn/
+.hg/
+
+# Logs (exclus car non nécessaires en production)
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Coverage et tests (exclus car non nécessaires en production)
+coverage/
+.nyc_output/
+.coverage/
+*.lcov
+
+# Fichiers temporaires
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Fichiers de sauvegarde
+*.bak
+*.backup
+
+# Cache des linters
+.eslintcache
+.stylelintcache
+
+# Fichiers de déploiement spécifiques au développement
+.last_sync
+
+# Inclusions spécifiques pour l'initialisation
+# Ces fichiers DOIVENT être synchronisés lors de la première installation
+
+# Fichiers de configuration essentiels
+!package.json
+!package-lock.json
+!yarn.lock
+!.env.example
+!.gitignore
+
+# Fichiers de configuration du projet
+!vite.config.js
+!vite.config.mjs
+!tailwind.config.js
+!postcss.config.js
+!babel.config.js
+!jsconfig.json
+
+# Documentation du projet
+!README.md
+!CHANGELOG.md
+!LICENSE.md
+
+# Configuration IDE (utile pour l'équipe)
+!.vscode/extensions.json
+
+# Configuration de déploiement
+!.dploycnf
+!vercel.json
+
+# Dockerfile pour la containerisation
+!Dockerfile
+!docker-compose.yml
+!docker/
+
+# Fichiers d'entrée
+!index.html
+
+# IMPORTANT: Tous les dossiers src/ et public/ sont inclus par défaut
+# car ils contiennent le code source et les assets nécessaires

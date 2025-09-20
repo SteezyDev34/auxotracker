@@ -1,0 +1,36 @@
+# Dockerfile optimisé pour la production
+# Étape 1: Build de l'application
+FROM node:18-alpine AS build-stage
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers package.json et package-lock.json
+COPY package*.json ./
+
+# Installer les dépendances
+RUN npm ci --only=production
+
+# Copier tous les fichiers du projet
+COPY . .
+
+# Construire l'application Vue.js pour la production
+RUN npm run build
+
+# Étape 2: Serveur de production avec Apache
+FROM httpd:2.4-alpine AS production-stage
+
+# Copier la configuration Apache personnalisée
+COPY docker/apache/auxotracker.lan.conf /usr/local/apache2/conf/extra/auxotracker.conf
+
+# Copier les fichiers buildés depuis l'étape précédente
+COPY --from=build-stage /app/dist /usr/local/apache2/htdocs/
+
+# Exposer le port 80
+EXPOSE 80
+
+# Activer les modules Apache nécessaires
+RUN echo "Include conf/extra/auxotracker.conf" >> /usr/local/apache2/conf/httpd.conf
+
+# Commande pour démarrer Apache
+CMD ["httpd-foreground"]

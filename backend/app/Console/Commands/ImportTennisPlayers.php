@@ -138,6 +138,7 @@ class ImportTennisPlayers extends Command
             'tournaments',    // Cache des tournois
             'players',       // Cache des joueurs
             'players/logos', // Images des joueurs
+            'players/statistics', // Statistiques des joueurs
             'metadata',      // Cache des métadonnées
             'compressed'     // Cache compressé pour les gros volumes
         ];
@@ -340,7 +341,7 @@ class ImportTennisPlayers extends Command
         $this->line("🧹 Nettoyage du cache expiré...");
         $cleaned = 0;
         
-        $directories = ['tournaments', 'players', 'metadata', 'default'];
+        $directories = ['tournaments', 'players', 'players/statistics', 'metadata', 'default'];
         
         foreach ($directories as $dir) {
             $path = $this->cacheDirectory . '/' . $dir;
@@ -713,6 +714,9 @@ class ImportTennisPlayers extends Command
             // Récupérer et mettre en cache les détails complets du joueur
             $this->fetchAndCachePlayerDetails($sofascoreId, $noCache, $force);
             
+            // Récupérer et mettre en cache les statistiques annuelles du joueur
+            $this->fetchAndCachePlayerStatistics($sofascoreId, $noCache, $force);
+            
             // Télécharger l'image du joueur si l'option est activée
             if ($downloadImages) {
                 $this->downloadPlayerImage($sofascoreId, $name);
@@ -841,6 +845,102 @@ class ImportTennisPlayers extends Command
         } catch (\Exception $e) {
             Log::error('Erreur lors de la récupération des détails du joueur', [
                 'sofascore_id' => $sofascoreId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Récupérer et mettre en cache les statistiques annuelles d'un joueur
+     */
+    private function fetchAndCachePlayerStatistics($sofascoreId, $noCache = false, $force = false)
+    {
+        try {
+            // Calculer l'année appropriée (année actuelle - 4 mois)
+            $currentDate = new \DateTime();
+            $currentMonth = (int) $currentDate->format('n');
+            $currentYear = (int) $currentDate->format('Y');
+            
+            // Si on est dans les 4 premiers mois de l'année, utiliser l'année précédente
+            $statisticsYear = ($currentMonth <= 4) ? $currentYear - 1 : $currentYear;
+            
+            $url = "https://www.sofascore.com/api/v1/team/{$sofascoreId}/year-statistics/{$statisticsYear}";
+             $cacheKey = "player_statistics_{$sofascoreId}";
+             $cacheFile = $this->cacheDirectory . '/players/statistics/' . $cacheKey . '.json';
+             $metadataFile = $this->cacheDirectory . '/metadata/' . md5($cacheKey) . '.meta';
+             
+             // Créer les répertoires s'ils n'existent pas
+             $statisticsDir = $this->cacheDirectory . '/players/statistics';
+             $metadataDir = $this->cacheDirectory . '/metadata';
+             if (!is_dir($statisticsDir)) {
+                 mkdir($statisticsDir, 0755, true);
+             }
+             if (!is_dir($metadataDir)) {
+                 mkdir($metadataDir, 0755, true);
+             }
+            
+            $playerStatistics = null;
+            $fromCache = false;
+            
+            // Ignorer le cache si force est activé
+            if ($force) {
+                $this->line("🔄 Mode force activé - Ignorer le cache des statistiques pour le joueur ID: {$sofascoreId}");
+            }
+            
+            // Vérifier le cache
+            if (!$noCache && !$force && file_exists($cacheFile) && file_exists($metadataFile)) {
+                $metadata = json_decode(file_get_contents($metadataFile), true);
+                $cacheAge = time() - $metadata['timestamp'];
+                
+                // Cache valide pendant 24 heures pour les statistiques (données plus volatiles)
+                if ($cacheAge < (24 * 3600)) {
+                    $playerStatistics = json_decode(file_get_contents($cacheFile), true);
+                    $fromCache = true;
+                    $this->stats['cache_hits']++;
+                    $playerName = $metadata['player_name'] ?? "ID: {$sofascoreId}";
+                    $this->line("📊 Statistiques du joueur depuis le cache: {$playerName} ({$statisticsYear}) (âge: " . round($cacheAge/3600, 1) . "h)");
+                }
+            }
+            
+            // Récupérer depuis l'API si pas en cache
+            if (!$playerStatistics) {
+                $this->stats['cache_misses']++;
+                $this->line("📈 Récupération des statistiques du joueur ID: {$sofascoreId} pour l'année {$statisticsYear}");
+                
+                $response = $this->makeHttpRequest($url, 3);
+                
+                if ($response && $response->successful()) {
+                    $playerStatistics = $response->json();
+                    $playerName = $playerStatistics['team']['name'] ?? "ID: {$sofascoreId}";
+                    
+                    // Sauvegarder en cache
+                    $cacheWritten = file_put_contents($cacheFile, json_encode($playerStatistics, JSON_PRETTY_PRINT));
+                    $this->line("📊 Cache des statistiques écrit: {$cacheFile} ({$cacheWritten} bytes)");
+                    
+                    // Sauvegarder les métadonnées
+                    $metadata = [
+                        'timestamp' => time(),
+                        'url' => $url,
+                        'player_id' => $sofascoreId,
+                        'player_name' => $playerName,
+                        'statistics_year' => $statisticsYear
+                    ];
+                    $metaWritten = file_put_contents($metadataFile, json_encode($metadata, JSON_PRETTY_PRINT));
+                    $this->line("📋 Metadata des statistiques écrite: {$metadataFile} ({$metaWritten} bytes)");
+                    
+                    $this->line("✅ Statistiques du joueur récupérées et mises en cache: {$playerName} ({$statisticsYear})");
+                } else {
+                    $this->warn("⚠️ Impossible de récupérer les statistiques du joueur ID: {$sofascoreId} pour l'année {$statisticsYear}");
+                    return;
+                }
+            }
+            
+            // Les statistiques sont maintenant en cache
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération des statistiques du joueur', [
+                'sofascore_id' => $sofascoreId,
+                'statistics_year' => $statisticsYear ?? 'unknown',
                 'error' => $e->getMessage()
             ]);
         }

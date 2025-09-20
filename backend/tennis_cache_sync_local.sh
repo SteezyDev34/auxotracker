@@ -33,7 +33,7 @@ echo "📤 Synchronisation avec ljdsync..."
 
 # Exécuter ljdsync
 ljdsync
-
+rm -rf storage/app/sofascore_cache/tennis_players/*
 
 
 if [[ $? -eq 0 ]]; then

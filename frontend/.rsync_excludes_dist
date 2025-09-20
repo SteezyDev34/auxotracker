@@ -1,0 +1,71 @@
+# Exclusions rsync pour déploiement - Envoyer uniquement le contenu de dist/
+# Ce fichier est utilisé pour synchroniser uniquement les fichiers buildés
+
+# Exclure tous les fichiers sources et de développement
+src/
+public/
+node_modules/
+.git/
+.vscode/
+.idea/
+
+# Exclure les fichiers de configuration
+.env*
+.gitignore
+.editorconfig
+.eslintrc*
+.prettierrc*
+babel.config.js
+jsconfig.json
+postcss.config.js
+tailwind.config.js
+vite.config.js
+vite.config.mjs
+
+# Exclure les fichiers de documentation
+README.md
+CHANGELOG.md
+LICENSE.md
+*.md
+
+# Exclure les fichiers de déploiement
+deploy-*.sh
+docker/
+docker-compose.yml
+Dockerfile*
+vercel.json
+
+# Exclure les fichiers de dépendances
+package.json
+package-lock.json
+yarn.lock
+
+# Exclure les fichiers de cache et temporaires
+.cache/
+.vite/
+.turbo/
+.parcel-cache/
+.output/
+.nuxt/
+.next/
+
+# Exclure les logs
+*.log
+logs/
+
+# Exclure les fichiers de backup
+*.backup
+*.bak
+*.tmp
+
+# Exclure les fichiers système
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Exclure les fichiers de configuration rsync
+.rsync_excludes*
+.dploycnf
+.last_sync
