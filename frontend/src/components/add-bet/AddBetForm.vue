@@ -7,18 +7,17 @@
 
     <form @submit.prevent="submitForm" class="space-y-4 mb-4">
       <!-- Date du pari -->
-      <div class="flex flex-col gap-2">
-        <DatePicker 
-          id="bet_date" 
-          v-model="formData.bet_date" 
-          dateFormat="dd/mm/yy" 
-          :showIcon="true" 
-          placeholder="Date du pari *"
-          class="w-full"
-          :class="{ 'p-invalid': errors.bet_date }"
-        />
-        <small v-if="errors.bet_date" class="text-red-500 block mt-1">{{ errors.bet_date }}</small>
-      </div>
+      <DatePickerField 
+        v-model="formData.bet_date" 
+        fieldId="bet_date"
+        placeholder="Date du pari"
+        :required="true"
+        dateFormat="dd/mm/yy" 
+        :showIcon="true" 
+        fieldClass="w-full"
+        :error="!!errors.bet_date"
+        :errorMessage="errors.bet_date"
+      />
 
       <!-- Cards Événements -->
       <div v-for="(eventData, eventIndex) in eventCards" :key="eventData.id" class="border-surface-200 dark:border-surface-600 border rounded-lg p-4 mb-4">
@@ -64,7 +63,7 @@
                 <!-- Icône du sport sélectionné -->
                 <img
                   v-if="slotProps.value.img"
-                  :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.value.img.replace('.png', '.svg')}`"
+                  :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.value.slug}${isDarkTheme ? '-dark' : ''}.svg`"
                   :alt="slotProps.value.name"
                   class="w-5 h-5 object-contain flex-shrink-0 filter brightness-0"
                   @error="$event.target.style.display='none'"
@@ -86,9 +85,9 @@
                 <!-- Icône du sport -->
                 <img
                   v-if="slotProps.option.img"
-                  :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.option.img.replace('.png', '.svg')}`"
+                  :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.option.slug}${isDarkTheme ? '-dark' : ''}.svg`"
                   :alt="slotProps.option.name"
-                  class="w-5 h-5 object-contain flex-shrink-0 filter brightness-0"
+                  class="w-5 h-5 object-contain"
                   @error="$event.target.style.display='none'"
                 />
                 <div 
@@ -402,6 +401,23 @@
             </div>
         </div>
         
+        <!-- Type de pari -->
+        <div class="flex flex-col gap-2 mb-4">
+          <label :for="`bet_type_${eventIndex}`" class="font-medium text-sm">Type de pari</label>
+          <Select 
+            :id="`bet_type_${eventIndex}`" 
+            v-model="eventData.bet_type" 
+            :options="getFilteredBetTypesForEvent(eventData)" 
+            optionLabel="label" 
+            optionValue="value"
+            placeholder="Sélectionner un type de pari"
+            class="w-full select-custom"
+            :class="{ 'p-invalid': errors[`bet_type-${eventIndex}`] }"
+            :disabled="!eventData.sport_id"
+          />
+          <small v-if="errors[`bet_type-${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`bet_type-${eventIndex}`] }}</small>
+        </div>
+        
         <!-- Description de l'événement -->
         <div class="flex flex-col gap-2 mb-4">
           <InputText 
@@ -450,9 +466,6 @@
               </div>
             </div>
           </div>
-
-
-
           <!-- Bouton Ajouter un pari combiné -->
           <div class="flex justify-center mt-4 mb-4">
             <Button 
@@ -464,7 +477,6 @@
             />
           </div>
     </form>
-
       <!-- Liste des événements ajoutés -->
       <div v-if="events.length > 0" class="border rounded-lg p-4 bg-blue-50">
         <h3 class="text-lg font-semibold mb-4 text-blue-800">Événements du pari combiné ({{ events.length }})</h3>
@@ -504,7 +516,6 @@
           </div>
         </div>
       </div>
-
       <!-- Cote, Mise et Type -->
       <div class="grid grid-cols-3 sm:grid-cols-4 gap-1 overflow-hidden">
         <!-- Cote -->
@@ -556,12 +567,10 @@
 
        
       </div>
-
       <!-- Section détaillée du gain potentiel (mode pourcentage uniquement) -->
       <div v-if="betTypeValue === 'percentage'" class="flex flex-col gap-2 mb-4 mt-4">
         <div class="p-4 bg-gray-50 rounded border">
           <h4 class="text-sm font-semibold text-gray-800 mb-3">Détails du gain potentiel</h4>
-          
           <!-- Capital actuel -->
           <div class="flex justify-between items-center mb-2">
             <span class="text-sm text-gray-600">Capital actuel :</span>
@@ -590,14 +599,12 @@
           </div>
         </div>
       </div>
-
       <!-- Gain potentiel simple (mode devise uniquement) -->
       <div v-if="betTypeValue === 'currency'" class="flex flex-col gap-2 mt-4 mb-4">
         <div class="p-3 bg-gray-50 rounded border text-lg font-semibold text-green-600 text-center">
           Gain potentiel : {{ potentialWin.toFixed(2) }} €
         </div>
       </div>
-
       <!-- Résultat (optionnel) -->
       <div class="flex flex-col sm:flex-row sm:items-center gap-2">
         <div class="flex-1">
@@ -612,7 +619,6 @@
           />
         </div>
       </div>
-
     <div class="flex justify-end gap-2 mt-4">
       <Button 
         label="Annuler" 
@@ -630,38 +636,34 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue';
 // Dialog import supprimé car ce n'est plus un Dialog
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
-import DatePicker from 'primevue/datepicker';
 import Select from 'primevue/select';
 import SelectButton from 'primevue/selectbutton';
 import AutoComplete from 'primevue/autocomplete';
+import DatePickerField from '@/components/DatePickerField.vue';
 import { BetService } from '@/service/BetService';
 import { SportService } from '@/service/SportService';
 import { CountryService } from '@/service/CountryService';
 import { useToast } from 'primevue/usetoast';
 import { useLayout } from '@/layout/composables/layout';
 import { useBetResults } from '@/composables/useBetResults';
-
+import { useBetTypes } from '@/composables/useBetTypes';
 // Props
 // Props supprimés car ce n'est plus un Dialog
-
 // Emits
 const emit = defineEmits(['bet-created']);
-
 // Composables
 const toast = useToast();
 const { isDarkTheme: layoutDarkTheme } = useLayout(); // Indique si le thème sombre est actif
 const { resultOptions, resultValues, getResultLabel, getResultClass } = useBetResults(); // Options de résultats globales
-
+const { getBetTypesForSport, betTypeOptions: allBetTypeOptions } = useBetTypes(); // Gestion des types de paris
 // Computed local pour s'assurer de la réactivité
 const isDarkTheme = computed(() => layoutDarkTheme.value);
-
 // Variables réactives
 const loading = ref(false);
 const availableSports = ref([]); // Liste des sports disponibles
@@ -669,14 +671,12 @@ const sportsLoading = ref(false); // État de chargement des sports
 const countries = ref([]);
 const allCountries = ref([]);
 const errors = ref({});
-
 // Cache pour les pays par sport
 const countriesBySportCache = ref(new Map());
 const eventOddsInput = ref(null);
 const availableLeagues = ref([]);
 const availableTeams = ref([]);
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
 // Variables pour la recherche de pays
 const countrySearchQuery = ref('');
 const countrySearchResults = ref([]);
@@ -684,7 +684,6 @@ const countryLoading = ref(false);
 const countryCurrentPage = ref(1);
 const countryHasMore = ref(false);
 const selectedCountry = ref([]);
-
 // Variables pour la recherche de ligues
 const leagueSearchQuery = ref('');
 const leagueSearchResults = ref([]);
@@ -692,7 +691,6 @@ const leagueLoading = ref(false);
 const leagueCurrentPage = ref(1);
 const leagueHasMore = ref(false);
 const selectedLeague = ref([]);
-
 // Variables pour la recherche d'équipes 1
 const team1SearchQuery = ref('');
 const team1SearchResults = ref([]);
@@ -700,7 +698,6 @@ const team1Loading = ref(false);
 const team1CurrentPage = ref(1);
 const team1HasMore = ref(false);
 const selectedTeam1 = ref([]);
-
 // Variables pour la recherche d'équipes 2
 const team2SearchQuery = ref('');
 const team2SearchResults = ref([]);
@@ -708,7 +705,6 @@ const team2Loading = ref(false);
 const team2CurrentPage = ref(1);
 const team2HasMore = ref(false);
 const selectedTeam2 = ref([]);
-
 // Variables pour la recherche de sports
 const sportSearchQuery = ref('');
 const sportSearchResults = ref([]);
@@ -736,6 +732,7 @@ const eventCards = ref([
     league: null,
     team1: null,
     team2: null,
+    bet_type: null,
     description: '',
     result: null,
     odds: null,
@@ -765,6 +762,7 @@ const currentEvent = ref({
   league: null,
   team1: null,
   team2: null,
+  bet_type: null,
   bet_code: '',
   description: '',
   result: null,
@@ -779,6 +777,7 @@ const formData = ref({
   league: null,
   team1: null,
   team2: null,
+  bet_type: null,
   global_odds: null,
   stake: null,
   result: resultValues.PENDING
@@ -813,6 +812,28 @@ const showSportFields = computed(() => {
   return formData.value.sport_id !== null;
 });
 
+// Types de paris filtrés en fonction du sport sélectionné
+const filteredBetTypes = computed(() => {
+  // Si aucun sport n'est sélectionné, afficher tous les types de paris
+  if (!formData.value.sport_id) {
+    return allBetTypeOptions.value;
+  }
+  
+  // Trouver le sport sélectionné dans la liste des sports disponibles
+  const selectedSport = availableSports.value.find(sport => sport.id === formData.value.sport_id);
+  if (!selectedSport || !selectedSport.slug) {
+    return allBetTypeOptions.value;
+  }
+  
+  // Obtenir les types de paris pour ce sport spécifique
+  const sportBetTypes = getBetTypesForSport(selectedSport.slug);
+  
+  // Filtrer les options pour ne garder que celles disponibles pour ce sport
+  return allBetTypeOptions.value.filter(option => 
+    sportBetTypes.includes(option.value)
+  );
+});
+
 const isFormValid = computed(() => {
   // Seuls les champs essentiels sont obligatoires
   return formData.value.bet_date &&
@@ -820,7 +841,31 @@ const isFormValid = computed(() => {
          formData.value.stake;
 });
 
-
+/**
+ * Obtenir les types de paris filtrés pour un événement spécifique
+ * @param {Object} eventData - Les données de l'événement
+ * @returns {Array} Les types de paris disponibles pour cet événement
+ */
+function getFilteredBetTypesForEvent(eventData) {
+  // Si aucun sport n'est sélectionné, afficher tous les types de paris
+  if (!eventData.sport_id) {
+    return allBetTypeOptions.value;
+  }
+  
+  // Trouver le sport sélectionné dans la liste des sports disponibles
+  const selectedSport = availableSports.value.find(sport => sport.id === eventData.sport_id);
+  if (!selectedSport || !selectedSport.slug) {
+    return allBetTypeOptions.value;
+  }
+  
+  // Obtenir les types de paris pour ce sport spécifique
+  const sportBetTypes = getBetTypesForSport(selectedSport.slug);
+  
+  // Filtrer les options pour ne garder que celles disponibles pour ce sport
+  return allBetTypeOptions.value.filter(option => 
+    sportBetTypes.includes(option.value)
+  );
+}
 
 // Méthodes
 
@@ -2565,6 +2610,30 @@ watch(
     calculateGlobalResult();
   },
   { deep: true }
+);
+
+// Surveiller les changements de sport pour réinitialiser le type de pari
+watch(
+  () => eventCards.value.map(event => event.sport_id),
+  (newSportIds, oldSportIds) => {
+    // Réinitialiser le type de pari si le sport a changé
+    newSportIds.forEach((newSportId, index) => {
+      if (oldSportIds && oldSportIds[index] !== newSportId) {
+        eventCards.value[index].bet_type = null;
+      }
+    });
+  },
+  { deep: true }
+);
+
+// Surveiller les changements de sport dans formData pour réinitialiser le type de pari
+watch(
+  () => formData.value.sport_id,
+  (newSportId, oldSportId) => {
+    if (oldSportId !== newSportId) {
+      formData.value.bet_type = null;
+    }
+  }
 );
 
 /**
