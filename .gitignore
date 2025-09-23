@@ -1,0 +1,2 @@
+backend/docker/logs/apache/.log
+backend/docker/logs/apache/error.log
