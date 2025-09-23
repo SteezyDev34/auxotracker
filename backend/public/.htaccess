@@ -5,20 +5,7 @@
 
     RewriteEngine On
 
-    # Configuration CORS pour O2Switch
-    <IfModule mod_headers.c>
-        # Autoriser les requêtes depuis le frontend O2Switch
-        SetEnvIf Origin "^https://auxotracker\.sc2vagr6376\.universe\.wf$" CORS_ORIGIN=$0
-        Header always set Access-Control-Allow-Origin %{CORS_ORIGIN}e env=CORS_ORIGIN
-        Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-        Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
-        Header always set Access-Control-Allow-Credentials "true"
-        
-        # Répondre aux requêtes OPTIONS (preflight)
-        RewriteCond %{REQUEST_METHOD} OPTIONS
-        RewriteRule ^(.*)$ $1 [R=200,L]
-    </IfModule>
-
+    # CORS géré par Laravel (HandleCors) - suppression de la gestion .htaccess pour éviter conflits
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

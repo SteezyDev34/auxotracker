@@ -7,6 +7,7 @@ import AddBetDialog from './AddBetDialog.vue';
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';
 import Tooltip from 'primevue/tooltip';
+import { useBetResults } from '@/composables/useBetResults';
 
 // Enregistrement des directives
 const vTooltip = Tooltip;
@@ -19,6 +20,9 @@ const expandedMonths = ref(new Set());
 const expandedBets = ref(new Set());
 const showAddBetDialog = ref(false);
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
+
+// Composable pour les résultats de paris
+const { resultValues, getResultClass, getResultLabel } = useBetResults();
 
 
 // Charger tous les paris
@@ -62,9 +66,9 @@ const betsByMonth = computed(() => {
     grouped[monthKey].totalStake += parseFloat(bet.stake || 0);
     
     // Calculer le profit/perte
-    if (bet.result === 'win') {
+    if (bet.result === resultValues.WIN) {
       grouped[monthKey].totalProfit += (parseFloat(bet.stake) * parseFloat(bet.global_odds)) - parseFloat(bet.stake);
-    } else if (bet.result === 'lost') {
+    } else if (bet.result === resultValues.LOST) {
       grouped[monthKey].totalProfit -= parseFloat(bet.stake);
     }
   });
@@ -152,10 +156,10 @@ function toggleBetEvents(betId) {
 function getResultBarColor(result) {
   console.log(result)
   switch (result) {
-    case 'win': return 'bg-green-500 dark:bg-green-400';
-    case 'lost': return 'bg-red-500 dark:bg-red-400';
+    case resultValues.WIN: return 'bg-green-500 dark:bg-green-400';
+    case resultValues.LOST: return 'bg-red-500 dark:bg-red-400';
     case 'pending': return 'bg-surface-300 dark:bg-surface-600';
-    case 'void': return 'bg-surface-500 dark:bg-surface-400';
+    case resultValues.VOID: return 'bg-surface-500 dark:bg-surface-400';
     case 'refunded': return 'bg-primary-500 dark:bg-primary-400';
     default: return 'bg-surface-400 dark:bg-surface-500';
   }
@@ -164,15 +168,15 @@ function getResultBarColor(result) {
 // Obtenir l'icône SVG pour le résultat du pari
 function getResultIcon(result) {
   switch (result) {
-    case 'win': 
+    case resultValues.WIN: 
       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
       </svg>`;
-    case 'lost': 
+    case resultValues.LOST: 
       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
       </svg>`;
-    case 'void': 
+    case resultValues.VOID: 
        return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
          <path d="M4,11H20V13H4V11Z"/>
        </svg>`;
@@ -193,9 +197,9 @@ function getResultIcon(result) {
 
 // Calculer le profit/perte d'un pari
 function calculateProfitLoss(bet) {
-  if (bet.result === 'win') {
+  if (bet.result === resultValues.WIN) {
     return (parseFloat(bet.stake) * parseFloat(bet.global_odds)) - parseFloat(bet.stake);
-  } else if (bet.result === 'lost') {
+  } else if (bet.result === resultValues.LOST) {
     return -parseFloat(bet.stake);
   }
   return 0;
@@ -434,29 +438,7 @@ function getCountryInfo(bet) {
   };
 }
 
-// Obtenir les classes CSS pour le résultat du pari (compatible mode sombre)
-function getResultClass(result) {
-  switch (result) {
-    case 'win': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200';
-    case 'lost': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
-    case 'pending': return 'bg-surface-100 dark:bg-surface-800 text-surface-800 dark:text-surface-200';
-    case 'void': return 'bg-surface-100 dark:bg-surface-800 text-surface-800 dark:text-surface-200';
-    case 'refunded': return 'bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200';
-    default: return 'bg-surface-100 dark:bg-surface-800 text-surface-800 dark:text-surface-200';
-  }
-}
-
-// Obtenir le label du résultat
-function getResultLabel(result) {
-  switch (result) {
-    case 'win': return 'Gagné';
-    case 'lost': return 'Perdu';
-    case 'pending': return 'En cours';
-    case 'void': return 'Annulé';
-    case 'refunded': return 'Remboursé';
-    default: return 'Inconnu';
-  }
-}
+// Les fonctions getResultClass et getResultLabel sont maintenant fournies par le composable useBetResults
 
 // Obtenir les informations du marché depuis l'événement
 function getMarketInfo(bet) {

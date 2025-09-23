@@ -1,4 +1,4 @@
-import { computed, reactive } from 'vue';
+import { computed, reactive, toRef } from 'vue';
 
 const layoutConfig = reactive({
     preset: 'Aura',
@@ -54,7 +54,7 @@ export function useLayout() {
 
     const isSidebarActive = computed(() => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive);
 
-    const isDarkTheme = computed(() => layoutConfig.darkTheme);
+    const isDarkTheme = toRef(layoutConfig, 'darkTheme');
 
     const getPrimary = computed(() => layoutConfig.primary);
 

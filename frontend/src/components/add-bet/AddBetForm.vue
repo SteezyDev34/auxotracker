@@ -3,6 +3,8 @@
     <h1 class="text-2xl font-bold mb-6">
       {{ events.length > 1 ? 'Ajouter un pari combiné' : 'Ajouter un pari simple' }}
     </h1>
+    
+
     <form @submit.prevent="submitForm" class="space-y-4 mb-4">
       <!-- Date du pari -->
       <div class="flex flex-col gap-2">
@@ -203,7 +205,7 @@
                      <!-- Logo de la ligue -->
                      <img 
                        v-if="slotProps.value.id"
-                       :src="`${apiBaseUrl}/storage/league_logos/${slotProps.value.id}.png`" 
+                       :src="`${apiBaseUrl}/storage/league_logos/${slotProps.value.id}${isDarkTheme ? '-dark' : ''}.png`" 
                        :alt="slotProps.value.name"
                        class="w-4 h-4 rounded object-cover flex-shrink-0" 
                        @error="$event.target.style.display='none'"
@@ -225,7 +227,7 @@
                     <!-- Logo de la ligue -->
                     <img 
                       v-if="slotProps.option.img"
-                      :src="`${apiBaseUrl}/storage/${slotProps.option.img}`" 
+                      :src="`${apiBaseUrl}/storage/league_logos/${slotProps.option.id}${isDarkTheme ? '-dark' : ''}.png`" 
                       :alt="slotProps.option.name"
                       class="w-4 h-4 rounded object-cover flex-shrink-0" 
                       @error="$event.target.style.display='none'"
@@ -487,13 +489,8 @@
                   <span v-if="event.odds" class="text-green-600 font-medium">
                     Cote: {{ event.odds }}
                   </span>
-                  <span v-if="event.result" class="font-medium" :class="{
-                    'text-green-600': event.result === 'win',
-                    'text-red-600': event.result === 'lost',
-                    'text-yellow-600': event.result === 'pending',
-                    'text-gray-600': event.result === 'void'
-                  }">
-                    Résultat: {{ resultOptions.find(r => r.value === event.result)?.label || event.result }}
+                  <span v-if="event.result" class="font-medium" :class="getResultClass(event.result)">
+                    Résultat: {{ getResultLabel(event.result) }}
                   </span>
                 </div>
               </div>
@@ -557,15 +554,7 @@
           </div>
         </div>
 
-        <!-- Gain potentiel (desktop uniquement) -->
-        <div class="hidden sm:flex flex-col justify-center min-w-0 w-full mt-4 mb-4">
-          <div class="w-full">
-            <div class="p-2 bg-gray-50 rounded border text-xs font-semibold text-green-600 h-8 flex items-center justify-center">
-              {{ potentialWin.toFixed(2) }} €
-            </div>
-          </div>
-          <small class="text-gray-500 text-xs text-center">Gain potentiel</small>
-        </div>
+       
       </div>
 
       <!-- Section détaillée du gain potentiel (mode pourcentage uniquement) -->
@@ -656,6 +645,8 @@ import { BetService } from '@/service/BetService';
 import { SportService } from '@/service/SportService';
 import { CountryService } from '@/service/CountryService';
 import { useToast } from 'primevue/usetoast';
+import { useLayout } from '@/layout/composables/layout';
+import { useBetResults } from '@/composables/useBetResults';
 
 // Props
 // Props supprimés car ce n'est plus un Dialog
@@ -665,6 +656,11 @@ const emit = defineEmits(['bet-created']);
 
 // Composables
 const toast = useToast();
+const { isDarkTheme: layoutDarkTheme } = useLayout(); // Indique si le thème sombre est actif
+const { resultOptions, resultValues, getResultLabel, getResultClass } = useBetResults(); // Options de résultats globales
+
+// Computed local pour s'assurer de la réactivité
+const isDarkTheme = computed(() => layoutDarkTheme.value);
 
 // Variables réactives
 const loading = ref(false);
@@ -785,17 +781,12 @@ const formData = ref({
   team2: null,
   global_odds: null,
   stake: null,
-  result: 'void'
+  result: resultValues.PENDING
 });
 
 
 
-// Options pour le résultat
-const resultOptions = [
-  { label: 'Annulé', value: 'void' },
-  { label: 'Gagné', value: 'win' },
-  { label: 'Perdu', value: 'lost' }
-];
+// Options pour le résultat maintenant fournies par le composable useBetResults
 
 // Computed
 // Variable visible supprimée car ce n'est plus un Dialog
@@ -2487,18 +2478,18 @@ function calculateGlobalResult() {
     }
     
     switch (result) {
-      case 'lost':
+      case resultValues.LOST:
         hasLost = true;
         hasWin = false;
         break;
-      case 'void':
+      case resultValues.VOID:
         hasVoid = true;
         break;
       case 'pending':
         hasPending = true;
         hasWin = false;
         break;
-      case 'win':
+      case resultValues.WIN:
         // Continue à vérifier les autres
         break;
       default:
@@ -2510,13 +2501,13 @@ function calculateGlobalResult() {
   if (!hasAllResults || hasPending) {
     formData.value.result = 'pending';
   } else if (hasLost) {
-    formData.value.result = 'lost';
+    formData.value.result = resultValues.LOST;
   } else if (hasVoid && hasWin) {
-    formData.value.result = 'win'; // Si certains sont void mais les autres gagnés
+    formData.value.result = resultValues.WIN; // Si certains sont void mais les autres gagnés
   } else if (hasVoid) {
-    formData.value.result = 'void';
+    formData.value.result = resultValues.VOID;
   } else if (hasWin) {
-    formData.value.result = 'win';
+    formData.value.result = resultValues.WIN;
   }
 }
 

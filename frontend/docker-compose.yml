@@ -6,6 +6,7 @@ services:
       context: ${DOCKER_DIR}/php74
     container_name: auxotracker
     restart: unless-stopped
+
     environment:
       - VIRTUAL_HOST=auxotracker.lan
       - VIRTUAL_PORT=80

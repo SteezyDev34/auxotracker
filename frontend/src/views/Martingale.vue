@@ -10,8 +10,12 @@ import Dialog from 'primevue/dialog';
 import Toast from 'primevue/toast';
 import Checkbox from 'primevue/checkbox';
 import { useToast } from 'primevue/usetoast';
+import { useBetResults } from '@/composables/useBetResults';
 
 const toast = useToast();
+
+// Composable pour les résultats de paris
+const { resultLabels } = useBetResults();
 
 // Variables pour la génération de paris aléatoires
 const nombreParis = ref(10);
@@ -81,7 +85,7 @@ const genererParisAleatoires = () => {
         parisAleatoires.value.push({
             id: i + 1,
             cote: parseFloat(cote),
-            resultat: resultat ? 'Gagné' : 'Perdu',
+            resultat: resultat ? resultLabels.WIN : resultLabels.LOST,
             mise: miseActuelle.toFixed(2),
             gain: gain.toFixed(2),
             capitalEvolution: capitalActuel.toFixed(2),
@@ -184,10 +188,10 @@ const genererParisAleatoires = () => {
                                         <!-- En-tête de la carte -->
                                         <div class="flex justify-between items-center pb-2 border-b border-surface-200 dark:border-surface-700">
                                             <span class="font-semibold text-lg">Pari #{{ pari.id }}</span>
-                                            <span :class="pari.resultat === 'Gagné' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'" 
-                                                  class="px-2 py-1 rounded-full text-xs font-medium">
-                                                {{ pari.resultat }}
-                                            </span>
+                                            <span :class="pari.resultat === resultLabels.WIN ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'" 
+                                  class="px-2 py-1 rounded-full text-xs font-medium">
+                                {{ pari.resultat }}
+                            </span>
                                         </div>
                                         
                                         <!-- Informations principales -->
@@ -227,7 +231,7 @@ const genererParisAleatoires = () => {
                                                 </span>
                                                 <span v-else class="text-surface-400 text-sm">-</span>
                                             </div>
-                                            <div v-if="inclureGainsManques && pari.resultat === 'Perdu'" class="flex flex-col col-span-2">
+                                            <div v-if="inclureGainsManques && pari.resultat === resultLabels.LOST" class="flex flex-col col-span-2">
                                                 <span class="text-xs text-surface-600 dark:text-surface-400 uppercase tracking-wide">Gains manqués</span>
                                                 <span v-if="parseFloat(pari.gainsManquesCumules) > 0" class="text-blue-600 font-medium text-sm">
                                                     {{ pari.gainsManquesCumules }}€
