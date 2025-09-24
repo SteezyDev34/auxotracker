@@ -101,26 +101,19 @@
               @search-refresh="() => {}"
             />
         </div>
+        <!-- Type de pari -->
+        <TypePariField
+          v-model="eventData.bet_type"
+          :event-index="eventIndex"
+          :sport-id="eventData.sport_id"
+          :available-sports="availableSports"
+          :error="errors[`bet_type-${eventIndex}`]"
+          @bet-type-select="(betType) => onBetTypeSelect(betType, eventIndex)"
+          @dropdown-show="(index) => onBetTypeDropdownShow(index)"
+        />
         </div>
         
-        <!-- Type de pari -->
-        <div class="flex flex-col gap-2 mb-4">
-          <Select 
-            :id="`bet_type_${eventIndex}`" 
-            v-model="eventData.bet_type" 
-            :options="getFilteredBetTypesForEvent(eventData)" 
-            optionLabel="label" 
-            optionValue="value"
-            @click="() => onBetTypeDropdownShow(eventIndex)"
-            placeholder="Sélectionner un type de pari"
-            class="w-full select-custom"
-            :class="{ 'p-invalid': errors[`bet_type-${eventIndex}`] }"
-            :disabled="!eventData.sport_id"
-            dropdown
-            dropdownMode="blank"
-          />
-          <small v-if="errors[`bet_type-${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`bet_type-${eventIndex}`] }}</small>
-        </div>
+        
         
         <!-- Description de l'événement -->
         <div class="flex flex-col gap-2 mb-4">
@@ -353,6 +346,7 @@ import SportField from './fields/SportField.vue';
 import CountryField from './fields/CountryField.vue';
 import LeagueField from './fields/LeagueField.vue';
 import TeamField from './fields/TeamField.vue';
+import TypePariField from './fields/TypePariField.vue';
 import DatePickerField from '@/components/DatePickerField.vue';
 import { BetService } from '@/service/BetService';
 import { SportService } from '@/service/SportService';
@@ -360,7 +354,7 @@ import { CountryService } from '@/service/CountryService';
 import { useToast } from 'primevue/usetoast';
 import { useLayout } from '@/layout/composables/layout';
 import { useBetResults } from '@/composables/useBetResults';
-import { useBetTypes } from '@/composables/useBetTypes';
+
 // Props
 // Props supprimés car ce n'est plus un Dialog
 // Emits
@@ -369,7 +363,7 @@ const emit = defineEmits(['bet-created']);
 const toast = useToast();
 const { isDarkTheme: layoutDarkTheme } = useLayout(); // Indique si le thème sombre est actif
 const { resultOptions, resultValues, getResultLabel, getResultClass } = useBetResults(); // Options de résultats globales
-const { getBetTypesForSport, betTypeOptions: allBetTypeOptions } = useBetTypes(); // Gestion des types de paris
+
 // Computed local pour s'assurer de la réactivité
 const isDarkTheme = computed(() => layoutDarkTheme.value);
 // Variables réactives
@@ -494,27 +488,7 @@ const showSportFields = computed(() => {
   return formData.value.sport_id !== null;
 });
 
-// Types de paris filtrés en fonction du sport sélectionné
-const filteredBetTypes = computed(() => {
-  // Si aucun sport n'est sélectionné, afficher tous les types de paris
-  if (!formData.value.sport_id) {
-    return allBetTypeOptions.value;
-  }
-  
-  // Trouver le sport sélectionné dans la liste des sports disponibles
-  const selectedSport = availableSports.value.find(sport => sport.id === formData.value.sport_id);
-  if (!selectedSport || !selectedSport.slug) {
-    return allBetTypeOptions.value;
-  }
-  
-  // Obtenir les types de paris pour ce sport spécifique
-  const sportBetTypes = getBetTypesForSport(selectedSport.slug);
-  
-  // Filtrer les options pour ne garder que celles disponibles pour ce sport
-  return allBetTypeOptions.value.filter(option => 
-    sportBetTypes.includes(option.value)
-  );
-});
+
 
 /**
  * Gérer l'affichage du dropdown des types de paris
@@ -525,6 +499,16 @@ function onBetTypeDropdownShow(eventIndex) {
   // Pas de logique spéciale nécessaire, le Select gère automatiquement les options
 }
 
+/**
+ * Gérer la sélection d'un type de pari
+ * @param {Object} betType - Type de pari sélectionné
+ * @param {number} eventIndex - Index de l'événement
+ */
+function onBetTypeSelect(betType, eventIndex) {
+  console.log('✅ Type de pari sélectionné pour événement', eventIndex, ':', betType);
+  // Logique additionnelle si nécessaire (validation, calculs, etc.)
+}
+
 const isFormValid = computed(() => {
   // Seuls les champs essentiels sont obligatoires
   return formData.value.bet_date &&
@@ -532,31 +516,7 @@ const isFormValid = computed(() => {
          formData.value.stake;
 });
 
-/**
- * Obtenir les types de paris filtrés pour un événement spécifique
- * @param {Object} eventData - Les données de l'événement
- * @returns {Array} Les types de paris disponibles pour cet événement
- */
-function getFilteredBetTypesForEvent(eventData) {
-  // Si aucun sport n'est sélectionné, afficher tous les types de paris
-  if (!eventData.sport_id) {
-    return allBetTypeOptions.value;
-  }
-  
-  // Trouver le sport sélectionné dans la liste des sports disponibles
-  const selectedSport = availableSports.value.find(sport => sport.id === eventData.sport_id);
-  if (!selectedSport || !selectedSport.slug) {
-    return allBetTypeOptions.value;
-  }
-  
-  // Obtenir les types de paris pour ce sport spécifique
-  const sportBetTypes = getBetTypesForSport(selectedSport.slug);
-  
-  // Filtrer les options pour ne garder que celles disponibles pour ce sport
-  return allBetTypeOptions.value.filter(option => 
-    sportBetTypes.includes(option.value)
-  );
-}
+
 
 // Méthodes
 
@@ -1097,46 +1057,7 @@ function handleEventOddsKeypress(event) {
 
 
 
-/**
- * Gérer l'ouverture du dropdown pour attacher le scroll listener
- */
-function onDropdownShow() {
-  console.log('🔍 Dropdown ouvert, recherche du panel...');
-  
-  // Fonction pour rechercher le panel
-  const findAndAttachListener = () => {
-    // Utiliser le bon sélecteur basé sur la structure DOM observée
-    const panel = document.querySelector('.p-autocomplete-list-container');
-    console.log('🔍 Panel trouvé (.p-autocomplete-list-container):', panel);
-    
-    if (panel && !panel.hasScrollListener) {
-      panel.hasScrollListener = true;
-      panel.addEventListener('scroll', handlePanelScroll);
-      console.log('✅ Scroll listener attaché au panel');
-      return true;
-    } else if (panel && panel.hasScrollListener) {
-      console.log('⚠️ Scroll listener déjà attaché');
-      return true;
-    } else {
-      console.log('❌ Aucun panel trouvé avec les sélecteurs testés');
-      return false;
-    }
-  };
-  
-  // Essayer immédiatement avec nextTick
-  nextTick(() => {
-    if (!findAndAttachListener()) {
-      // Si pas trouvé, essayer avec un délai
-      console.log('⏰ Nouvelle tentative dans 100ms...');
-      setTimeout(() => {
-        if (!findAndAttachListener()) {
-          console.log('⏰ Dernière tentative dans 300ms...');
-          setTimeout(findAndAttachListener, 300);
-        }
-      }, 100);
-    }
-  });
-}
+
 
 
 
@@ -1306,32 +1227,9 @@ function resetForm() {
   teamCurrentPage.value = 1;
   teamHasMore.value = false;
   teamLoading.value = false;
-  
-  // Nettoyer les event listeners
-  cleanupScrollListeners();
 }
 
-/**
- * Nettoyer les event listeners de scroll
- */
-function cleanupScrollListeners() {
-  const panels = document.querySelectorAll('.p-autocomplete-panel .p-autocomplete-items, .p-autocomplete-list-container');
-  panels.forEach(panel => {
-    if (panel.hasScrollListener) {
-      panel.removeEventListener('scroll', handlePanelScroll);
-      panel.hasScrollListener = false;
-    }
-    if (panel.hasTeam1ScrollListener) {
-      panel.removeEventListener('scroll', handleTeam1PanelScroll);
-      panel.hasTeam1ScrollListener = false;
-    }
-    if (panel.hasTeam2ScrollListener) {
-      panel.removeEventListener('scroll', handleTeam2PanelScroll);
-      panel.hasTeam2ScrollListener = false;
-    }
 
-  });
-}
 
 
 
