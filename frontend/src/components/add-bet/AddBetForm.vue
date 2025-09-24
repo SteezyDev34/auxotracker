@@ -45,69 +45,14 @@
         <!-- Champs conditionnels selon le sport -->
         <div v-if="eventData.sport_id" class="space-y-4 mb-4">
           <!-- Pays -->
-          <div class="flex flex-col gap-2">
-            <div class="relative">
-              <AutoComplete 
-                :ref="(el) => { if (el) countryAutoCompleteRefs[eventIndex] = el }"
-                :id="`country_${eventIndex}`" 
-                v-model="eventData.selectedCountry" 
-                :suggestions="eventData.countryFilteredResults || []" 
-                @complete="(event) => searchCountries(event, eventIndex)"
-                @focus="() => onCountryDropdownShow(eventIndex)"
-                @click="() => onCountryDropdownShow(eventIndex)"
-                @item-select="(event) => onCountrySelect(event, eventIndex)"
-                optionLabel="name"
-                :placeholder="eventData.selectedCountry && eventData.selectedCountry.length > 0 ? '' : 'Pays'"
-                class="w-full max-w-full select-custom"
-                :class="{ 'p-invalid': errors[`country_id_${eventIndex}`] }"
-                :loading="eventData.countryLoading"
-                :disabled="!eventData.sport_id"
-                :minLength="0"
-                dropdown
-                dropdownMode="blank"
-                multiple
-                display="chip"
-                aria-label="Rechercher et sélectionner un pays"
-                role="combobox"
-                aria-expanded="false"
-                aria-autocomplete="list"
-            >
-                <!-- Template pour afficher le pays sélectionné avec son drapeau -->
-                <template #chip="slotProps">
-                  <div class="flex items-center gap-2">
-                    <!-- Drapeau du pays sélectionné -->
-                    <img 
-                      v-if="slotProps.value && slotProps.value.id"
-                      :src="`${apiBaseUrl}/storage/country_flags/${slotProps.value.id}.png`" 
-                      :alt="slotProps.value.name"
-                      class="w-4 h-4 rounded object-cover flex-shrink-0" 
-                      @error="$event.target.style.display='none'"
-                    />
-                    <!-- Nom du pays sélectionné -->
-                    <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
-                  </div>
-                </template>
-                
-                <!-- Template pour les options du dropdown -->
-                <template #option="slotProps">
-                  <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
-                    <!-- Drapeau du pays -->
-                    <img 
-                      v-if="slotProps.option.id"
-                      :src="`${apiBaseUrl}/storage/country_flags/${slotProps.option.id}.png`" 
-                      :alt="slotProps.option.name"
-                      class="w-4 h-4 rounded object-cover flex-shrink-0" 
-                      @error="$event.target.style.display='none'"
-                    />
-                    <!-- Nom du pays -->
-                    <span class="truncate">{{ slotProps.option.name }}</span>
-                  </div>
-                </template>
-
-              </AutoComplete>
-            </div>
-            <small v-if="errors.country_id" class="text-red-500 block mt-1">{{ errors.country_id }}</small>
-          </div>
+          <CountryField
+            v-model="eventData.selectedCountry"
+            :event-index="eventIndex"
+            :sport-id="eventData.sport_id"
+            :error="errors.country_id"
+            @country-select="onCountrySelect"
+            @country-change="onCountryChange"
+          />
 
           <!-- Ligue -->
           <div class="flex flex-col gap-2">
@@ -585,6 +530,7 @@ import Select from 'primevue/select';
 import SelectButton from 'primevue/selectbutton';
 import AutoComplete from 'primevue/autocomplete';
 import SportField from './fields/SportField.vue';
+import CountryField from './fields/CountryField.vue';
 import DatePickerField from '@/components/DatePickerField.vue';
 import { BetService } from '@/service/BetService';
 import { SportService } from '@/service/SportService';
@@ -612,7 +558,7 @@ const countries = ref([]);
 const allCountries = ref([]);
 const errors = ref({});
 // Cache pour les pays par sport
-const countriesBySportCache = ref(new Map());
+
 const eventOddsInput = ref(null);
 const availableLeagues = ref([]);
 const availableTeams = ref([]);
@@ -653,7 +599,7 @@ const selectedSport = ref([]);
 
 // Références pour les composants AutoComplete
 const sportAutoCompleteRefs = ref({});
-const countryAutoCompleteRefs = ref({});
+
 const leagueAutoCompleteRefs = ref({}); // Initialisation comme un objet simple
 const team1AutoCompleteRefs = ref({});
 const team2AutoCompleteRefs = ref({});
@@ -690,8 +636,6 @@ const eventCards = ref([
     selectedTeam2: [],
     sportSearchResults: [],
     sportLoading: false,
-    countryFilteredResults: [],
-    countryLoading: false,
     leagueSearchResults: [],
     leagueLoading: false,
     team1SearchResults: [],
@@ -907,49 +851,7 @@ async function loadTeamsByLeague(leagueId) {
   }
 }
 
-/**
- * Charger les pays qui ont des ligues pour un sport spécifique
- * @param {number} sportId - ID du sport
- * @param {number} eventIndex - Index de l'événement
- */
-async function loadCountriesBySport(sportId, eventIndex) {
-  try {
-    const eventData = eventCards.value[eventIndex];
-    eventData.countryLoading = true;
-    
-    // Vérifier si les pays sont déjà en cache pour ce sport
-    if (countriesBySportCache.value.has(sportId)) {
-      const cachedCountries = countriesBySportCache.value.get(sportId);
-      eventData.countryFilteredResults = [...cachedCountries];
-      console.log('✅ Pays récupérés depuis le cache pour le sport', sportId, ':', cachedCountries.length, 'pays');
-      return;
-    }
-    
-    // Charger depuis l'API si pas en cache
-    const countriesData = await SportService.getCountriesBySport(sportId);
-    
-    // Mettre en cache les résultats
-    countriesBySportCache.value.set(sportId, countriesData);
-    
-    // Mettre à jour les pays disponibles pour cette carte d'événement
-    eventData.countryFilteredResults = [...countriesData];
-    
-    
-  } catch (error) {
-    console.error('Erreur lors du chargement des pays par sport:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Erreur',
-      detail: 'Impossible de charger les pays pour ce sport',
-      life: 3000
-    });
-    const eventData = eventCards.value[eventIndex];
-    eventData.countryFilteredResults = [];
-  } finally {
-    const eventData = eventCards.value[eventIndex];
-    eventData.countryLoading = false;
-  }
-}
+
 
 /**
  * Charger tous les sports disponibles
@@ -980,7 +882,7 @@ async function loadSports() {
 
 
 // Drapeaux pour éviter les appels multiples sur les dropdowns
-const countryDropdownOpeningInProgress = ref({});
+
 const leagueDropdownOpeningInProgress = ref({});
 const team1DropdownOpeningInProgress = ref({});
 const team2DropdownOpeningInProgress = ref({});
@@ -1048,7 +950,6 @@ async function onSportSelect(event, eventIndex) {
   
   // Réinitialiser la recherche de pays pour cette card
   eventData.selectedCountry = [];
-  eventData.countryFilteredResults = [];
   
   // Réinitialiser la recherche de ligues pour cette card
   eventData.selectedLeague = [];
@@ -1059,163 +960,31 @@ async function onSportSelect(event, eventIndex) {
   eventData.team1SearchResults = [];
   eventData.selectedTeam2 = [];
   eventData.team2SearchResults = [];
-  
-  // Charger les données du sport sélectionné
-  if (eventData.sport_id) {
-    // Charger les pays qui ont des ligues pour ce sport
-    await loadCountriesBySport(eventData.sport_id, eventIndex);
-    //await loadTeamsBySport(eventData.sport_id);
-    // Charger les premières ligues
-    //await searchLeagues({ query: '' }, eventIndex);
-    // Charger les premières équipes pour les deux sélecteurs
-    //await searchTeam1({ query: '' }, eventIndex);
-    // await searchTeam2({ query: '' }, eventIndex);
-  }
 }
 
-/**
- * Gérer l'affichage du dropdown des pays
- * @param {number} eventIndex - Index de l'événement
- */
-// Utilisation du drapeau existant pour éviter les appels multiples
 
-function onCountryDropdownShow(eventIndex) {
-  // Vérifier si l'ouverture est déjà en cours pour cet événement
-  if (countryDropdownOpeningInProgress.value[eventIndex]) {
-    return;
-  }
-  
-  // Marquer l'ouverture comme en cours
-  countryDropdownOpeningInProgress.value[eventIndex] = true;
-  
-  console.log('🔽 Dropdown pays ouvert pour événement', eventIndex);
-  const eventData = eventCards.value[eventIndex];
-  
-  // Si aucun sport sélectionné, ne rien faire
-  if (!eventData.sport_id) {
-    // Réinitialiser le drapeau après un court délai
-    setTimeout(() => {
-      countryDropdownOpeningInProgress.value[eventIndex] = false;
-    }, 300);
-    return;
-  }
-  
-  // Charger les pays depuis le cache si disponibles
-  const cachedCountries = countriesBySportCache.value.get(eventData.sport_id) || [];
-  if (cachedCountries.length > 0 && (!eventData.countryFilteredResults || eventData.countryFilteredResults.length === 0)) {
-    eventData.countryFilteredResults = [...cachedCountries];
-  }
-  
-  // Forcer l'ouverture du dropdown en utilisant la référence
-  nextTick(() => {
-    const countryRef = countryAutoCompleteRefs.value[eventIndex];
-    if (countryRef && typeof countryRef.show === 'function') {
-      countryRef.show();
-      console.log('✅ Dropdown pays forcé à s\'ouvrir');
-    } else if (countryRef && countryRef.$el) {
-      // Essayer de déclencher un focus sur l'élément input
-      const inputElement = countryRef.$el.querySelector('input');
-      if (inputElement) {
-        inputElement.focus();
-        inputElement.click();
-        console.log('✅ Focus et clic appliqués sur le champ pays');
-      } else {
-        console.log('❌ Élément input non trouvé dans le composant pays');
-      }
-    } else {
-      console.log('❌ Référence du composant pays non trouvée', countryRef);
-    }
-    
-    // Réinitialiser le drapeau après un court délai
-    setTimeout(() => {
-      countryDropdownOpeningInProgress.value[eventIndex] = false;
-    }, 300);
-  });
-}
+
+
 
 /**
- * Rechercher des pays avec filtrage côté client utilisant le cache
- * @param {Object} event - Événement de recherche contenant la query
- * @param {number} eventIndex - Index de l'événement
- */
-function searchCountries(event, eventIndex) {
-  const query = event.query || '';
-  const eventData = eventCards.value[eventIndex];
-  
-  // Si aucun sport n'est sélectionné, ne pas afficher de pays
-  if (!eventData.sport_id) {
-    eventData.countryFilteredResults = [];
-    return;
-  }
-  
-  // Récupérer les pays depuis le cache pour ce sport
-  const cachedCountries = countriesBySportCache.value.get(eventData.sport_id) || [];
-  
-  setTimeout(() => {
-    if (!query.trim().length) {
-      // Afficher tous les pays disponibles pour ce sport depuis le cache
-      eventData.countryFilteredResults = [...cachedCountries];
-    } else {
-      // Filtrer les pays depuis le cache
-      eventData.countryFilteredResults = cachedCountries.filter((country) => {
-        return country.name.toLowerCase().includes(query.toLowerCase());
-      });
-    }
-  }, 250);
-}
-
-/**
- * Gérer la sélection d'un pays
- * @param {Object} event - Événement de sélection contenant le pays
- */
-/**
- * Gérer la sélection d'un pays
+ * Gérer la sélection d'un pays depuis CountryField
  * @param {Object} event - Événement de sélection
  * @param {number} eventIndex - Index de l'événement
  */
 function onCountrySelect(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
-  // Remplacer l'élément existant par le nouveau pays sélectionné
+  // Mettre à jour les données de l'événement
   if (event.value) {
-    eventData.selectedCountry = [event.value]; // Remplacer par le nouveau pays
     eventData.country_id = event.value.id;
+    console.log('🔄 Pays sélectionné:', event.value.name);
     
     // Charger immédiatement les équipes pour ce pays
-    console.log('🔄 Chargement immédiat des équipes après sélection du pays');
     searchTeam1({ query: '' }, eventIndex, true);
     searchTeam2({ query: '' }, eventIndex, true);
-    
-    // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
-    countryDropdownOpeningInProgress.value[eventIndex] = true;
-    
-    // Fermer le dropdown après sélection avec nextTick pour s'assurer que le rendu est terminé
-    nextTick(() => {
-      const countryRef = countryAutoCompleteRefs.value[eventIndex];
-      if (countryRef && typeof countryRef.hide === 'function') {
-        countryRef.hide();
-        console.log('✅ Dropdown pays fermé après sélection');
-      } else if (countryRef && countryRef.$el) {
-        // Méthode alternative: blur sur l'élément input
-        const inputElement = countryRef.$el.querySelector('input');
-        if (inputElement) {
-          inputElement.blur();
-          console.log('✅ Blur appliqué sur le champ pays pour fermeture');
-        }
-      }
-      
-      // Réinitialiser le drapeau après un délai pour permettre de futures ouvertures
-      setTimeout(() => {
-        countryDropdownOpeningInProgress.value[eventIndex] = false;
-      }, 300);
-    });
   } else {
-    eventData.selectedCountry = [];
     eventData.country_id = null;
   }
-  
-  // Déclencher le changement de pays
-  onCountryChange(eventIndex);
 }
 
 /**
