@@ -275,6 +275,59 @@ import TypePariField from './fields/TypePariField.vue';
 
 ---
 
+---
+
+## 11. Nouveau composant : StakeField.vue
+
+### Vue d'ensemble
+Le composant `StakeField.vue` a été extrait d'`AddBetForm.vue` pour gérer la saisie de mise avec support devise/pourcentage et calcul du gain potentiel. Il suit la même architecture que `TypePariField.vue`.
+
+### Localisation
+- **Fichier** : `/frontend/src/components/add-bet/fields/StakeField.vue`
+- **Documentation détaillée** : `DOCUMENTATION_CHAMPS_MISE.md`
+
+### Fonctionnalités principales
+- **Double mode** : Saisie en devise (€) ou en pourcentage (%)
+- **Calcul automatique** : Gain potentiel basé sur les cotes globales
+- **Validation** : Contrôles de saisie et gestion d'erreurs
+- **Récupération capital** : Intégration avec BetService pour le capital actuel
+
+### Intégration dans AddBetForm.vue
+```vue
+<StakeField
+  v-model="formData.stake"
+  v-model:stake-type="formData.stake_type"
+  :global-odds="globalOdds"
+  :show-potential-win="true"
+  :error="errors.stake"
+  field-id="stake"
+  @stake-changed="onStakeChanged"
+  @error="onStakeError"
+  @valid="onStakeValid"
+/>
+```
+
+### Code supprimé d'AddBetForm.vue
+- **Fonctions** : `fetchCurrentCapital()`, `calculatePercentageStake()`
+- **Computed** : `potentialWin`
+- **Watchers** : Surveillance de `betTypeValue` et `formData.value.stake`
+- **Import** : `BetService`
+- **Template** : Bloc HTML de saisie de mise
+
+### Avantages de l'extraction
+- ✅ **Logique complexe isolée** : Gestion devise/pourcentage encapsulée
+- ✅ **Réutilisabilité** : Composant utilisable dans d'autres formulaires
+- ✅ **Maintenance facilitée** : Code de mise séparé et documenté
+- ✅ **Performance** : Optimisation des calculs et re-rendus
+
+---
+
 ## Conclusion
 
-L'extraction du composant `TypePariField.vue` représente une amélioration significative de l'architecture de l'application. Le composant suit les meilleures pratiques Vue.js et s'intègre parfaitement dans l'écosystème existant tout en offrant une meilleure maintenabilité et réutilisabilité.
+L'extraction des composants `TypePariField.vue` et `StakeField.vue` représente une amélioration significative de l'architecture de l'application. Ces composants suivent les meilleures pratiques Vue.js et s'intègrent parfaitement dans l'écosystème existant tout en offrant une meilleure maintenabilité et réutilisabilité.
+
+### Impact global
+- **AddBetForm.vue** : Simplifié et plus maintenable
+- **Architecture** : Composants modulaires et réutilisables
+- **Documentation** : Chaque composant est bien documenté
+- **Évolutivité** : Facilite l'ajout de nouvelles fonctionnalités

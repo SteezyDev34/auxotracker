@@ -208,7 +208,7 @@
         </div>
       </div>
       <!-- Cote, Mise et Type -->
-      <div class="grid grid-cols-3 sm:grid-cols-4 gap-1 overflow-hidden">
+      <div class="grid grid-cols-2 sm:grid-cols-2 gap-1 overflow-hidden">
         <!-- Cote -->
         <GlobalOddsField
           v-model="formData.global_odds"
@@ -219,78 +219,33 @@
           @valid="(isValid) => handleGlobalOddsValid(isValid)"
         />
         
-        <!-- Mise -->
-        <div class="flex flex-col justify-center min-w-0 w-full">
-          <div class="w-full">
-            <InputText 
-              id="stake" 
-              v-model="formData.stake" 
-              type="text"
-              :placeholder="betTypeValue === 'currency' ? 'Mise en €' : betTypeValue === 'percentage' ? 'Mise en %' : 'Mise'"
-              class="w-full text-xs"
-              :class="{ 'p-invalid': errors.stake }"
-              @input="handleStakeInput"
-              @keypress="handleStakeKeypress"
-            />
-          </div>
-          <small v-if="errors.stake" class="text-red-500 text-xs truncate">{{ errors.stake }}</small>
-        </div>
-
-        <!-- Type de mise -->
-        <div class="flex flex-col justify-center min-w-0 w-full">
-          <div class="w-full flex items-center">
-            <SelectButton 
-              v-model="betTypeValue" 
-              :options="betTypeOptions" 
-              optionLabel="symbol" 
-              optionValue="value"
-              class="h-8 text-xs w-full"
-            />
-          </div>
-        </div>
+        <!-- Champ de mise avec composant dédié -->
+        <StakeField
+          v-model="formData.stake"
+          v-model:stake-type="betTypeValue"
+          :global-odds="formData.global_odds"
+          :show-potential-win="false"
+          :error="errors.stake"
+          field-id="stake"
+          @stake-changed="onStakeChanged"
+          @error="handleStakeError"
+          @valid="handleStakeValid"
+        />
 
        
       </div>
-      <!-- Section détaillée du gain potentiel (mode pourcentage uniquement) -->
-      <div v-if="betTypeValue === 'percentage'" class="flex flex-col gap-2 mb-4 mt-4">
-        <div class="p-4 bg-gray-50 rounded border">
-          <h4 class="text-sm font-semibold text-gray-800 mb-3">Détails du gain potentiel</h4>
-          <!-- Capital actuel -->
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-sm text-gray-600">Capital actuel :</span>
-            <span class="text-sm font-medium">
-              <i v-if="capitalLoading" class="pi pi-spin pi-spinner text-xs"></i>
-              <span v-else>{{ currentCapital.toFixed(2) }} €</span>
-            </span>
-          </div>
-          
-          <!-- Mise calculée -->
-          <div v-if="calculatedStake > 0" class="flex justify-between items-center mb-2">
-            <span class="text-sm text-gray-600">Mise calculée ({{ formData.stake }}%) :</span>
-            <span class="text-sm font-medium text-blue-600">{{ calculatedStake.toFixed(2) }} €</span>
-          </div>
-          
-          <!-- Cote -->
-          <div v-if="formData.global_odds" class="flex justify-between items-center mb-2">
-            <span class="text-sm text-gray-600">Cote :</span>
-            <span class="text-sm font-medium">{{ parseFloat(formData.global_odds).toFixed(2) }}</span>
-          </div>
-          
-          <!-- Gain potentiel -->
-          <div class="flex justify-between items-center pt-2 border-t border-gray-200">
-            <span class="text-sm font-semibold text-gray-800">Gain potentiel :</span>
-            <span class="text-lg font-bold text-green-600">{{ potentialWin.toFixed(2) }} €</span>
-          </div>
-        </div>
-      </div>
-      <!-- Gain potentiel simple (mode devise uniquement) -->
-      <div v-if="betTypeValue === 'currency'" class="flex flex-col gap-2 mt-4 mb-4">
-        <div class="p-3 bg-gray-50 rounded border text-lg font-semibold text-green-600 text-center">
-          Gain potentiel : {{ potentialWin.toFixed(2) }} €
-        </div>
-      </div>
+      
+      <!-- Affichage du gain potentiel en pleine largeur -->
+      <PotentialWinDisplay
+        :stake-value="formData.stake"
+        :stake-type="betTypeValue"
+        :global-odds="formData.global_odds"
+        :current-capital="currentCapital"
+        :calculated-stake="calculatedStake"
+        :show-potential-win="true"
+      />
       <!-- Résultat (optionnel) -->
-      <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2 mt-3">
         <div class="flex-1">
           <Select 
             id="result" 
@@ -348,9 +303,11 @@ import GlobalOddsField from './fields/GlobalOddsField.vue';
 import EventOddsField from './fields/EventOddsField.vue';
 import OddsCalculator from './fields/OddsCalculator.vue';
 import DatePickerField from '@/components/DatePickerField.vue';
-import { BetService } from '@/service/BetService';
+import StakeField from './fields/StakeField.vue';
+import PotentialWinDisplay from './fields/PotentialWinDisplay.vue';
 import { SportService } from '@/service/SportService';
 import { CountryService } from '@/service/CountryService';
+import { BetService } from '@/service/BetService';
 import { useToast } from 'primevue/usetoast';
 import { useLayout } from '@/layout/composables/layout';
 import { useBetResults } from '@/composables/useBetResults';
@@ -395,17 +352,12 @@ const selectedSport = ref([]);
 // Références pour les composants AutoComplete
 const sportAutoCompleteRefs = ref({});
 
-// Variables pour le type de mise
+// Variables pour le type de mise (maintenant gérées par StakeField)
 const betTypeValue = ref('currency');
-const betTypeOptions = ref([
-  { symbol: '€', value: 'currency' },
-  { symbol: '%', value: 'percentage' }
-]);
 
-// Variables pour le capital actuel
+// Variables pour l'affichage du gain potentiel
 const currentCapital = ref(0);
 const calculatedStake = ref(0);
-const capitalLoading = ref(false);
 
 // Variables pour les cards d'événements multiples
 const eventCards = ref([
@@ -494,29 +446,7 @@ function onBetTypeSelect(betType, eventIndex) {
   // Logique additionnelle si nécessaire (validation, calculs, etc.)
 }
 
-/**
- * Calculer le gain potentiel basé sur la mise et la cote globale
- * @returns {Number} Gain potentiel en euros
- */
-const potentialWin = computed(() => {
-  let stake = 0;
-  
-  // Utiliser la mise calculée en mode pourcentage, sinon la mise directe
-  if (betTypeValue.value === 'percentage' && calculatedStake.value > 0) {
-    stake = calculatedStake.value;
-  } else {
-    stake = parseFloat(formData.value.stake);
-  }
-  
-  const odds = parseFloat(formData.value.global_odds);
-  
-  // Validation des valeurs
-  if (isNaN(stake) || isNaN(odds) || stake <= 0 || odds <= 0) {
-    return 0;
-  }
-  
-  return stake * odds;
-});
+
 
 const isFormValid = computed(() => {
   // Seuls les champs essentiels sont obligatoires
@@ -839,88 +769,47 @@ function onTeamSearchRefresh(teamType, eventIndex) {
 
 
 
+
+
+// ===== GESTIONNAIRES D'ÉVÉNEMENTS STAKEFIELD =====
+
 /**
- * Gérer la saisie de la mise pour accepter les virgules et les points comme séparateurs décimaux
- * @param {Event} event - Événement d'input
+ * Gestionnaire de changement de mise du composant StakeField
+ * @param {Object} stakeData - Données complètes de la mise
  */
-function handleStakeInput(event) {
-  let inputValue = event.target.value;
-  console.log('handleStakeInput - Valeur tapée:', inputValue);
+function onStakeChanged(stakeData) {
+  console.log('StakeField - Mise modifiée:', stakeData);
   
-  // Remplacer immédiatement toutes les virgules par des points
-  const normalizedValue = inputValue.replace(/,/g, '.');
-  console.log('handleStakeInput - Valeur normalisée:', normalizedValue);
-  
-  // Si une virgule a été détectée, forcer le remplacement immédiat
-  if (inputValue !== normalizedValue) {
-    console.log('handleStakeInput - Virgule détectée, remplacement en cours...');
-    // Sauvegarder la position du curseur
-    const cursorPosition = event.target.selectionStart;
-    
-    // Mettre à jour immédiatement la valeur de l'input
-    event.target.value = normalizedValue;
-    
-    // Restaurer la position du curseur
-    event.target.setSelectionRange(cursorPosition, cursorPosition);
-    
-    // Mettre à jour le v-model
-    formData.value.stake = normalizedValue;
-    console.log('handleStakeInput - Remplacement terminé, nouvelle valeur:', event.target.value);
-    return;
+  // Mettre à jour les variables pour PotentialWinDisplay
+  if (stakeData.currentCapital !== undefined) {
+    currentCapital.value = stakeData.currentCapital;
   }
-  
-  // Vérifier que la valeur est un nombre réel valide
-  if (normalizedValue === '' || normalizedValue === '.') {
-    formData.value.stake = null;
-    return;
+  if (stakeData.calculatedStake !== undefined) {
+    calculatedStake.value = stakeData.calculatedStake;
   }
-  
-  // Validation du format nombre réel (la mise peut être 0)
-  const numericValue = parseFloat(normalizedValue);
-  if (!isNaN(numericValue) && isFinite(numericValue) && numericValue >= 0) {
-    formData.value.stake = numericValue;
+}
+
+/**
+ * Gestionnaire d'erreur du composant StakeField
+ * @param {String} message - Message d'erreur
+ */
+function handleStakeError(message) {
+  if (message) {
+    errors.value.stake = message;
   } else {
-    // Si la valeur n'est pas valide, on garde la dernière valeur valide
-    console.warn('Valeur de mise invalide:', normalizedValue);
+    delete errors.value.stake;
   }
 }
-
-
 
 /**
- * Gérer les touches pressées pour la mise (permettre point et virgule)
- * @param {KeyboardEvent} event - Événement de frappe
+ * Gestionnaire de validation du composant StakeField
+ * @param {Boolean} isValid - État de validation
  */
-function handleStakeKeypress(event) {
-  const char = String.fromCharCode(event.which);
-  const currentValue = event.target.value;
-  
-  // Permettre les chiffres, le point, la virgule et les touches de contrôle
-  if (!/[0-9.,]/.test(char) && event.which !== 8 && event.which !== 46 && event.which !== 37 && event.which !== 39) {
-    event.preventDefault();
-    return;
-  }
-  
-  // Empêcher plusieurs séparateurs décimaux (point ou virgule)
-  if ((char === '.' || char === ',') && (currentValue.includes('.') || currentValue.includes(','))) {
-    event.preventDefault();
-    return;
-  }
-  
-  // Empêcher le point/virgule en première position
-  if ((char === '.' || char === ',') && currentValue === '') {
-    event.preventDefault();
-    return;
+function handleStakeValid(isValid) {
+  if (isValid) {
+    delete errors.value.stake;
   }
 }
-
-
-
-
-
-
-
-
 
 /**
  * Valider le formulaire
@@ -1304,52 +1193,8 @@ function calculateGlobalResult() {
   }
 }
 
-/**
- * Récupérer le capital actuel de l'utilisateur
- */
-async function fetchCurrentCapital() {
-  try {
-    capitalLoading.value = true;
-    const response = await BetService.getCapitalEvolution();
-    
-    if (response.success && response.data) {
-      currentCapital.value = response.current_capital || response.initial_capital || 0;
-    }
-  } catch (error) {
-    console.error('Erreur lors de la récupération du capital actuel:', error);
-    currentCapital.value = 0;
-  } finally {
-    capitalLoading.value = false;
-  }
-}
-
-/**
- * Calculer la mise en pourcentage du capital
- */
-function calculatePercentageStake() {
-  if (betTypeValue.value === 'percentage' && formData.value.stake && currentCapital.value > 0) {
-    const percentage = parseFloat(formData.value.stake);
-    if (!isNaN(percentage) && percentage > 0) {
-      calculatedStake.value = (currentCapital.value * percentage) / 100;
-      return;
-    }
-  }
-  calculatedStake.value = 0;
-}
 
 // Watchers
-// Surveiller le changement de type de mise pour récupérer le capital
-watch(betTypeValue, async (newValue) => {
-  if (newValue === 'percentage') {
-    await fetchCurrentCapital();
-  }
-  calculatePercentageStake();
-});
-
-// Surveiller les changements de la mise pour recalculer en mode pourcentage
-watch(() => formData.value.stake, () => {
-  calculatePercentageStake();
-});
 
 // Surveiller les changements dans les résultats des événements
 watch(
