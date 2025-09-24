@@ -401,7 +401,6 @@
         
         <!-- Type de pari -->
         <div class="flex flex-col gap-2 mb-4">
-          <label :for="`bet_type_${eventIndex}`" class="font-medium text-sm">Type de pari</label>
           <Select 
             :id="`bet_type_${eventIndex}`" 
             v-model="eventData.bet_type" 
