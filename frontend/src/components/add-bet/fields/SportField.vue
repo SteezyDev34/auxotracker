@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col gap-2 mb-4">
-    <label :for="`sport_${eventIndex}`" class="font-medium text-sm">Sport *</label>
     <AutoComplete 
       :ref="(el) => { if (el) sportRef = el }"
       :id="`sport_${eventIndex}`" 
