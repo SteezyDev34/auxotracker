@@ -1,2 +1,3 @@
 backend/docker/logs/apache/.log
 backend/docker/logs/apache/error.log
+backend/docker/logs/apache/access.log
