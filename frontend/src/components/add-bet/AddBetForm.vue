@@ -55,81 +55,15 @@
           />
 
           <!-- Ligue -->
-          <div class="flex flex-col gap-2">
-            <div class="relative">
-              <AutoComplete 
-                :ref="(el) => { if (el) leagueAutoCompleteRefs[eventIndex] = el }"
-                :id="`league-${eventIndex}`" 
-                v-model="eventData.selectedLeague" 
-                :suggestions="eventData.leagueSearchResults" 
-                @complete="(event) => searchLeagues(event, eventIndex)"
-                @focus="() => onLeagueDropdownShow(eventIndex)"
-                @click="() => onLeagueDropdownShow(eventIndex)"
-                @item-select="(event) => onLeagueSelect(event, eventIndex)"
-                optionLabel="name"
-                :placeholder="eventData.selectedLeague && eventData.selectedLeague.length > 0 ? '' : 'Ligue'"
-                class="w-full max-w-full select-custom"
-                :class="{ 'p-invalid': errors[`league-${eventIndex}`] }"
-                :loading="eventData.leagueLoading"
-                :disabled="!eventData.sport_id"
-                :minLength="0"
-                dropdown
-                dropdownMode="blank"
-                multiple
-                display="chip"
-                aria-label="Rechercher et sélectionner une ligue"
-              >
-                <!-- Template pour afficher la ligue sélectionnée avec son logo -->
-                 <template #chip="slotProps">
-                   <div class="flex items-center gap-2">
-                     
-                     <!-- Logo de la ligue -->
-                     <img 
-                       v-if="slotProps.value.id"
-                       :src="`${apiBaseUrl}/storage/league_logos/${slotProps.value.id}${isDarkTheme ? '-dark' : ''}.png`" 
-                       :alt="slotProps.value.name"
-                       class="w-4 h-4 rounded object-cover flex-shrink-0" 
-                       @error="$event.target.style.display='none'"
-                     />
-                     <!-- Nom de la ligue -->
-                     <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
-                   </div>
-                 </template>
-                <template #option="slotProps">
-                  <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
-                    <!-- Drapeau du pays -->
-                    <img 
-                       v-if="slotProps.option.country_id"
-                       :src="`${apiBaseUrl}/storage/country_flags/${slotProps.option.country_id}.png`" 
-                       :alt="slotProps.option.country?.name || 'Pays'"
-                       class="w-4 h-4 rounded object-cover flex-shrink-0" 
-                       @error="$event.target.style.display='none'"
-                     />
-                    <!-- Logo de la ligue -->
-                    <img 
-                      v-if="slotProps.option.img"
-                      :src="`${apiBaseUrl}/storage/league_logos/${slotProps.option.id}${isDarkTheme ? '-dark' : ''}.png`" 
-                      :alt="slotProps.option.name"
-                      class="w-4 h-4 rounded object-cover flex-shrink-0" 
-                      @error="$event.target.style.display='none'"
-                    />
-                    <!-- Nom de la ligue -->
-                    <span class="truncate">{{ slotProps.option.name }}</span>
-                  </div>
-                </template>
-                
-                <template #footer v-if="leagueHasMore">
-                  <div class="flex justify-center items-center p-2" v-if="leagueLoading">
-                    <i class="pi pi-spin pi-spinner"></i>
-                  </div>
-                  <div class="text-center p-2 text-sm text-gray-500" v-else>
-                    Faites défiler pour charger plus de résultats
-                  </div>
-                </template>
-              </AutoComplete>
-            </div>
-            <small v-if="errors[`league-${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`league-${eventIndex}`] }}</small>
-          </div>
+          <LeagueField
+            v-model="eventData.selectedLeague"
+            :sport-id="eventData.sport_id"
+            :country-id="eventData.country_id"
+            :has-error="!!errors[`league-${eventIndex}`]"
+            :error-message="errors[`league-${eventIndex}`]"
+            @league-select="(league) => onLeagueSelect({ value: league }, eventIndex)"
+            @league-clear="() => onLeagueClear(eventIndex)"
+          />
 
           <!-- Équipes -->
           <div class="space-y-4">
@@ -531,6 +465,7 @@ import SelectButton from 'primevue/selectbutton';
 import AutoComplete from 'primevue/autocomplete';
 import SportField from './fields/SportField.vue';
 import CountryField from './fields/CountryField.vue';
+import LeagueField from './fields/LeagueField.vue';
 import DatePickerField from '@/components/DatePickerField.vue';
 import { BetService } from '@/service/BetService';
 import { SportService } from '@/service/SportService';
@@ -560,7 +495,6 @@ const errors = ref({});
 // Cache pour les pays par sport
 
 const eventOddsInput = ref(null);
-const availableLeagues = ref([]);
 const availableTeams = ref([]);
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 // Variables pour la recherche de pays
@@ -570,13 +504,7 @@ const countryLoading = ref(false);
 const countryCurrentPage = ref(1);
 const countryHasMore = ref(false);
 const selectedCountry = ref([]);
-// Variables pour la recherche de ligues
-const leagueSearchQuery = ref('');
-const leagueSearchResults = ref([]);
-const leagueLoading = ref(false);
-const leagueCurrentPage = ref(1);
-const leagueHasMore = ref(false);
-const selectedLeague = ref([]);
+
 // Variables pour la recherche d'équipes 1
 const team1SearchQuery = ref('');
 const team1SearchResults = ref([]);
@@ -600,7 +528,7 @@ const selectedSport = ref([]);
 // Références pour les composants AutoComplete
 const sportAutoCompleteRefs = ref({});
 
-const leagueAutoCompleteRefs = ref({}); // Initialisation comme un objet simple
+
 const team1AutoCompleteRefs = ref({});
 const team2AutoCompleteRefs = ref({});
 
@@ -636,8 +564,6 @@ const eventCards = ref([
     selectedTeam2: [],
     sportSearchResults: [],
     sportLoading: false,
-    leagueSearchResults: [],
-    leagueLoading: false,
     team1SearchResults: [],
     team1Loading: false,
     team2SearchResults: [],
@@ -797,23 +723,7 @@ async function loadCountries() {
   }
 }
 
-/**
- * Charger les ligues d'un sport spécifique
- */
-async function loadLeaguesBySport(sportId) {
-  try {
-    availableLeagues.value = await SportService.getLeaguesBySport(sportId);
-  } catch (error) {
-    console.error('Erreur lors du chargement des ligues:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Erreur',
-      detail: 'Impossible de charger les ligues',
-      life: 3000
-    });
-    availableLeagues.value = [];
-  }
-}
+
 
 /**
  * Charger les équipes d'un sport spécifique
@@ -883,7 +793,7 @@ async function loadSports() {
 
 // Drapeaux pour éviter les appels multiples sur les dropdowns
 
-const leagueDropdownOpeningInProgress = ref({});
+
 const team1DropdownOpeningInProgress = ref({});
 const team2DropdownOpeningInProgress = ref({});
 
@@ -905,7 +815,6 @@ function onSportClear(eventIndex) {
   eventData.country_id = null;
   eventData.selectedCountry = [];
   eventData.league = null;
-  eventData.selectedLeague = [];
   eventData.team1 = null;
   eventData.selectedTeam1 = [];
   eventData.team2 = null;
@@ -913,7 +822,6 @@ function onSportClear(eventIndex) {
   
   // Réinitialiser les résultats de recherche
   eventData.countryFilteredResults = [];
-  eventData.leagueSearchResults = [];
   eventData.team1SearchResults = [];
   eventData.team2SearchResults = [];
   
@@ -945,15 +853,12 @@ async function onSportSelect(event, eventIndex) {
   // Réinitialiser les champs liés au sport pour cette card
   eventData.country_id = null;
   eventData.league = null;
+  eventData.selectedLeague = []; // Synchroniser avec le tableau pour le v-model
   eventData.team1 = null;
   eventData.team2 = null;
   
   // Réinitialiser la recherche de pays pour cette card
   eventData.selectedCountry = [];
-  
-  // Réinitialiser la recherche de ligues pour cette card
-  eventData.selectedLeague = [];
-  eventData.leagueSearchResults = [];
   
   // Réinitialiser la recherche d'équipes pour cette card
   eventData.selectedTeam1 = [];
@@ -996,12 +901,9 @@ async function onCountryChange(eventIndex) {
   
   // Réinitialiser les champs liés aux ligues et équipes pour cette card
   eventData.league = null;
+  eventData.selectedLeague = []; // Synchroniser avec le tableau pour le v-model
   eventData.team1 = null;
   eventData.team2 = null;
-  
-  // Réinitialiser la recherche de ligues pour cette card
-  eventData.selectedLeague = [];
-  eventData.leagueSearchResults = [];
   
   // Réinitialiser la recherche d'équipes pour cette card
   eventData.selectedTeam1 = [];
@@ -1010,64 +912,11 @@ async function onCountryChange(eventIndex) {
   eventData.selectedTeam2 = [];
   eventData.team2SearchResults = [];
   
-  // Recharger les ligues avec le filtre de pays si un sport est sélectionné
-  if (eventData.sport_id) {
-    await searchLeagues({ query: '' }, eventIndex);
-    await searchTeam1({ query: '' }, eventIndex);
-    await searchTeam2({ query: '' }, eventIndex);
-  }
+  // Les composants LeagueField et TeamField se mettront à jour automatiquement
+  // grâce aux watchers sur sportId et countryId
 }
 
-/**
- * Rechercher des ligues avec pagination
- * @param {Object} event - Événement de recherche contenant la query
- * @param {number} eventIndex - Index de l'événement
- */
-async function searchLeagues(event, eventIndex) {
-  const eventData = eventCards.value[eventIndex];
-  
-  if (!eventData.sport_id) {
-    console.log('❌ searchLeagues: Aucun sport sélectionné pour événement', eventIndex);
-    return;
-  }
-  
-  const query = event.query || '';
-  console.log('🔍 searchLeagues appelée avec:', {
-    query,
-    sportId: eventData.sport_id,
-    eventIndex
-  });
-  
-  // Initialiser les résultats si nécessaire
-  if (!eventData.leagueSearchResults) {
-    eventData.leagueSearchResults = [];
-  }
-  
-  try {
-    eventData.leagueLoading = true;
-    
-    const response = await SportService.searchLeaguesBySport(
-      eventData.sport_id,
-      query,
-      1,
-      30,
-      eventData.country_id
-    );
-    
-    eventData.leagueSearchResults = response.data;
-    
-  } catch (error) {
-    console.error('❌ Erreur lors de la recherche des ligues:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Erreur',
-      detail: 'Impossible de rechercher les ligues',
-      life: 3000
-    });
-  } finally {
-    eventData.leagueLoading = false;
-  }
-}
+
 
 /**
  * Gérer la sélection d'une ligue
@@ -1077,37 +926,13 @@ async function searchLeagues(event, eventIndex) {
 async function onLeagueSelect(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
-  // Remplacer l'élément existant par la nouvelle ligue sélectionnée
+  // Mettre à jour la ligue sélectionnée
   if (event.value) {
-    eventData.selectedLeague = [event.value]; // Remplacer par la nouvelle ligue
     eventData.league = event.value.id;
-    
-    // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
-    leagueDropdownOpeningInProgress.value[eventIndex] = true;
-    
-    // Fermer le dropdown après sélection
-    nextTick(() => {
-      const leagueRef = leagueAutoCompleteRefs.value[eventIndex];
-      if (leagueRef && typeof leagueRef.hide === 'function') {
-        leagueRef.hide();
-        console.log('✅ Dropdown ligue fermé après sélection');
-      } else if (leagueRef && leagueRef.$el) {
-        // Alternative: forcer la fermeture en retirant le focus
-        const inputElement = leagueRef.$el.querySelector('input');
-        if (inputElement) {
-          inputElement.blur();
-          console.log('✅ Dropdown ligue fermé par blur');
-        }
-      }
-      
-      // Réinitialiser le drapeau après un délai pour permettre de futures ouvertures
-      setTimeout(() => {
-        leagueDropdownOpeningInProgress.value[eventIndex] = false;
-      }, 300);
-    });
+    eventData.selectedLeague = [event.value]; // Synchroniser avec le tableau pour le v-model
   } else {
-    eventData.selectedLeague = [];
     eventData.league = null;
+    eventData.selectedLeague = [];
   }
   
   // Réinitialiser les équipes sélectionnées
@@ -1116,9 +941,33 @@ async function onLeagueSelect(event, eventIndex) {
   eventData.selectedTeam1 = [];
   eventData.selectedTeam2 = [];
   
-  // Recharger les équipes avec le filtre de ligue pour les deux sélecteurs
+  // Recharger les équipes avec le filtre de ligue
   await searchTeam1({ query: eventData.team1SearchQuery || '' }, eventIndex, true);
   await searchTeam2({ query: eventData.team2SearchQuery || '' }, eventIndex, true);
+}
+
+/**
+ * Gérer l'effacement de la ligue
+ * @param {number} eventIndex - Index de l'événement
+ */
+async function onLeagueClear(eventIndex) {
+  const eventData = eventCards.value[eventIndex];
+  
+  // Réinitialiser la ligue
+  eventData.league = null;
+  eventData.selectedLeague = []; // Synchroniser avec le tableau pour le v-model
+  
+  // Réinitialiser les équipes sélectionnées
+  eventData.team1 = null;
+  eventData.team2 = null;
+  eventData.selectedTeam1 = [];
+  eventData.selectedTeam2 = [];
+  
+  // Recharger les équipes sans filtre de ligue
+  await searchTeam1({ query: eventData.team1SearchQuery || '' }, eventIndex, true);
+  await searchTeam2({ query: eventData.team2SearchQuery || '' }, eventIndex, true);
+  
+  console.log('🗑️ Ligue effacée pour événement', eventIndex);
 }
 
 /**
@@ -1461,53 +1310,7 @@ function onTeam2DropdownShow(eventIndex) {
 
 
 
-/**
- * Gérer l'affichage du dropdown des ligues
- * @param {number} eventIndex - Index de l'événement
- */
-function onLeagueDropdownShow(eventIndex) {
-  // Vérifier si l'ouverture est déjà en cours pour cet événement
-  if (leagueDropdownOpeningInProgress.value[eventIndex]) {
-    return; // Éviter les appels multiples
-  }
-  
-  // Marquer l'ouverture comme en cours
-  leagueDropdownOpeningInProgress.value[eventIndex] = true;
-  
-  console.log('🔽 Dropdown ligues ouvert pour événement', eventIndex);
-  
-  // Charger les ligues si pas encore chargées pour cette card
-  const eventData = eventCards.value[eventIndex];
-  if (!eventData.leagueSearchResults || eventData.leagueSearchResults.length === 0) {
-    searchLeagues({ query: '' }, eventIndex);
-  }
-  
-  // Forcer l'ouverture du dropdown en utilisant la référence
-  nextTick(() => {
-    const leagueRef = leagueAutoCompleteRefs.value[eventIndex];
-    if (leagueRef && typeof leagueRef.show === 'function') {
-      leagueRef.show();
-      console.log('✅ Dropdown ligue forcé à s\'ouvrir');
-    } else if (leagueRef && leagueRef.$el) {
-      // Essayer de déclencher un focus sur l'élément input
-      const inputElement = leagueRef.$el.querySelector('input');
-      if (inputElement) {
-        inputElement.focus();
-        inputElement.click();
-        console.log('✅ Focus et clic appliqués sur le champ ligue');
-      } else {
-        console.log('❌ Élément input non trouvé dans le composant ligue');
-      }
-    } else {
-      console.log('❌ Référence du composant ligue non trouvée', leagueRef);
-    }
-  });
-  
-  // Réinitialiser le drapeau après un délai
-  setTimeout(() => {
-    leagueDropdownOpeningInProgress.value[eventIndex] = false;
-  }, 300);
-}
+
 
 
 
@@ -1869,132 +1672,7 @@ function onDropdownShow() {
 
 
 
-/**
- * Charger plus de ligues (pagination)
- */
-async function loadMoreLeagues() {
-  console.log('🚀 loadMoreLeagues appelée avec état:', {
-    sportId: formData.value.sport_id,
-    hasMore: leagueHasMore.value,
-    loading: leagueLoading.value,
-    currentPage: leagueCurrentPage.value,
-    query: leagueSearchQuery.value,
-    currentResultsCount: leagueSearchResults.value.length
-  });
-  
-  if (!formData.value.sport_id || !leagueHasMore.value || leagueLoading.value) {
-    console.log('❌ loadMoreLeagues bloquée:', {
-      noSport: !formData.value.sport_id,
-      noMore: !leagueHasMore.value,
-      alreadyLoading: leagueLoading.value
-    });
-    return;
-  }
-  
-  try {
-    leagueLoading.value = true;
-    leagueCurrentPage.value++;
-    
-    console.log('🚀 Chargement page', leagueCurrentPage.value, 'pour query:', leagueSearchQuery.value);
-    
-    const response = await SportService.searchLeaguesBySport(
-      formData.value.sport_id,
-      leagueSearchQuery.value,
-      leagueCurrentPage.value,
-      30,
-      formData.value.country_id
-    );
-    
-    console.log('📡 loadMoreLeagues - Réponse API:', {
-      data: response.data,
-      dataLength: response.data?.length,
-      hasMore: response.hasMore,
-      pagination: response.pagination,
-      fullResponse: response
-    });
-    
-    // Ajouter les nouveaux résultats à la liste existante
-    const previousCount = leagueSearchResults.value.length;
-    leagueSearchResults.value = [...leagueSearchResults.value, ...response.data];
-    leagueHasMore.value = response.hasMore;
-    
-    console.log('✅ Page chargée:', {
-      newLeagues: response.data.length,
-      previousTotal: previousCount,
-      newTotal: leagueSearchResults.value.length,
-      hasMoreAfter: leagueHasMore.value
-    });
-    
-  } catch (error) {
-    console.error('❌ Erreur lors du chargement de plus de ligues:', error);
-    // Revenir à la page précédente en cas d'erreur
-    leagueCurrentPage.value--;
-    console.log('🔄 Page remise à:', leagueCurrentPage.value);
-  } finally {
-    leagueLoading.value = false;
-    console.log('🏁 loadMoreLeagues: loading terminé');
-  }
-}
 
-/**
- * Gérer le défilement du panneau pour le lazy loading
- * @param {Event} event - Événement de défilement
- */
-function handlePanelScroll(event) {
-  const panel = event.target;
-  const scrollTop = panel.scrollTop;
-  const scrollHeight = panel.scrollHeight;
-  const clientHeight = panel.clientHeight;
-  
-  // Calculer le pourcentage de défilement
-  const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
-  
-  console.log('📊 Scroll détecté:', {
-    scrollTop,
-    scrollHeight,
-    clientHeight,
-    scrollPercentage: Math.round(scrollPercentage * 100) + '%',
-    hasMore: leagueHasMore.value,
-    loading: leagueLoading.value,
-    currentPage: leagueCurrentPage.value,
-    resultsCount: leagueSearchResults.value.length
-  });
-  
-  // Si on a atteint 90% du défilement et qu'il y a plus de données
-  if (scrollPercentage >= 0.9) {
-    console.log('🎯 90% atteint! État actuel:', {
-      hasMore: leagueHasMore.value,
-      loading: leagueLoading.value,
-      willTrigger: leagueHasMore.value && !leagueLoading.value
-    });
-    
-    if (leagueHasMore.value && !leagueLoading.value) {
-      console.log('🚀 Déclenchement du lazy loading...');
-      loadMoreLeagues();
-    } else {
-      console.log('❌ Lazy loading non déclenché:', {
-        reason: !leagueHasMore.value ? 'Pas de données supplémentaires' : 'Chargement en cours'
-      });
-    }
-  }
-}
-
-/**
- * Gérer le changement de ligue (méthode legacy, gardée pour compatibilité)
- */
-async function onLeagueChange() {
-  // Réinitialiser les équipes sélectionnées
-  formData.value.team1 = null;
-  formData.value.team2 = null;
-  
-  // Si une ligue est sélectionnée, charger ses équipes
-  if (formData.value.league) {
-    await loadTeamsByLeague(formData.value.league);
-  } else if (formData.value.sport_id) {
-    // Sinon, charger toutes les équipes du sport
-    await loadTeamsBySport(formData.value.sport_id);
-  }
-}
 
 /**
  * Valider le formulaire
@@ -2150,13 +1828,7 @@ function resetForm() {
   countryHasMore.value = false;
   countryLoading.value = false;
   
-  // Réinitialiser les variables de recherche de ligues
-  selectedLeague.value = null;
-  leagueSearchResults.value = [];
-  leagueSearchQuery.value = '';
-  leagueCurrentPage.value = 1;
-  leagueHasMore.value = false;
-  leagueLoading.value = false;
+
   
   // Réinitialiser les variables de recherche d'équipes
   selectedTeam1.value = [];
@@ -2193,18 +1865,7 @@ function cleanupScrollListeners() {
   });
 }
 
-/**
- * Supprimer la ligue sélectionnée
- */
-function clearLeague() {
-  selectedLeague.value = null;
-  formData.value.league = null;
-  // Réinitialiser les équipes quand on supprime la ligue
-  selectedTeam1.value = [];
-  selectedTeam2.value = [];
-  formData.value.team1 = null;
-  formData.value.team2 = null;
-}
+
 
 /**
  * Supprimer l'équipe 1 sélectionnée
@@ -2242,7 +1903,7 @@ function addEvent() {
     id: Date.now(), // ID temporaire
     sport_id: formData.value.sport_id,
     country_id: formData.value.country_id,
-    league: selectedLeague.value,
+    league: formData.value.league,
     team1: selectedTeam1.value,
     team2: selectedTeam2.value,
     bet_code: currentEvent.value.description,
@@ -2280,15 +1941,12 @@ function addEventCard() {
     odds: null,
     selectedSport: [],
     selectedCountry: [],
-    selectedLeague: [],
     selectedTeam1: [],
     selectedTeam2: [],
     sportSearchResults: [],
     sportLoading: false,
     countryFilteredResults: [],
     countryLoading: false,
-    leagueSearchResults: [],
-    leagueLoading: false,
     team1SearchResults: [],
     team1Loading: false,
     team2SearchResults: [],
@@ -2344,7 +2002,6 @@ function resetEventFields() {
   
   // Réinitialiser les variables de sélection
   selectedCountry.value = [];
-  selectedLeague.value = [];
   selectedTeam1.value = [];
   selectedTeam2.value = [];
   
