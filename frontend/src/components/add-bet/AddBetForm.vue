@@ -1132,6 +1132,10 @@ async function onSportSelect(event, eventIndex) {
     eventData.selectedSport = [event.value];
     eventData.sport_id = event.value.id;
     
+    // Charger immédiatement les ligues pour ce sport
+    console.log('🔄 Chargement immédiat des ligues après sélection du sport');
+    searchLeagues({ query: '' }, eventIndex);
+    
     // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
     sportDropdownOpeningInProgress.value[eventIndex] = true;
     
@@ -1315,6 +1319,11 @@ function onCountrySelect(event, eventIndex) {
   if (event.value) {
     eventData.selectedCountry = [event.value]; // Remplacer par le nouveau pays
     eventData.country_id = event.value.id;
+    
+    // Charger immédiatement les équipes pour ce pays
+    console.log('🔄 Chargement immédiat des équipes après sélection du pays');
+    searchTeam1({ query: '' }, eventIndex, true);
+    searchTeam2({ query: '' }, eventIndex, true);
     
     // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
     countryDropdownOpeningInProgress.value[eventIndex] = true;
