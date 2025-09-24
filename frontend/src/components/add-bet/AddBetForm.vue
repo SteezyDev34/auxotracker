@@ -128,7 +128,7 @@
         </div>
 
             <!-- Champs spécifiques à l'événement pour les paris combinés -->
-            <div v-if="events.length > 0" class="space-y-4">
+            <div v-if="eventCards.length > 1" class="space-y-4">
               <!-- Résultat de l'événement -->
               <div class="flex flex-col gap-2">
                 <Select 
@@ -147,20 +147,14 @@
               </div>
 
               <!-- Cote de l'événement -->
-              <div class="flex flex-col gap-2">
-                <InputText 
-                  :id="`event_odds_${eventIndex}`" 
-                  :ref="`eventOddsInput_${eventIndex}`"
-                  v-model="eventData.odds" 
-                  placeholder="Cote de l'événement *"
-                  class="w-full"
-                  :class="{ 'p-invalid': errors[`event_odds-${eventIndex}`] }"
-                  type="text"
-                  @input="(e) => handleEventOddsInput(e, eventIndex)"
-                  @keypress="handleEventOddsKeypress"
-                />
-                <small v-if="errors[`event_odds-${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`event_odds-${eventIndex}`] }}</small>
-              </div>
+              <EventOddsField
+                v-model="eventData.odds"
+                :event-index="eventIndex"
+                :error="errors[`event_odds-${eventIndex}`]"
+                @odds-changed="onEventOddsChanged"
+                @error="(message) => handleEventOddsError(eventIndex, message)"
+                @valid="(isValid) => handleEventOddsValid(eventIndex, isValid)"
+              />
             </div>
           </div>
           <!-- Bouton Ajouter un pari combiné -->
@@ -216,21 +210,14 @@
       <!-- Cote, Mise et Type -->
       <div class="grid grid-cols-3 sm:grid-cols-4 gap-1 overflow-hidden">
         <!-- Cote -->
-        <div class="flex flex-col justify-center min-w-0 w-full">
-          <div class="w-full">
-            <InputText 
-              id="global_odds" 
-              v-model="formData.global_odds" 
-              type="text"
-              placeholder="Cote"
-              class="w-full text-xs"
-              :class="{ 'p-invalid': errors.global_odds }"
-              @input="handleOddsInput"
-              @keypress="handleOddsKeypress"
-            />
-          </div>
-          <small v-if="errors.global_odds" class="text-red-500 text-xs truncate">{{ errors.global_odds }}</small>
-        </div>
+        <GlobalOddsField
+          v-model="formData.global_odds"
+          :stake="calculatedStake > 0 ? calculatedStake : parseFloat(formData.stake) || 0"
+          :show-potential-win="false"
+          :error="errors.global_odds"
+          @error="(message) => handleGlobalOddsError(message)"
+          @valid="(isValid) => handleGlobalOddsValid(isValid)"
+        />
         
         <!-- Mise -->
         <div class="flex flex-col justify-center min-w-0 w-full">
@@ -332,6 +319,16 @@
       />
     </div>
   </div>
+  
+  <!-- Composant utilitaire pour le calcul automatique de la cote globale -->
+  <OddsCalculator
+    :event-cards="eventCards"
+    :global-odds="formData.global_odds"
+    :auto-calculate="true"
+    @global-odds-calculated="onGlobalOddsCalculated"
+    @calculation-cleared="onGlobalOddsCleared"
+    @calculation-failed="onGlobalOddsCalculationFailed"
+  />
 </template>
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue';
@@ -347,6 +344,9 @@ import CountryField from './fields/CountryField.vue';
 import LeagueField from './fields/LeagueField.vue';
 import TeamField from './fields/TeamField.vue';
 import TypePariField from './fields/TypePariField.vue';
+import GlobalOddsField from './fields/GlobalOddsField.vue';
+import EventOddsField from './fields/EventOddsField.vue';
+import OddsCalculator from './fields/OddsCalculator.vue';
 import DatePickerField from '@/components/DatePickerField.vue';
 import { BetService } from '@/service/BetService';
 import { SportService } from '@/service/SportService';
@@ -466,22 +466,7 @@ const formData = ref({
 // Computed
 // Variable visible supprimée car ce n'est plus un Dialog
 
-const potentialWin = computed(() => {
-  let stake = 0;
-  
-  if (betTypeValue.value === 'percentage' && calculatedStake.value > 0) {
-    // Utiliser la mise calculée en pourcentage
-    stake = calculatedStake.value;
-  } else if (betTypeValue.value === 'currency' && formData.value.stake) {
-    // Utiliser la mise en devise
-    stake = parseFloat(formData.value.stake);
-  }
-  
-  if (stake > 0 && formData.value.global_odds) {
-    return stake * parseFloat(formData.value.global_odds);
-  }
-  return 0;
-});
+
 
 // Afficher les champs sport conditionnels
 const showSportFields = computed(() => {
@@ -508,6 +493,30 @@ function onBetTypeSelect(betType, eventIndex) {
   console.log('✅ Type de pari sélectionné pour événement', eventIndex, ':', betType);
   // Logique additionnelle si nécessaire (validation, calculs, etc.)
 }
+
+/**
+ * Calculer le gain potentiel basé sur la mise et la cote globale
+ * @returns {Number} Gain potentiel en euros
+ */
+const potentialWin = computed(() => {
+  let stake = 0;
+  
+  // Utiliser la mise calculée en mode pourcentage, sinon la mise directe
+  if (betTypeValue.value === 'percentage' && calculatedStake.value > 0) {
+    stake = calculatedStake.value;
+  } else {
+    stake = parseFloat(formData.value.stake);
+  }
+  
+  const odds = parseFloat(formData.value.global_odds);
+  
+  // Validation des valeurs
+  if (isNaN(stake) || isNaN(odds) || stake <= 0 || odds <= 0) {
+    return 0;
+  }
+  
+  return stake * odds;
+});
 
 const isFormValid = computed(() => {
   // Seuls les champs essentiels sont obligatoires
@@ -828,51 +837,7 @@ function onTeamSearchRefresh(teamType, eventIndex) {
 
 
 
-/**
- * Gérer la saisie de la cote pour remplacer immédiatement les virgules par des points
- * @param {Event} event - Événement d'input
- */
-function handleOddsInput(event) {
-  let inputValue = event.target.value;
-  console.log('handleOddsInput - Valeur tapée:', inputValue);
-  
-  // Remplacer immédiatement toutes les virgules par des points
-  const normalizedValue = inputValue.replace(/,/g, '.');
-  console.log('handleOddsInput - Valeur normalisée:', normalizedValue);
-  
-  // Si une virgule a été détectée, forcer le remplacement immédiat
-  if (inputValue !== normalizedValue) {
-    console.log('handleOddsInput - Virgule détectée, remplacement en cours...');
-    // Sauvegarder la position du curseur
-    const cursorPosition = event.target.selectionStart;
-    
-    // Mettre à jour immédiatement la valeur de l'input
-    event.target.value = normalizedValue;
-    
-    // Restaurer la position du curseur
-    event.target.setSelectionRange(cursorPosition, cursorPosition);
-    
-    // Mettre à jour le v-model
-    formData.value.global_odds = normalizedValue;
-    console.log('handleOddsInput - Remplacement terminé, nouvelle valeur:', event.target.value);
-    return;
-  }
-  
-  // Vérifier que la valeur est un nombre réel valide
-  if (normalizedValue === '' || normalizedValue === '.') {
-    formData.value.global_odds = null;
-    return;
-  }
-  
-  // Validation du format nombre réel
-  const numericValue = parseFloat(normalizedValue);
-  if (!isNaN(numericValue) && isFinite(numericValue) && numericValue > 0) {
-    formData.value.global_odds = numericValue;
-  } else {
-    // Si la valeur n'est pas valide, on garde la dernière valeur valide
-    console.warn('Valeur de cote invalide:', normalizedValue);
-  }
-}
+
 
 /**
  * Gérer la saisie de la mise pour accepter les virgules et les points comme séparateurs décimaux
@@ -920,119 +885,13 @@ function handleStakeInput(event) {
   }
 }
 
-/**
- * Gérer la saisie de la cote d'événement pour remplacer immédiatement les virgules par des points
- * @param {Event} event - Événement d'input
- * @param {number} eventIndex - Index de l'événement
- */
-function handleEventOddsInput(event, eventIndex) {
-  let inputValue = event.target.value;
-  console.log('handleEventOddsInput - Valeur tapée:', inputValue, 'pour événement', eventIndex);
-  
-  const eventData = eventCards.value[eventIndex];
-  
-  // Remplacer immédiatement toutes les virgules par des points
-  const normalizedValue = inputValue.replace(/,/g, '.');
-  console.log('handleEventOddsInput - Valeur normalisée:', normalizedValue);
-  
-  // Si une virgule a été détectée, forcer le remplacement immédiat
-  if (inputValue !== normalizedValue) {
-    console.log('handleEventOddsInput - Virgule détectée, remplacement en cours...');
-    // Sauvegarder la position du curseur
-    const cursorPosition = event.target.selectionStart;
-    
-    // Mettre à jour immédiatement la valeur de l'input
-    event.target.value = normalizedValue;
-    
-    // Restaurer la position du curseur
-    event.target.setSelectionRange(cursorPosition, cursorPosition);
-    
-    // Mettre à jour le v-model
-    eventData.odds = normalizedValue;
-    console.log('handleEventOddsInput - Remplacement terminé, nouvelle valeur:', event.target.value);
-    return;
-  }
-  
-  // Vérifier que la valeur est un nombre réel valide
-  if (normalizedValue === '' || normalizedValue === '.') {
-    eventData.odds = null;
-    // Recalculer la cote globale même avec une valeur vide
-    calculateGlobalOdds();
-    return;
-  }
-  
-  // Validation du format nombre réel
-  const numericValue = parseFloat(normalizedValue);
-  if (!isNaN(numericValue) && isFinite(numericValue) && numericValue > 0) {
-    eventData.odds = numericValue;
-  } else {
-    // Si la valeur n'est pas valide, on garde la dernière valeur valide
-    console.warn('Valeur de cote d\'événement invalide:', normalizedValue);
-  }
-  
-  // Recalculer la cote globale
-  calculateGlobalOdds();
-}
 
-/**
- * Gérer les touches pressées pour la cote globale (permettre point et virgule)
- * @param {KeyboardEvent} event - Événement de frappe
- */
-function handleOddsKeypress(event) {
-  const char = String.fromCharCode(event.which);
-  const currentValue = event.target.value;
-  
-  // Permettre les chiffres, le point, la virgule et les touches de contrôle
-  if (!/[0-9.,]/.test(char) && event.which !== 8 && event.which !== 46 && event.which !== 37 && event.which !== 39) {
-    event.preventDefault();
-    return;
-  }
-  
-  // Empêcher plusieurs séparateurs décimaux (point ou virgule)
-  if ((char === '.' || char === ',') && (currentValue.includes('.') || currentValue.includes(','))) {
-    event.preventDefault();
-    return;
-  }
-  
-  // Empêcher le point/virgule en première position
-  if ((char === '.' || char === ',') && currentValue === '') {
-    event.preventDefault();
-    return;
-  }
-}
 
 /**
  * Gérer les touches pressées pour la mise (permettre point et virgule)
  * @param {KeyboardEvent} event - Événement de frappe
  */
 function handleStakeKeypress(event) {
-  const char = String.fromCharCode(event.which);
-  const currentValue = event.target.value;
-  
-  // Permettre les chiffres, le point, la virgule et les touches de contrôle
-  if (!/[0-9.,]/.test(char) && event.which !== 8 && event.which !== 46 && event.which !== 37 && event.which !== 39) {
-    event.preventDefault();
-    return;
-  }
-  
-  // Empêcher plusieurs séparateurs décimaux (point ou virgule)
-  if ((char === '.' || char === ',') && (currentValue.includes('.') || currentValue.includes(','))) {
-    event.preventDefault();
-    return;
-  }
-  
-  // Empêcher le point/virgule en première position
-  if ((char === '.' || char === ',') && currentValue === '') {
-    event.preventDefault();
-    return;
-  }
-}
-
-/**
- * Gérer les touches pressées pour la cote d'événement (permettre point et virgule)
- * @param {KeyboardEvent} event - Événement de frappe
- */
-function handleEventOddsKeypress(event) {
   const char = String.fromCharCode(event.which);
   const currentValue = event.target.value;
   
@@ -1287,8 +1146,7 @@ function addEvent() {
   console.log('✅ Événement ajouté:', newEvent);
    console.log('📋 Liste des événements:', events.value);
    
-   // Recalculer la cote globale
-   calculateGlobalOdds();
+   // Recalcul de la cote globale maintenant géré par OddsField
  }
 
 /**
@@ -1384,36 +1242,7 @@ function resetEventFields() {
   };
 }
 
-/**
- * Calculer la cote globale en multipliant toutes les cotes des événements
- */
-function calculateGlobalOdds() {
-  if (events.value.length === 0) {
-    return;
-  }
-  
-  let globalOdds = 1;
-  let hasValidOdds = true;
-  
-  // Inclure la cote de l'événement actuel s'il y en a une
-  if (currentEvent.value.odds && currentEvent.value.odds > 0) {
-    globalOdds *= parseFloat(currentEvent.value.odds);
-  }
-  
-  // Multiplier par toutes les cotes des événements ajoutés
-  events.value.forEach(event => {
-    if (event.odds && event.odds > 0) {
-      globalOdds *= parseFloat(event.odds);
-    } else {
-      hasValidOdds = false;
-    }
-  });
-  
-  // Mettre à jour la cote globale seulement si toutes les cotes sont valides
-  if (hasValidOdds && globalOdds > 1) {
-    formData.value.global_odds = parseFloat(globalOdds.toFixed(2));
-  }
-}
+
 
 /**
  * Calculer le résultat global basé sur tous les résultats des événements
@@ -1580,6 +1409,94 @@ async function initializeComponent() {
   // Charger les sports et les pays au montage
   await loadSports();
   await loadCountries();
+}
+
+/**
+ * Nouvelles fonctions de gestion des cotes avec les composants dédiés
+ */
+
+/**
+ * Gérer les changements de cote d'événement
+ * @param {Object} eventData - Données de l'événement avec la nouvelle cote
+ */
+function onEventOddsChanged(eventData) {
+  console.log('AddBetForm - onEventOddsChanged:', eventData)
+  // Le calcul automatique est géré par le composant OddsCalculator
+}
+
+/**
+ * Gérer les erreurs de cote d'événement
+ * @param {number} eventIndex - Index de l'événement
+ * @param {string} message - Message d'erreur
+ */
+function handleEventOddsError(eventIndex, message) {
+  if (message) {
+    errors.value[`event_odds-${eventIndex}`] = message
+  } else {
+    delete errors.value[`event_odds-${eventIndex}`]
+  }
+}
+
+/**
+ * Gérer la validation de cote d'événement
+ * @param {number} eventIndex - Index de l'événement
+ * @param {boolean} isValid - État de validation
+ */
+function handleEventOddsValid(eventIndex, isValid) {
+  if (isValid) {
+    delete errors.value[`event_odds-${eventIndex}`]
+  }
+}
+
+/**
+ * Gérer les erreurs de cote globale
+ * @param {string} message - Message d'erreur
+ */
+function handleGlobalOddsError(message) {
+  if (message) {
+    errors.value.global_odds = message
+  } else {
+    delete errors.value.global_odds
+  }
+}
+
+/**
+ * Gérer la validation de cote globale
+ * @param {boolean} isValid - État de validation
+ */
+function handleGlobalOddsValid(isValid) {
+  if (isValid) {
+    delete errors.value.global_odds
+  }
+}
+
+/**
+ * Gérer le calcul automatique de la cote globale
+ * @param {number} calculatedOdds - Cote globale calculée
+ */
+function onGlobalOddsCalculated(calculatedOdds) {
+  console.log('AddBetForm - Cote globale calculée automatiquement:', calculatedOdds)
+  formData.value.global_odds = calculatedOdds
+  // Effacer les erreurs de cote globale si le calcul réussit
+  delete errors.value.global_odds
+}
+
+/**
+ * Gérer l'effacement de la cote globale
+ */
+function onGlobalOddsCleared() {
+  console.log('AddBetForm - Cote globale effacée')
+  // Ne pas modifier la cote globale automatiquement lors de l'effacement
+  // L'utilisateur peut toujours saisir manuellement
+}
+
+/**
+ * Gérer l'échec du calcul de la cote globale
+ * @param {string} errorMessage - Message d'erreur
+ */
+function onGlobalOddsCalculationFailed(errorMessage) {
+  console.log('AddBetForm - Échec du calcul de la cote globale:', errorMessage)
+  // Ne pas afficher d'erreur à l'utilisateur, juste logger
 }
 
 // Lifecycle
