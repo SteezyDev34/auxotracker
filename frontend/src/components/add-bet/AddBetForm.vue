@@ -42,6 +42,7 @@
           :suggestions="eventData.sportSearchResults || []" 
           @complete="(event) => searchSports(event, eventIndex)"
           @item-select="(event) => onSportSelect(event, eventIndex)"
+          @clear="() => onSportClear(eventIndex)"
           @click="() => onSportDropdownShow(eventIndex)"
           optionLabel="name"
           :placeholder="eventData.selectedSport && eventData.selectedSport.length > 0 ? '' : 'Sport'"
@@ -1068,6 +1069,39 @@ const leagueDropdownOpeningInProgress = ref({});
 const team1DropdownOpeningInProgress = ref({});
 const team2DropdownOpeningInProgress = ref({});
 
+/**
+ * Gérer le cas où le champ sport est vidé
+ * @param {number} eventIndex - Index de l'événement
+ */
+function onSportClear(eventIndex) {
+  const timestamp = new Date().toISOString();
+  console.log(`🧹 [${timestamp}] Champ sport vidé pour événement ${eventIndex}`);
+  
+  const eventData = eventCards.value[eventIndex];
+  
+  // Réinitialiser les données liées au sport
+  eventData.sport_id = null;
+  eventData.selectedSport = [];
+  
+  // Réinitialiser les champs liés au sport
+  eventData.country_id = null;
+  eventData.selectedCountry = [];
+  eventData.league = null;
+  eventData.selectedLeague = [];
+  eventData.team1 = null;
+  eventData.selectedTeam1 = [];
+  eventData.team2 = null;
+  eventData.selectedTeam2 = [];
+  
+  // Réinitialiser les résultats de recherche
+  eventData.countryFilteredResults = [];
+  eventData.leagueSearchResults = [];
+  eventData.team1SearchResults = [];
+  eventData.team2SearchResults = [];
+  
+  console.log(`✅ [${timestamp}] Tous les champs liés au sport ont été réinitialisés`);
+}
+
 function onSportDropdownShow(eventIndex) {
   // Vérifier si l'ouverture est déjà en cours pour cet événement
   if (sportDropdownOpeningInProgress.value[eventIndex]) {
@@ -1126,10 +1160,6 @@ async function onSportSelect(event, eventIndex) {
     eventData.selectedSport = [event.value];
     eventData.sport_id = event.value.id;
     
-    // Charger immédiatement les ligues pour ce sport
-    console.log('🔄 Chargement immédiat des ligues après sélection du sport');
-    searchLeagues({ query: '' }, eventIndex);
-    
     // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
     sportDropdownOpeningInProgress.value[eventIndex] = true;
     
@@ -1186,12 +1216,12 @@ async function onSportSelect(event, eventIndex) {
   if (eventData.sport_id) {
     // Charger les pays qui ont des ligues pour ce sport
     await loadCountriesBySport(eventData.sport_id, eventIndex);
-    await loadTeamsBySport(eventData.sport_id);
+    //await loadTeamsBySport(eventData.sport_id);
     // Charger les premières ligues
-    await searchLeagues({ query: '' }, eventIndex);
+    //await searchLeagues({ query: '' }, eventIndex);
     // Charger les premières équipes pour les deux sélecteurs
-    await searchTeam1({ query: '' }, eventIndex);
-    await searchTeam2({ query: '' }, eventIndex);
+    //await searchTeam1({ query: '' }, eventIndex);
+    // await searchTeam2({ query: '' }, eventIndex);
   }
 }
 
