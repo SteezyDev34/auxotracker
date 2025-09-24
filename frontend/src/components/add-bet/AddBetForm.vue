@@ -33,75 +33,14 @@
         </div>
         
         <!-- Sport -->
-        <div class="flex flex-col gap-2 mb-4">
-          <label :for="`sport_${eventIndex}`" class="font-medium text-sm">Sport *</label>
-          <AutoComplete 
+        <SportField
+          :event-index="eventIndex"
+          v-model="eventData.selectedSport"
+          :error="errors[`sport_id_${eventIndex}`]"
+          @sport-select="onSportSelect"
+          @sport-clear="onSportClear"
           :ref="(el) => { if (el) sportAutoCompleteRefs[eventIndex] = el }"
-          :id="`sport_${eventIndex}`" 
-          v-model="eventData.selectedSport" 
-          :suggestions="eventData.sportSearchResults || []" 
-          @complete="(event) => searchSports(event, eventIndex)"
-          @item-select="(event) => onSportSelect(event, eventIndex)"
-          @clear="() => onSportClear(eventIndex)"
-          @click="() => onSportDropdownShow(eventIndex)"
-          optionLabel="name"
-          :placeholder="eventData.selectedSport && eventData.selectedSport.length > 0 ? '' : 'Sport'"
-          class="w-full max-w-full select-custom"
-          :class="{ 'p-invalid': errors[`sport_id_${eventIndex}`] }"
-          :loading="eventData.sportLoading"
-          panelClass="select-panel-custom"
-          @show="() => onSportDropdownShow(eventIndex)"
-          @focus="() => onSportDropdownShow(eventIndex)"
-          :minLength="0"
-          dropdown
-          dropdownMode="blank"
-          multiple
-          display="chip"
-          aria-label="Rechercher et sélectionner un sport"
-          role="combobox"
-          aria-expanded="false"
-          aria-autocomplete="list"
-        >
-          <!-- Template pour afficher le sport sélectionné avec son icône -->
-          <template #chip="slotProps">
-            <div class="flex items-center gap-2">
-              <!-- Icône du sport sélectionné -->
-              <img
-                v-if="slotProps.value && slotProps.value.slug"
-                :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.value.slug}${isDarkTheme ? '-dark' : ''}.svg`"
-                :alt="slotProps.value.name"
-                class="w-4 h-4 rounded object-cover flex-shrink-0"
-                @error="$event.target.style.display='none'"
-              />
-              <!-- Nom du sport sélectionné -->
-              <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
-            </div>
-          </template>
-            
-            <!-- Template pour les options du dropdown -->
-            <template #option="slotProps">
-              <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
-                <!-- Icône du sport -->
-                <img
-                  v-if="slotProps.option.img"
-                  :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.option.slug}${isDarkTheme ? '-dark' : ''}.svg`"
-                  :alt="slotProps.option.name"
-                  class="w-5 h-5 object-contain"
-                  @error="$event.target.style.display='none'"
-                />
-                <div 
-                  v-else
-                  class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600 flex-shrink-0"
-                >
-                  {{ slotProps.option.name ? slotProps.option.name.charAt(0).toUpperCase() : '?' }}
-                </div>
-                <!-- Nom du sport -->
-                <span class="truncate">{{ slotProps.option.name }}</span>
-              </div>
-            </template>
-          </AutoComplete>
-          <small v-if="errors[`sport_id_${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`sport_id_${eventIndex}`] }}</small>
-        </div>
+        />
 
         <!-- Champs conditionnels selon le sport -->
         <div v-if="eventData.sport_id" class="space-y-4 mb-4">
@@ -645,6 +584,7 @@ import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
 import SelectButton from 'primevue/selectbutton';
 import AutoComplete from 'primevue/autocomplete';
+import SportField from './fields/SportField.vue';
 import DatePickerField from '@/components/DatePickerField.vue';
 import { BetService } from '@/service/BetService';
 import { SportService } from '@/service/SportService';
@@ -1037,32 +977,9 @@ async function loadSports() {
   }
 }
 
-/**
- * Rechercher des sports avec filtrage
- * @param {Object} event - Événement de recherche contenant la query
- * @param {number} eventIndex - Index de l'événement
- */
-function searchSports(event, eventIndex) {
-  const query = event.query || '';
-  const eventData = eventCards.value[eventIndex];
-  
-  setTimeout(() => {
-    if (!query.trim().length) {
-      eventData.sportSearchResults = [...availableSports.value];
-    } else {
-      eventData.sportSearchResults = availableSports.value.filter((sport) => {
-        return sport.name.toLowerCase().includes(query.toLowerCase());
-      });
-    }
-  }, 250);
-}
 
-/**
- * Gérer l'affichage du dropdown des sports
- * @param {number} eventIndex - Index de l'événement
- */
-// Drapeaux pour éviter les appels multiples
-const sportDropdownOpeningInProgress = ref({});
+
+// Drapeaux pour éviter les appels multiples sur les dropdowns
 const countryDropdownOpeningInProgress = ref({});
 const leagueDropdownOpeningInProgress = ref({});
 const team1DropdownOpeningInProgress = ref({});
@@ -1101,49 +1018,7 @@ function onSportClear(eventIndex) {
   console.log(`✅ [${timestamp}] Tous les champs liés au sport ont été réinitialisés`);
 }
 
-function onSportDropdownShow(eventIndex) {
-  // Vérifier si l'ouverture est déjà en cours pour cet événement
-  if (sportDropdownOpeningInProgress.value[eventIndex]) {
-    return; // Éviter les appels multiples
-  }
-  
-  // Marquer l'ouverture comme en cours
-  sportDropdownOpeningInProgress.value[eventIndex] = true;
-  
-  console.log('🔽 Dropdown sports ouvert pour événement', eventIndex);
-  const eventData = eventCards.value[eventIndex];
-  
-  // Charger tous les sports si pas encore chargés
-  if (!eventData.sportSearchResults || eventData.sportSearchResults.length === 0) {
-    eventData.sportSearchResults = [...availableSports.value];
-  }
-  
-  // Forcer l'ouverture du dropdown en utilisant la référence
-  nextTick(() => {
-    const sportRef = sportAutoCompleteRefs.value[eventIndex];
-    if (sportRef && typeof sportRef.show === 'function') {
-      sportRef.show();
-      console.log('✅ Dropdown sport forcé à s\'ouvrir');
-    } else if (sportRef && sportRef.$el) {
-      // Essayer de déclencher un focus sur l'élément input
-      const inputElement = sportRef.$el.querySelector('input');
-      if (inputElement) {
-        inputElement.focus();
-        inputElement.click();
-        console.log('✅ Focus et clic appliqués sur le champ sport');
-      } else {
-        console.log('❌ Élément input non trouvé dans le composant sport');
-      }
-    } else {
-      console.log('❌ Référence du composant sport non trouvée', sportRef);
-    }
-    
-    // Réinitialiser le drapeau après un court délai
-    setTimeout(() => {
-      sportDropdownOpeningInProgress.value[eventIndex] = false;
-    }, 300);
-  });
-}
+
 
 /**
  * Gérer la sélection d'un sport
@@ -1158,33 +1033,7 @@ async function onSportSelect(event, eventIndex) {
     // En mode multiple, on garde un tableau d'un seul élément
     eventData.selectedSport = [event.value];
     eventData.sport_id = event.value.id;
-    
-    // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
-    sportDropdownOpeningInProgress.value[eventIndex] = true;
-    
-    // Fermer le dropdown après sélection
-    const sportRef = sportAutoCompleteRefs.value[eventIndex];
-    if (sportRef) {
-      // Utiliser nextTick pour s'assurer que la fermeture se produit après le rendu
-      nextTick(() => {
-        if (typeof sportRef.hide === 'function') {
-          sportRef.hide();
-          console.log('✅ Dropdown sport fermé après sélection');
-        } else if (sportRef.$el) {
-          // Alternative: forcer la fermeture en retirant le focus
-          const inputElement = sportRef.$el.querySelector('input');
-          if (inputElement) {
-            inputElement.blur();
-            console.log('✅ Dropdown sport fermé par blur');
-          }
-        }
-        
-        // Réinitialiser le drapeau après un délai pour permettre de futures ouvertures
-        setTimeout(() => {
-          sportDropdownOpeningInProgress.value[eventIndex] = false;
-        }, 300);
-      });
-    }
+    console.log('✅ Sport sélectionné pour événement', eventIndex, ':', event.value.name);
   } else {
     eventData.selectedSport = [];
     eventData.sport_id = null;
@@ -1222,17 +1071,6 @@ async function onSportSelect(event, eventIndex) {
     //await searchTeam1({ query: '' }, eventIndex);
     // await searchTeam2({ query: '' }, eventIndex);
   }
-}
-
-/**
- * Gérer le changement de sport (fonction de compatibilité)
- * @param {Object} event - Événement de changement
- * @param {number} eventIndex - Index de l'événement
- */
-async function onSportChange(event, eventIndex) {
-  // Cette fonction est maintenant gérée par onSportSelect
-  console.log('⚠️ onSportChange appelée - redirection vers onSportSelect');
-  await onSportSelect(event, eventIndex);
 }
 
 /**
