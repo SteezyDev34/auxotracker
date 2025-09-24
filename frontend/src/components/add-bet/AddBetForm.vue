@@ -36,48 +36,46 @@
         <div class="flex flex-col gap-2 mb-4">
           <label :for="`sport_${eventIndex}`" class="font-medium text-sm">Sport *</label>
           <AutoComplete 
-            :id="`sport_${eventIndex}`" 
-            v-model="eventData.selectedSport" 
-            :suggestions="eventData.sportSearchResults || []" 
-            @complete="(event) => searchSports(event, eventIndex)"
-            @item-select="(event) => onSportSelect(event, eventIndex)"
-            optionLabel="name"
-            placeholder="Rechercher un sport"
-            class="w-full max-w-full select-custom"
-            :class="{ 'p-invalid': errors[`sport_id_${eventIndex}`] }"
-            :loading="eventData.sportLoading"
-            panelClass="select-panel-custom"
-            @show="() => onSportDropdownShow(eventIndex)"
-            @focus="() => onSportDropdownShow(eventIndex)"
-            :minLength="0"
-            dropdown
-            dropdownMode="blank"
-            aria-label="Rechercher et sélectionner un sport"
-            role="combobox"
-            aria-expanded="false"
-            aria-autocomplete="list"
-          >
-            <!-- Template pour afficher le sport sélectionné avec son icône -->
-            <template #value="slotProps">
-              <div v-if="slotProps.value" class="flex items-center gap-2">
-                <!-- Icône du sport sélectionné -->
-                <img
-                  v-if="slotProps.value.img"
-                  :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.value.slug}${isDarkTheme ? '-dark' : ''}.svg`"
-                  :alt="slotProps.value.name"
-                  class="w-5 h-5 object-contain flex-shrink-0 filter brightness-0"
-                  @error="$event.target.style.display='none'"
-                />
-                <div 
-                  v-else
-                  class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600 flex-shrink-0"
-                >
-                  {{ slotProps.value.name ? slotProps.value.name.charAt(0).toUpperCase() : '?' }}
-                </div>
-                <!-- Nom du sport sélectionné -->
-                <span>{{ slotProps.value.name }}</span>
-              </div>
-            </template>
+          :ref="(el) => { if (el) sportAutoCompleteRefs[eventIndex] = el }"
+          :id="`sport_${eventIndex}`" 
+          v-model="eventData.selectedSport" 
+          :suggestions="eventData.sportSearchResults || []" 
+          @complete="(event) => searchSports(event, eventIndex)"
+          @item-select="(event) => onSportSelect(event, eventIndex)"
+          @click="() => onSportDropdownShow(eventIndex)"
+          optionLabel="name"
+          :placeholder="eventData.selectedSport && eventData.selectedSport.length > 0 ? '' : 'Sport'"
+          class="w-full max-w-full select-custom"
+          :class="{ 'p-invalid': errors[`sport_id_${eventIndex}`] }"
+          :loading="eventData.sportLoading"
+          panelClass="select-panel-custom"
+          @show="() => onSportDropdownShow(eventIndex)"
+          @focus="() => onSportDropdownShow(eventIndex)"
+          :minLength="0"
+          dropdown
+          dropdownMode="blank"
+          multiple
+          display="chip"
+          aria-label="Rechercher et sélectionner un sport"
+          role="combobox"
+          aria-expanded="false"
+          aria-autocomplete="list"
+        >
+          <!-- Template pour afficher le sport sélectionné avec son icône -->
+          <template #chip="slotProps">
+            <div class="flex items-center gap-2">
+              <!-- Icône du sport sélectionné -->
+              <img
+                v-if="slotProps.value && slotProps.value.slug"
+                :src="`${apiBaseUrl}/storage/sport_icons/${slotProps.value.slug}${isDarkTheme ? '-dark' : ''}.svg`"
+                :alt="slotProps.value.name"
+                class="w-4 h-4 rounded object-cover flex-shrink-0"
+                @error="$event.target.style.display='none'"
+              />
+              <!-- Nom du sport sélectionné -->
+              <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
+            </div>
+          </template>
             
             <!-- Template pour les options du dropdown -->
             <template #option="slotProps">
@@ -110,11 +108,13 @@
           <div class="flex flex-col gap-2">
             <div class="relative">
               <AutoComplete 
+                :ref="(el) => { if (el) countryAutoCompleteRefs[eventIndex] = el }"
                 :id="`country_${eventIndex}`" 
                 v-model="eventData.selectedCountry" 
                 :suggestions="eventData.countryFilteredResults || []" 
                 @complete="(event) => searchCountries(event, eventIndex)"
                 @focus="() => onCountryDropdownShow(eventIndex)"
+                @click="() => onCountryDropdownShow(eventIndex)"
                 @item-select="(event) => onCountrySelect(event, eventIndex)"
                 optionLabel="name"
                 :placeholder="eventData.selectedCountry && eventData.selectedCountry.length > 0 ? '' : 'Pays'"
@@ -178,6 +178,7 @@
                 :suggestions="eventData.leagueSearchResults" 
                 @complete="(event) => searchLeagues(event, eventIndex)"
                 @item-select="(event) => onLeagueSelect(event, eventIndex)"
+                @click="() => onLeagueDropdownShow(eventIndex)"
                 optionLabel="name"
                 :placeholder="eventData.selectedLeague && eventData.selectedLeague.length > 0 ? '' : 'Ligue'"
                 class="w-full max-w-full select-custom"
@@ -260,6 +261,7 @@
                   :suggestions="eventData.team1SearchResults" 
                   @complete="(event) => searchTeam1(event, eventIndex)"
                   @item-select="(event) => onTeam1Select(event, eventIndex)"
+                  @click="() => onTeam1DropdownShow(eventIndex)"
                   optionLabel="name"
                   :placeholder="eventData.selectedTeam1 && eventData.selectedTeam1.length > 0 ? '' : 'Équipe 1'"
                   class="w-full max-w-full select-custom"
@@ -334,6 +336,7 @@
                     :suggestions="eventData.team2SearchResults" 
                     @complete="(event) => searchTeam2(event, eventIndex)"
                     @item-select="(event) => onTeam2Select(event, eventIndex)"
+                    @click="() => onTeam2DropdownShow(eventIndex)"
                     optionLabel="name"
                     :placeholder="eventData.selectedTeam2 && eventData.selectedTeam2.length > 0 ? '' : 'Équipe 2'"
                     class="w-full max-w-full select-custom"
@@ -410,10 +413,13 @@
             :options="getFilteredBetTypesForEvent(eventData)" 
             optionLabel="label" 
             optionValue="value"
+            @click="() => onBetTypeDropdownShow(eventIndex)"
             placeholder="Sélectionner un type de pari"
             class="w-full select-custom"
             :class="{ 'p-invalid': errors[`bet_type-${eventIndex}`] }"
             :disabled="!eventData.sport_id"
+            dropdown
+            dropdownMode="blank"
           />
           <small v-if="errors[`bet_type-${eventIndex}`]" class="text-red-500 block mt-1">{{ errors[`bet_type-${eventIndex}`] }}</small>
         </div>
@@ -711,6 +717,13 @@ const sportSearchResults = ref([]);
 const sportLoading = ref(false);
 const selectedSport = ref([]);
 
+// Références pour les composants AutoComplete
+const sportAutoCompleteRefs = ref({});
+const countryAutoCompleteRefs = ref({});
+const leagueAutoCompleteRefs = ref({});
+const team1AutoCompleteRefs = ref({});
+const team2AutoCompleteRefs = ref({});
+
 // Variables pour le type de mise
 const betTypeValue = ref('currency');
 const betTypeOptions = ref([
@@ -736,7 +749,7 @@ const eventCards = ref([
     description: '',
     result: null,
     odds: null,
-    selectedSport: null,
+    selectedSport: [],
     selectedCountry: [],
     selectedLeague: [],
     selectedTeam1: [],
@@ -833,6 +846,15 @@ const filteredBetTypes = computed(() => {
     sportBetTypes.includes(option.value)
   );
 });
+
+/**
+ * Gérer l'affichage du dropdown des types de paris
+ * @param {number} eventIndex - Index de l'événement
+ */
+function onBetTypeDropdownShow(eventIndex) {
+  console.log('🔽 Dropdown type de paris ouvert pour événement', eventIndex);
+  // Pas de logique spéciale nécessaire, le Select gère automatiquement les options
+}
 
 const isFormValid = computed(() => {
   // Seuls les champs essentiels sont obligatoires
@@ -978,7 +1000,6 @@ async function loadCountriesBySport(sportId, eventIndex) {
     // Mettre à jour les pays disponibles pour cette carte d'événement
     eventData.countryFilteredResults = [...countriesData];
     
-    console.log('✅ Pays chargés depuis l\'API et mis en cache pour le sport', sportId, ':', countriesData.length, 'pays');
     
   } catch (error) {
     console.error('Erreur lors du chargement des pays par sport:', error);
@@ -1000,7 +1021,6 @@ async function loadCountriesBySport(sportId, eventIndex) {
  * Charger tous les sports disponibles
  */
 async function loadSports() {
-  console.log('🔍 Chargement des sports...');
   
   try {
     sportsLoading.value = true;
@@ -1008,7 +1028,6 @@ async function loadSports() {
     const sportsData = await SportService.getSports();
     availableSports.value = sportsData;
     
-    console.log('✅ Sports chargés avec succès:', sportsData.length, 'sports');
     
   } catch (error) {
     console.error('❌ Erreur lors du chargement des sports:', error);
@@ -1048,7 +1067,22 @@ function searchSports(event, eventIndex) {
  * Gérer l'affichage du dropdown des sports
  * @param {number} eventIndex - Index de l'événement
  */
+// Drapeaux pour éviter les appels multiples
+const sportDropdownOpeningInProgress = ref({});
+const countryDropdownOpeningInProgress = ref({});
+const leagueDropdownOpeningInProgress = ref({});
+const team1DropdownOpeningInProgress = ref({});
+const team2DropdownOpeningInProgress = ref({});
+
 function onSportDropdownShow(eventIndex) {
+  // Vérifier si l'ouverture est déjà en cours pour cet événement
+  if (sportDropdownOpeningInProgress.value[eventIndex]) {
+    return; // Éviter les appels multiples
+  }
+  
+  // Marquer l'ouverture comme en cours
+  sportDropdownOpeningInProgress.value[eventIndex] = true;
+  
   console.log('🔽 Dropdown sports ouvert pour événement', eventIndex);
   const eventData = eventCards.value[eventIndex];
   
@@ -1056,6 +1090,32 @@ function onSportDropdownShow(eventIndex) {
   if (!eventData.sportSearchResults || eventData.sportSearchResults.length === 0) {
     eventData.sportSearchResults = [...availableSports.value];
   }
+  
+  // Forcer l'ouverture du dropdown en utilisant la référence
+  nextTick(() => {
+    const sportRef = sportAutoCompleteRefs.value[eventIndex];
+    if (sportRef && typeof sportRef.show === 'function') {
+      sportRef.show();
+      console.log('✅ Dropdown sport forcé à s\'ouvrir');
+    } else if (sportRef && sportRef.$el) {
+      // Essayer de déclencher un focus sur l'élément input
+      const inputElement = sportRef.$el.querySelector('input');
+      if (inputElement) {
+        inputElement.focus();
+        inputElement.click();
+        console.log('✅ Focus et clic appliqués sur le champ sport');
+      } else {
+        console.log('❌ Élément input non trouvé dans le composant sport');
+      }
+    } else {
+      console.log('❌ Référence du composant sport non trouvée', sportRef);
+    }
+    
+    // Réinitialiser le drapeau après un court délai
+    setTimeout(() => {
+      sportDropdownOpeningInProgress.value[eventIndex] = false;
+    }, 300);
+  });
 }
 
 /**
@@ -1066,13 +1126,40 @@ function onSportDropdownShow(eventIndex) {
 async function onSportSelect(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
-  // Gérer la sélection d'un sport unique
+  // Gérer la sélection d'un sport unique (en mode multiple mais limité à 1)
   if (event.value) {
-    eventData.selectedSport = event.value; // Sport unique au lieu d'un tableau
+    // En mode multiple, on garde un tableau d'un seul élément
+    eventData.selectedSport = [event.value];
     eventData.sport_id = event.value.id;
-    console.log('✅ Sport sélectionné pour événement', eventIndex, ':', event.value);
+    
+    // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
+    sportDropdownOpeningInProgress.value[eventIndex] = true;
+    
+    // Fermer le dropdown après sélection
+    const sportRef = sportAutoCompleteRefs.value[eventIndex];
+    if (sportRef) {
+      // Utiliser nextTick pour s'assurer que la fermeture se produit après le rendu
+      nextTick(() => {
+        if (typeof sportRef.hide === 'function') {
+          sportRef.hide();
+          console.log('✅ Dropdown sport fermé après sélection');
+        } else if (sportRef.$el) {
+          // Alternative: forcer la fermeture en retirant le focus
+          const inputElement = sportRef.$el.querySelector('input');
+          if (inputElement) {
+            inputElement.blur();
+            console.log('✅ Dropdown sport fermé par blur');
+          }
+        }
+        
+        // Réinitialiser le drapeau après un délai pour permettre de futures ouvertures
+        setTimeout(() => {
+          sportDropdownOpeningInProgress.value[eventIndex] = false;
+        }, 300);
+      });
+    }
   } else {
-    eventData.selectedSport = null;
+    eventData.selectedSport = [];
     eventData.sport_id = null;
     console.log('✅ Sport désélectionné pour événement', eventIndex);
   }
@@ -1125,12 +1212,26 @@ async function onSportChange(event, eventIndex) {
  * Gérer l'affichage du dropdown des pays
  * @param {number} eventIndex - Index de l'événement
  */
+// Utilisation du drapeau existant pour éviter les appels multiples
+
 function onCountryDropdownShow(eventIndex) {
+  // Vérifier si l'ouverture est déjà en cours pour cet événement
+  if (countryDropdownOpeningInProgress.value[eventIndex]) {
+    return;
+  }
+  
+  // Marquer l'ouverture comme en cours
+  countryDropdownOpeningInProgress.value[eventIndex] = true;
+  
   console.log('🔽 Dropdown pays ouvert pour événement', eventIndex);
   const eventData = eventCards.value[eventIndex];
   
   // Si aucun sport sélectionné, ne rien faire
   if (!eventData.sport_id) {
+    // Réinitialiser le drapeau après un court délai
+    setTimeout(() => {
+      countryDropdownOpeningInProgress.value[eventIndex] = false;
+    }, 300);
     return;
   }
   
@@ -1139,6 +1240,32 @@ function onCountryDropdownShow(eventIndex) {
   if (cachedCountries.length > 0 && (!eventData.countryFilteredResults || eventData.countryFilteredResults.length === 0)) {
     eventData.countryFilteredResults = [...cachedCountries];
   }
+  
+  // Forcer l'ouverture du dropdown en utilisant la référence
+  nextTick(() => {
+    const countryRef = countryAutoCompleteRefs.value[eventIndex];
+    if (countryRef && typeof countryRef.show === 'function') {
+      countryRef.show();
+      console.log('✅ Dropdown pays forcé à s\'ouvrir');
+    } else if (countryRef && countryRef.$el) {
+      // Essayer de déclencher un focus sur l'élément input
+      const inputElement = countryRef.$el.querySelector('input');
+      if (inputElement) {
+        inputElement.focus();
+        inputElement.click();
+        console.log('✅ Focus et clic appliqués sur le champ pays');
+      } else {
+        console.log('❌ Élément input non trouvé dans le composant pays');
+      }
+    } else {
+      console.log('❌ Référence du composant pays non trouvée', countryRef);
+    }
+    
+    // Réinitialiser le drapeau après un court délai
+    setTimeout(() => {
+      countryDropdownOpeningInProgress.value[eventIndex] = false;
+    }, 300);
+  });
 }
 
 /**
@@ -1188,6 +1315,30 @@ function onCountrySelect(event, eventIndex) {
   if (event.value) {
     eventData.selectedCountry = [event.value]; // Remplacer par le nouveau pays
     eventData.country_id = event.value.id;
+    
+    // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
+    countryDropdownOpeningInProgress.value[eventIndex] = true;
+    
+    // Fermer le dropdown après sélection avec nextTick pour s'assurer que le rendu est terminé
+    nextTick(() => {
+      const countryRef = countryAutoCompleteRefs.value[eventIndex];
+      if (countryRef && typeof countryRef.hide === 'function') {
+        countryRef.hide();
+        console.log('✅ Dropdown pays fermé après sélection');
+      } else if (countryRef && countryRef.$el) {
+        // Méthode alternative: blur sur l'élément input
+        const inputElement = countryRef.$el.querySelector('input');
+        if (inputElement) {
+          inputElement.blur();
+          console.log('✅ Blur appliqué sur le champ pays pour fermeture');
+        }
+      }
+      
+      // Réinitialiser le drapeau après un délai pour permettre de futures ouvertures
+      setTimeout(() => {
+        countryDropdownOpeningInProgress.value[eventIndex] = false;
+      }, 300);
+    });
   } else {
     eventData.selectedCountry = [];
     eventData.country_id = null;
@@ -1255,7 +1406,6 @@ async function searchLeagues(event, eventIndex) {
   
   try {
     eventData.leagueLoading = true;
-    console.log('⏳ Début de la requête API...');
     
     const response = await SportService.searchLeaguesBySport(
       eventData.sport_id,
@@ -1265,21 +1415,7 @@ async function searchLeagues(event, eventIndex) {
       eventData.country_id
     );
     
-    console.log('📡 Réponse API reçue:', {
-      data: response.data,
-      dataLength: response.data?.length,
-      hasMore: response.hasMore,
-      pagination: response.pagination,
-      fullResponse: response
-    });
-    
     eventData.leagueSearchResults = response.data;
-    console.log('📝 Résultats ligues mis à jour pour événement', eventIndex);
-    
-    console.log('✅ searchLeagues terminée:', {
-      totalResults: eventData.leagueSearchResults.length,
-      eventIndex
-    });
     
   } catch (error) {
     console.error('❌ Erreur lors de la recherche des ligues:', error);
@@ -1291,7 +1427,6 @@ async function searchLeagues(event, eventIndex) {
     });
   } finally {
     eventData.leagueLoading = false;
-    console.log('🏁 searchLeagues: loading terminé');
   }
 }
 
@@ -1307,6 +1442,30 @@ async function onLeagueSelect(event, eventIndex) {
   if (event.value) {
     eventData.selectedLeague = [event.value]; // Remplacer par la nouvelle ligue
     eventData.league = event.value.id;
+    
+    // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
+    leagueDropdownOpeningInProgress.value[eventIndex] = true;
+    
+    // Fermer le dropdown après sélection
+    nextTick(() => {
+      const leagueRef = leagueAutoCompleteRefs.value[eventIndex];
+      if (leagueRef && typeof leagueRef.hide === 'function') {
+        leagueRef.hide();
+        console.log('✅ Dropdown ligue fermé après sélection');
+      } else if (leagueRef && leagueRef.$el) {
+        // Alternative: forcer la fermeture en retirant le focus
+        const inputElement = leagueRef.$el.querySelector('input');
+        if (inputElement) {
+          inputElement.blur();
+          console.log('✅ Dropdown ligue fermé par blur');
+        }
+      }
+      
+      // Réinitialiser le drapeau après un délai pour permettre de futures ouvertures
+      setTimeout(() => {
+        leagueDropdownOpeningInProgress.value[eventIndex] = false;
+      }, 300);
+    });
   } else {
     eventData.selectedLeague = [];
     eventData.league = null;
@@ -1338,14 +1497,6 @@ async function searchTeam1(event, eventIndex, resetSearch = false) {
   }
   
   const query = event.query || '';
-  console.log('🔍 searchTeam1 appelée avec:', {
-    query,
-    sportId: eventData.sport_id,
-    leagueId: eventData.league,
-    excludeTeam: eventData.team2,
-    eventIndex,
-    resetSearch
-  });
   
   // Initialiser les résultats si nécessaire
   if (!eventData.team1SearchResults || resetSearch) {
@@ -1355,7 +1506,6 @@ async function searchTeam1(event, eventIndex, resetSearch = false) {
   
   try {
     eventData.team1Loading = true;
-    console.log('⏳ Début de la requête API équipes 1...');
     
     const response = await SportService.searchTeamsBySport(
       eventData.sport_id,
@@ -1365,13 +1515,6 @@ async function searchTeam1(event, eventIndex, resetSearch = false) {
       eventData.league, // Filtrer par ligue si sélectionnée
       eventData.country_id // Filtrer par pays si sélectionné
     );
-    
-    console.log('📡 Réponse API équipes 1 reçue:', {
-      data: response.data,
-      dataLength: response.data?.length,
-      hasMore: response.hasMore,
-      pagination: response.pagination
-    });
     
     // Filtrer pour exclure l'équipe 2 si elle est sélectionnée
     let filteredData = response.data;
@@ -1385,12 +1528,6 @@ async function searchTeam1(event, eventIndex, resetSearch = false) {
     }
     
     eventData.team1SearchResults = filteredData;
-    console.log('📝 Résultats équipes 1 mis à jour pour événement', eventIndex);
-    
-    console.log('✅ searchTeam1 terminée:', {
-      totalResults: eventData.team1SearchResults.length,
-      eventIndex
-    });
     
   } catch (error) {
     console.error('❌ Erreur lors de la recherche des équipes 1:', error);
@@ -1402,7 +1539,6 @@ async function searchTeam1(event, eventIndex, resetSearch = false) {
     });
   } finally {
     eventData.team1Loading = false;
-    console.log('🏁 searchTeam1: loading terminé');
   }
 }
 
@@ -1416,29 +1552,18 @@ async function searchTeam2(event, eventIndex, resetSearch = false) {
   const eventData = eventCards.value[eventIndex];
   
   if (!eventData.sport_id) {
-    console.log('❌ searchTeam2: Aucun sport sélectionné pour événement', eventIndex);
     return;
   }
   
   const query = event.query || '';
-  console.log('🔍 searchTeam2 appelée avec:', {
-    query,
-    sportId: eventData.sport_id,
-    leagueId: eventData.league,
-    excludeTeam: eventData.team1,
-    eventIndex,
-    resetSearch
-  });
   
   // Initialiser les résultats si nécessaire
   if (!eventData.team2SearchResults || resetSearch) {
-    console.log('🔄 Initialisation recherche équipe 2 pour événement', eventIndex);
     eventData.team2SearchResults = [];
   }
   
   try {
     eventData.team2Loading = true;
-    console.log('⏳ Début de la requête API équipes 2...');
     
     const response = await SportService.searchTeamsBySport(
       eventData.sport_id,
@@ -1449,31 +1574,13 @@ async function searchTeam2(event, eventIndex, resetSearch = false) {
       eventData.country_id // Filtrer par pays si sélectionné
     );
     
-    console.log('📡 Réponse API équipes 2 reçue:', {
-      data: response.data,
-      dataLength: response.data?.length,
-      hasMore: response.hasMore,
-      pagination: response.pagination
-    });
-    
     // Filtrer pour exclure l'équipe 1 si elle est sélectionnée
     let filteredData = response.data;
     if (eventData.team1) {
       filteredData = response.data.filter(team => team.id !== eventData.team1);
-      console.log('🚫 Équipe 1 exclue des résultats équipe 2:', {
-        originalCount: response.data.length,
-        filteredCount: filteredData.length,
-        excludedTeamId: eventData.team1
-      });
     }
     
     eventData.team2SearchResults = filteredData;
-    console.log('📝 Résultats équipes 2 mis à jour pour événement', eventIndex);
-    
-    console.log('✅ searchTeam2 terminée:', {
-      totalResults: eventData.team2SearchResults.length,
-      eventIndex
-    });
     
   } catch (error) {
     console.error('❌ Erreur lors de la recherche des équipes 2:', error);
@@ -1485,7 +1592,6 @@ async function searchTeam2(event, eventIndex, resetSearch = false) {
     });
   } finally {
     eventData.team2Loading = false;
-    console.log('🏁 searchTeam2: loading terminé');
   }
 }
 
@@ -1501,16 +1607,37 @@ function onTeam1Select(event, eventIndex) {
   if (event.value) {
     eventData.selectedTeam1 = [event.value]; // Remplacer par la nouvelle équipe
     eventData.team1 = event.value.id;
-    console.log('✅ Équipe 1 sélectionnée pour événement', eventIndex, ':', event.value);
+    
+    // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
+    team1DropdownOpeningInProgress.value[eventIndex] = true;
+    
+    // Fermer le dropdown après sélection
+    nextTick(() => {
+      const team1Ref = team1AutoCompleteRefs.value[eventIndex];
+      if (team1Ref && typeof team1Ref.hide === 'function') {
+        team1Ref.hide();
+        console.log('✅ Dropdown équipe 1 fermé après sélection');
+      } else if (team1Ref && team1Ref.$el) {
+        // Alternative: forcer la fermeture en retirant le focus
+        const inputElement = team1Ref.$el.querySelector('input');
+        if (inputElement) {
+          inputElement.blur();
+          console.log('✅ Dropdown équipe 1 fermé par blur');
+        }
+      }
+      
+      // Réinitialiser le drapeau après un délai pour permettre de futures ouvertures
+      setTimeout(() => {
+        team1DropdownOpeningInProgress.value[eventIndex] = false;
+      }, 300);
+    });
   } else {
     eventData.selectedTeam1 = [];
     eventData.team1 = null;
-    console.log('✅ Équipe 1 désélectionnée pour événement', eventIndex);
   }
   
   // Rafraîchir les résultats de l'équipe 2 pour exclure l'équipe 1 sélectionnée
   if (eventData.team2SearchResults && eventData.team2SearchResults.length > 0) {
-    console.log('🔄 Rafraîchissement des résultats équipe 2 pour exclure équipe 1');
     searchTeam2({ query: eventData.team2SearchQuery || '' }, eventIndex, true);
   }
 }
@@ -1523,20 +1650,43 @@ function onTeam1Select(event, eventIndex) {
 function onTeam2Select(event, eventIndex) {
   const eventData = eventCards.value[eventIndex];
   
+  if (event.value) {
+    // Empêcher la réouverture du dropdown en marquant l'ouverture comme en cours
+    team2DropdownOpeningInProgress.value[eventIndex] = true;
+    
+    // Fermer le dropdown après sélection
+    nextTick(() => {
+      const team2Ref = team2AutoCompleteRefs.value[eventIndex];
+      if (team2Ref && typeof team2Ref.hide === 'function') {
+        team2Ref.hide();
+        console.log('✅ Dropdown équipe 2 fermé après sélection');
+      } else if (team2Ref && team2Ref.$el) {
+        // Alternative: forcer la fermeture en retirant le focus
+        const inputElement = team2Ref.$el.querySelector('input');
+        if (inputElement) {
+          inputElement.blur();
+          console.log('✅ Dropdown équipe 2 fermé par blur');
+        }
+      }
+      
+      // Réinitialiser le drapeau après un délai pour permettre de futures ouvertures
+      setTimeout(() => {
+        team2DropdownOpeningInProgress.value[eventIndex] = false;
+      }, 300);
+    });
+  }
+  
   // Remplacer l'élément existant par la nouvelle équipe sélectionnée
   if (event.value) {
     eventData.selectedTeam2 = [event.value]; // Remplacer par la nouvelle équipe
     eventData.team2 = event.value.id;
-    console.log('✅ Équipe 2 sélectionnée pour événement', eventIndex, ':', event.value);
   } else {
     eventData.selectedTeam2 = [];
     eventData.team2 = null;
-    console.log('✅ Équipe 2 désélectionnée pour événement', eventIndex);
   }
   
   // Rafraîchir les résultats de l'équipe 1 pour exclure l'équipe 2 sélectionnée
   if (eventData.team1SearchResults && eventData.team1SearchResults.length > 0) {
-    console.log('🔄 Rafraîchissement des résultats équipe 1 pour exclure équipe 2');
     searchTeam1({ query: eventData.team1SearchQuery || '' }, eventIndex, true);
   }
 }
@@ -1576,7 +1726,20 @@ async function loadMoreTeam2() {
  * @param {number} eventIndex - Index de l'événement
  */
 function onTeam1DropdownShow(eventIndex) {
+  // Vérifier si l'ouverture est déjà en cours pour cet événement
+  if (team1DropdownOpeningInProgress.value[eventIndex]) {
+    return; // Éviter les appels multiples
+  }
+  
+  // Marquer l'ouverture comme en cours
+  team1DropdownOpeningInProgress.value[eventIndex] = true;
+  
   console.log('🔽 Dropdown équipes 1 ouvert pour événement', eventIndex);
+  
+  // Réinitialiser le drapeau après un délai
+  setTimeout(() => {
+    team1DropdownOpeningInProgress.value[eventIndex] = false;
+  }, 300);
   const eventData = eventCards.value[eventIndex];
   if ((!eventData.team1SearchResults || eventData.team1SearchResults.length === 0) && eventData.sport_id) {
     console.log('🔄 Chargement initial des équipes 1 au dropdown');
@@ -1589,12 +1752,25 @@ function onTeam1DropdownShow(eventIndex) {
  * @param {number} eventIndex - Index de l'événement
  */
 function onTeam2DropdownShow(eventIndex) {
+  // Vérifier si l'ouverture est déjà en cours pour cet événement
+  if (team2DropdownOpeningInProgress.value[eventIndex]) {
+    return; // Éviter les appels multiples
+  }
+  
+  // Marquer l'ouverture comme en cours
+  team2DropdownOpeningInProgress.value[eventIndex] = true;
+  
   console.log('🔽 Dropdown équipes 2 ouvert pour événement', eventIndex);
   const eventData = eventCards.value[eventIndex];
   if ((!eventData.team2SearchResults || eventData.team2SearchResults.length === 0) && eventData.sport_id) {
     console.log('🔄 Chargement initial des équipes 2 au dropdown');
     searchTeam2({ query: '' }, eventIndex, true);
   }
+  
+  // Réinitialiser le drapeau après un délai
+  setTimeout(() => {
+    team2DropdownOpeningInProgress.value[eventIndex] = false;
+  }, 300);
 }
 
 
@@ -1604,6 +1780,14 @@ function onTeam2DropdownShow(eventIndex) {
  * @param {number} eventIndex - Index de l'événement
  */
 function onLeagueDropdownShow(eventIndex) {
+  // Vérifier si l'ouverture est déjà en cours pour cet événement
+  if (leagueDropdownOpeningInProgress.value[eventIndex]) {
+    return; // Éviter les appels multiples
+  }
+  
+  // Marquer l'ouverture comme en cours
+  leagueDropdownOpeningInProgress.value[eventIndex] = true;
+  
   console.log('🔽 Dropdown ligues ouvert pour événement', eventIndex);
   
   // Charger les ligues si pas encore chargées pour cette card
@@ -1611,6 +1795,11 @@ function onLeagueDropdownShow(eventIndex) {
   if (!eventData.leagueSearchResults || eventData.leagueSearchResults.length === 0) {
     searchLeagues({ query: '' }, eventIndex);
   }
+  
+  // Réinitialiser le drapeau après un délai
+  setTimeout(() => {
+    leagueDropdownOpeningInProgress.value[eventIndex] = false;
+  }, 300);
 }
 
 
@@ -2382,7 +2571,7 @@ function addEventCard() {
     description: '',
     result: null,
     odds: null,
-    selectedSport: null,
+    selectedSport: [],
     selectedCountry: [],
     selectedLeague: [],
     selectedTeam1: [],
@@ -2661,7 +2850,6 @@ async function initializeComponent() {
   // Charger les sports et les pays au montage
   await loadSports();
   await loadCountries();
-  console.log('✅ Sports et pays chargés au montage du composant');
 }
 
 // Lifecycle

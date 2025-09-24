@@ -142,7 +142,6 @@ export const SportService = {
             }
 
             const result = await response.json();
-            console.log('🔍 SportService - Réponse API brute:', result);
             
             return {
                 data: result.data || [],
