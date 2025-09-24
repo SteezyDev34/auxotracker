@@ -173,30 +173,26 @@
           <div class="flex flex-col gap-2">
             <div class="relative">
               <AutoComplete 
+                :ref="(el) => { if (el) leagueAutoCompleteRefs[eventIndex] = el }"
                 :id="`league-${eventIndex}`" 
                 v-model="eventData.selectedLeague" 
                 :suggestions="eventData.leagueSearchResults" 
                 @complete="(event) => searchLeagues(event, eventIndex)"
-                @item-select="(event) => onLeagueSelect(event, eventIndex)"
+                @focus="() => onLeagueDropdownShow(eventIndex)"
                 @click="() => onLeagueDropdownShow(eventIndex)"
+                @item-select="(event) => onLeagueSelect(event, eventIndex)"
                 optionLabel="name"
                 :placeholder="eventData.selectedLeague && eventData.selectedLeague.length > 0 ? '' : 'Ligue'"
                 class="w-full max-w-full select-custom"
                 :class="{ 'p-invalid': errors[`league-${eventIndex}`] }"
                 :loading="eventData.leagueLoading"
                 :disabled="!eventData.sport_id"
-                panelClass="select-panel-custom"
-                @show="() => onLeagueDropdownShow(eventIndex)"
-                @focus="() => searchLeagues({ query: '' }, eventIndex)"
                 :minLength="0"
                 dropdown
                 dropdownMode="blank"
                 multiple
                 display="chip"
                 aria-label="Rechercher et sélectionner une ligue"
-                role="combobox"
-                aria-expanded="false"
-                aria-autocomplete="list"
               >
                 <!-- Template pour afficher la ligue sélectionnée avec son logo -->
                  <template #chip="slotProps">
@@ -720,7 +716,7 @@ const selectedSport = ref([]);
 // Références pour les composants AutoComplete
 const sportAutoCompleteRefs = ref({});
 const countryAutoCompleteRefs = ref({});
-const leagueAutoCompleteRefs = ref({});
+const leagueAutoCompleteRefs = ref({}); // Initialisation comme un objet simple
 const team1AutoCompleteRefs = ref({});
 const team2AutoCompleteRefs = ref({});
 
@@ -1745,6 +1741,15 @@ function onTeam1DropdownShow(eventIndex) {
   
   console.log('🔽 Dropdown équipes 1 ouvert pour événement', eventIndex);
   
+  // Forcer l'ouverture du dropdown en utilisant la référence
+  nextTick(() => {
+    const team1Ref = team1AutoCompleteRefs.value[eventIndex];
+    if (team1Ref && typeof team1Ref.show === 'function') {
+      team1Ref.show();
+      console.log('✅ Dropdown équipe 1 ouvert manuellement');
+    }
+  });
+  
   // Réinitialiser le drapeau après un délai
   setTimeout(() => {
     team1DropdownOpeningInProgress.value[eventIndex] = false;
@@ -1770,6 +1775,16 @@ function onTeam2DropdownShow(eventIndex) {
   team2DropdownOpeningInProgress.value[eventIndex] = true;
   
   console.log('🔽 Dropdown équipes 2 ouvert pour événement', eventIndex);
+  
+  // Forcer l'ouverture du dropdown en utilisant la référence
+  nextTick(() => {
+    const team2Ref = team2AutoCompleteRefs.value[eventIndex];
+    if (team2Ref && typeof team2Ref.show === 'function') {
+      team2Ref.show();
+      console.log('✅ Dropdown équipe 2 ouvert manuellement');
+    }
+  });
+  
   const eventData = eventCards.value[eventIndex];
   if ((!eventData.team2SearchResults || eventData.team2SearchResults.length === 0) && eventData.sport_id) {
     console.log('🔄 Chargement initial des équipes 2 au dropdown');
@@ -1804,6 +1819,27 @@ function onLeagueDropdownShow(eventIndex) {
   if (!eventData.leagueSearchResults || eventData.leagueSearchResults.length === 0) {
     searchLeagues({ query: '' }, eventIndex);
   }
+  
+  // Forcer l'ouverture du dropdown en utilisant la référence
+  nextTick(() => {
+    const leagueRef = leagueAutoCompleteRefs.value[eventIndex];
+    if (leagueRef && typeof leagueRef.show === 'function') {
+      leagueRef.show();
+      console.log('✅ Dropdown ligue forcé à s\'ouvrir');
+    } else if (leagueRef && leagueRef.$el) {
+      // Essayer de déclencher un focus sur l'élément input
+      const inputElement = leagueRef.$el.querySelector('input');
+      if (inputElement) {
+        inputElement.focus();
+        inputElement.click();
+        console.log('✅ Focus et clic appliqués sur le champ ligue');
+      } else {
+        console.log('❌ Élément input non trouvé dans le composant ligue');
+      }
+    } else {
+      console.log('❌ Référence du composant ligue non trouvée', leagueRef);
+    }
+  });
   
   // Réinitialiser le drapeau après un délai
   setTimeout(() => {
