@@ -252,21 +252,20 @@
             <div class="flex flex-col gap-2">
               <div class="relative">
                 <AutoComplete 
+                  :ref="(el) => { if (el) team1AutoCompleteRefs[eventIndex] = el }"
                   :id="`team1-${eventIndex}`" 
                   v-model="eventData.selectedTeam1" 
                   :suggestions="eventData.team1SearchResults" 
                   @complete="(event) => searchTeam1(event, eventIndex)"
-                  @item-select="(event) => onTeam1Select(event, eventIndex)"
+                  @focus="() => onTeam1DropdownShow(eventIndex)"
                   @click="() => onTeam1DropdownShow(eventIndex)"
+                  @item-select="(event) => onTeam1Select(event, eventIndex)"
                   optionLabel="name"
                   :placeholder="eventData.selectedTeam1 && eventData.selectedTeam1.length > 0 ? '' : 'Équipe 1'"
                   class="w-full max-w-full select-custom"
                   :class="{ 'p-invalid': errors[`team1-${eventIndex}`] }"
                   :loading="eventData.team1Loading"
                   :disabled="!eventData.sport_id"
-                  panelClass="select-panel-custom"
-                  @show="() => onTeam1DropdownShow(eventIndex)"
-                  @focus="() => searchTeam1({ query: '' }, eventIndex)"
                   :minLength="0"
                   dropdown
                   dropdownMode="blank"
@@ -327,21 +326,20 @@
             <div class="flex flex-col gap-2">
               <div class="relative">
                   <AutoComplete 
+                    :ref="(el) => { if (el) team2AutoCompleteRefs[eventIndex] = el }"
                     :id="`team2-${eventIndex}`" 
                     v-model="eventData.selectedTeam2" 
                     :suggestions="eventData.team2SearchResults" 
                     @complete="(event) => searchTeam2(event, eventIndex)"
-                    @item-select="(event) => onTeam2Select(event, eventIndex)"
+                    @focus="() => onTeam2DropdownShow(eventIndex)"
                     @click="() => onTeam2DropdownShow(eventIndex)"
+                    @item-select="(event) => onTeam2Select(event, eventIndex)"
                     optionLabel="name"
                     :placeholder="eventData.selectedTeam2 && eventData.selectedTeam2.length > 0 ? '' : 'Équipe 2'"
                     class="w-full max-w-full select-custom"
                     :class="{ 'p-invalid': errors[`team2-${eventIndex}`] }"
                     :loading="eventData.team2Loading"
                     :disabled="!eventData.sport_id"
-                    panelClass="select-panel-custom"
-                    @show="() => onTeam2DropdownShow(eventIndex)"
-                    @focus="() => searchTeam2({ query: '' }, eventIndex)"
                     :minLength="0"
                     dropdown
                     dropdownMode="blank"
@@ -1740,6 +1738,14 @@ function onTeam1DropdownShow(eventIndex) {
   team1DropdownOpeningInProgress.value[eventIndex] = true;
   
   console.log('🔽 Dropdown équipes 1 ouvert pour événement', eventIndex);
+  console.log('📊 État de team1AutoCompleteRefs:', team1AutoCompleteRefs, 'Référence pour index', eventIndex, ':', team1AutoCompleteRefs[eventIndex]);
+  
+  // Charger les équipes si pas encore chargées pour cette card
+  const eventData = eventCards.value[eventIndex];
+  if ((!eventData.team1SearchResults || eventData.team1SearchResults.length === 0) && eventData.sport_id) {
+    console.log('🔄 Chargement initial des équipes 1 au dropdown');
+    searchTeam1({ query: '' }, eventIndex, true);
+  }
   
   // Forcer l'ouverture du dropdown en utilisant la référence
   nextTick(() => {
@@ -1747,6 +1753,18 @@ function onTeam1DropdownShow(eventIndex) {
     if (team1Ref && typeof team1Ref.show === 'function') {
       team1Ref.show();
       console.log('✅ Dropdown équipe 1 ouvert manuellement');
+    } else if (team1Ref && team1Ref.$el) {
+      // Essayer de déclencher un focus sur l'élément input
+      const inputElement = team1Ref.$el.querySelector('input');
+      if (inputElement) {
+        inputElement.focus();
+        inputElement.click();
+        console.log('✅ Focus et clic appliqués sur le champ équipe 1');
+      } else {
+        console.log('❌ Élément input non trouvé dans le composant équipe 1');
+      }
+    } else {
+      console.log('❌ Référence du composant équipe 1 non trouvée', team1Ref);
     }
   });
   
@@ -1754,11 +1772,6 @@ function onTeam1DropdownShow(eventIndex) {
   setTimeout(() => {
     team1DropdownOpeningInProgress.value[eventIndex] = false;
   }, 300);
-  const eventData = eventCards.value[eventIndex];
-  if ((!eventData.team1SearchResults || eventData.team1SearchResults.length === 0) && eventData.sport_id) {
-    console.log('🔄 Chargement initial des équipes 1 au dropdown');
-    searchTeam1({ query: '' }, eventIndex, true);
-  }
 }
 
 /**
@@ -1775,6 +1788,13 @@ function onTeam2DropdownShow(eventIndex) {
   team2DropdownOpeningInProgress.value[eventIndex] = true;
   
   console.log('🔽 Dropdown équipes 2 ouvert pour événement', eventIndex);
+  console.log('📊 État de team2AutoCompleteRefs:', team2AutoCompleteRefs, 'Référence pour index', eventIndex, ':', team2AutoCompleteRefs[eventIndex]);
+  
+  const eventData = eventCards.value[eventIndex];
+  if ((!eventData.team2SearchResults || eventData.team2SearchResults.length === 0) && eventData.sport_id) {
+    console.log('🔄 Chargement initial des équipes 2 au dropdown');
+    searchTeam2({ query: '' }, eventIndex, true);
+  }
   
   // Forcer l'ouverture du dropdown en utilisant la référence
   nextTick(() => {
@@ -1782,14 +1802,20 @@ function onTeam2DropdownShow(eventIndex) {
     if (team2Ref && typeof team2Ref.show === 'function') {
       team2Ref.show();
       console.log('✅ Dropdown équipe 2 ouvert manuellement');
+    } else if (team2Ref && team2Ref.$el) {
+      // Essayer de déclencher un focus sur l'élément input
+      const inputElement = team2Ref.$el.querySelector('input');
+      if (inputElement) {
+        inputElement.focus();
+        inputElement.click();
+        console.log('✅ Focus et clic appliqués sur le champ équipe 2');
+      } else {
+        console.log('❌ Élément input non trouvé dans le composant équipe 2');
+      }
+    } else {
+      console.log('❌ Référence du composant équipe 2 non trouvée', team2Ref);
     }
   });
-  
-  const eventData = eventCards.value[eventIndex];
-  if ((!eventData.team2SearchResults || eventData.team2SearchResults.length === 0) && eventData.sport_id) {
-    console.log('🔄 Chargement initial des équipes 2 au dropdown');
-    searchTeam2({ query: '' }, eventIndex, true);
-  }
   
   // Réinitialiser le drapeau après un délai
   setTimeout(() => {
