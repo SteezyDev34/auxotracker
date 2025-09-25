@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { BetService } from '@/service/BetService';
+import { SportService } from '@/service/SportService';
 import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import AddBetDialog from './AddBetDialog.vue';
@@ -8,12 +9,14 @@ import Button from 'primevue/button';
 import Chip from 'primevue/chip';
 import Tooltip from 'primevue/tooltip';
 import { useBetResults } from '@/composables/useBetResults';
+import { useLayout } from '@/layout/composables/layout';
 
 // Enregistrement des directives
 const vTooltip = Tooltip;
 
 // Variables réactives
 const bets = ref([]);
+const sports = ref([]);
 const loading = ref(false);
 const error = ref('');
 const expandedMonths = ref(new Set());
@@ -24,6 +27,25 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker
 // Composable pour les résultats de paris
 const { resultValues, getResultClass, getResultLabel } = useBetResults();
 
+// Composable pour le thème
+const { isDarkTheme } = useLayout();
+
+
+// Fonction utilitaire pour récupérer les informations d'un sport par son ID
+function getSportInfo(sportId) {
+  if (!sportId || !sports.value.length) return null;
+  return sports.value.find(sport => sport.id === sportId);
+}
+
+// Charger tous les sports
+async function loadSports() {
+  try {
+    const sportsData = await SportService.getSports();
+    sports.value = sportsData;
+  } catch (e) {
+    console.error('❌ Erreur lors du chargement des sports:', e);
+  }
+}
 
 // Charger tous les paris
 async function loadBets() {
@@ -37,7 +59,6 @@ async function loadBets() {
       error.value = 'Erreur lors du chargement des paris';
     }
   } catch (e) {
-    console.error('Erreur lors du chargement des paris:', e);
     error.value = 'Impossible de charger les paris.';
   } finally {
     loading.value = false;
@@ -154,7 +175,6 @@ function toggleBetEvents(betId) {
 
 // Obtenir la couleur de la barre pour le résultat du pari
 function getResultBarColor(result) {
-  console.log(result)
   switch (result) {
     case resultValues.WIN: return 'bg-green-500 dark:bg-green-400';
     case resultValues.LOST: return 'bg-red-500 dark:bg-red-400';
@@ -315,7 +335,7 @@ function getLeagueInfo(bet) {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
       
       // Logo de la ligue
-      const leagueLogo = event.league.img ? `<img src="${apiBaseUrl}/storage/${event.league.img}" alt="${event.league.name}" class="w-4 h-4 rounded object-cover" />` : '';
+      const leagueLogo = event.league.id ? `<img src="${apiBaseUrl}/storage/league_logos/${event.league.id}${isDarkTheme ? '-dark' : ''}.png" alt="${event.league.name}" class="w-4 h-4 rounded object-cover" />` : '';
       
       return {
         html: `
@@ -339,12 +359,27 @@ function getCountryInfo(bet) {
   if (bet.events && bet.events.length > 0) {
     // Si plusieurs événements (pari combiné)
     if (bet.events.length > 1) {
+
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
       
-      // Icône de sport (football par défaut) - SVG intégré
-      const sportIcon = `<svg viewBox="0 0 32 32" class="w-5 h-5" focusable="false" role="img">
-        <path d="M16 0a16 16 0 100 32 16 16 0 000-32zm1 5l5-3 2 1 2 2 1 1 1 1v1l-1 4-5 2-5-4zM4 7l1-1 1-1 2-2 2-1 5 3v5l-5 4-5-2-1-4V7zm0 17l-1-1-1-2v-1l-1-1v-2l3-4 6 2 1 7-2 3zm16 7h-2-1a14 14 0 01-2 0h-1-1l-3-5 2-4h8l2 4zm11-12l-1 1v1l-1 2-1 1-5 1-2-3 1-7 6-2 3 4v2z"></path>
-      </svg>`;
+      // Récupérer le sport du premier événement pour l'icône
+      const firstEvent = bet.events[0];
+      let sportIcon = '';
+
+      
+      if (firstEvent.league.sport_id) {
+        const sportInfo = getSportInfo(firstEvent.league.sport_id);
+        if (sportInfo && sportInfo.slug) {
+          sportIcon = `<img src="${apiBaseUrl}/storage/sport_icons/${sportInfo.slug}${isDarkTheme ? '-dark' : ''}.svg" alt="${sportInfo.name}" class="w-5 h-5 object-contain" onerror="this.style.display='none'" />`;
+        }
+      }
+      
+      // Icône de sport par défaut si aucune image trouvée
+      if (!sportIcon) {
+        sportIcon = `<svg viewBox="0 0 32 32" class="w-5 h-5" focusable="false" role="img">
+          <path d="M16 0a16 16 0 100 32 16 16 0 000-32zm1 5l5-3 2 1 2 2 1 1 1 1v1l-1 4-5 2-5-4zM4 7l1-1 1-1 2-2 2-1 5 3v5l-5 4-5-2-1-4V7zm0 17l-1-1-1-2v-1l-1-1v-2l3-4 6 2 1 7-2 3zm16 7h-2-1a14 14 0 01-2 0h-1-1l-3-5 2-4h8l2 4zm11-12l-1 1v1l-1 2-1 1-5 1-2-3 1-7 6-2 3 4v2z"></path>
+        </svg>`;
+      }
       
       // Collecter les pays uniques des événements
       const uniqueCountries = new Set();
@@ -385,10 +420,21 @@ function getCountryInfo(bet) {
     if (event.league) {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
       
-      // Icône de sport (football par défaut) - SVG intégré
-      const sportIcon = `<svg viewBox="0 0 32 32" class="w-4 h-4" focusable="false" role="img">
-        <path d="M16 0a16 16 0 100 32 16 16 0 000-32zm1 5l5-3 2 1 2 2 1 1 1 1v1l-1 4-5 2-5-4zM4 7l1-1 1-1 2-2 2-1 5 3v5l-5 4-5-2-1-4V7zm0 17l-1-1-1-2v-1l-1-1v-2l3-4 6 2 1 7-2 3zm16 7h-2-1a14 14 0 01-2 0h-1-1l-3-5 2-4h8l2 4zm11-12l-1 1v1l-1 2-1 1-5 1-2-3 1-7 6-2 3 4v2z"></path>
-      </svg>`;
+      // Récupérer l'icône du sport
+      let sportIcon = '';
+      if (event.league.sport_id) {
+        const sportInfo = getSportInfo(event.league.sport_id);
+        if (sportInfo && sportInfo.slug) {
+          sportIcon = `<img src="${apiBaseUrl}/storage/sport_icons/${sportInfo.slug}${isDarkTheme ? '-dark' : ''}.svg" alt="${sportInfo.name}" class="w-4 h-4 object-contain" onerror="this.style.display='none'" />`;
+        }
+      }
+      
+      // Icône de sport par défaut si aucune image trouvée
+      if (!sportIcon) {
+        sportIcon = `<svg viewBox="0 0 32 32" class="w-4 h-4" focusable="false" role="img">
+          <path d="M16 0a16 16 0 100 32 16 16 0 000-32zm1 5l5-3 2 1 2 2 1 1 1 1v1l-1 4-5 2-5-4zM4 7l1-1 1-1 2-2 2-1 5 3v5l-5 4-5-2-1-4V7zm0 17l-1-1-1-2v-1l-1-1v-2l3-4 6 2 1 7-2 3zm16 7h-2-1a14 14 0 01-2 0h-1-1l-3-5 2-4h8l2 4zm11-12l-1 1v1l-1 2-1 1-5 1-2-3 1-7 6-2 3 4v2z"></path>
+        </svg>`;
+      }
       
       // Vérifier différentes structures possibles pour le pays
       let countryId = null;
@@ -403,7 +449,7 @@ function getCountryInfo(bet) {
       }
       
       // Logo de la ligue
-      const leagueLogo = event.league.img ? `<img src="${apiBaseUrl}/storage/${event.league.img}" alt="${event.league.name}" class="w-4 h-4 rounded object-cover" />` : '';
+      const leagueLogo = event.league.id ? `<img src="${apiBaseUrl}/storage/league_logos/${event.league.id}${isDarkTheme ? '-dark' : ''}.png" alt="${event.league.name}" class="w-4 h-4 rounded object-cover" />` : '';
       
       if (countryId && countryName) {
         const countryLogo = `<img src="${apiBaseUrl}/storage/country_flags/${countryId}.png" alt="${countryName}" class="w-4 h-4 rounded object-cover" onerror="this.style.display='none'" />`;
@@ -433,7 +479,7 @@ function getCountryInfo(bet) {
     }
   }
   return {
-    html: '',
+    html: 'tst',
     text: ''
   };
 }
@@ -488,7 +534,10 @@ function onBetCreated(newBet) {
   loadBets();
 }
 
-onMounted(loadBets);
+onMounted(() => {
+  loadBets();
+  loadSports();
+});
 </script>
 
 <template>
@@ -575,10 +624,6 @@ onMounted(loadBets);
                   >
                     <!-- Contenu principal -->
                     <div class="flex-1 p-3 relative">
-                      <!-- ID du pari en badge -->
-                      <div class="absolute top-2 right-2 bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300 text-xs px-2 py-1 rounded-full font-mono">
-                        #{{ bet.id }}
-                      </div>
                       <!-- Événements du pari -->
                       <div v-if="bet.events && bet.events.length > 0" class="mb-3">
                         <!-- Si un seul événement -->
@@ -650,7 +695,7 @@ onMounted(loadBets);
                             >
                               <!-- Informations sport, pays et ligue pour chaque événement -->
                                 <div class="flex items-center justify-center gap-2 mb-2">
-                                  <div v-html="getCountryInfo({ events: [event] }).html"></div>
+                                  <div v-html="getCountryInfo({events: [event]}).html"></div>
                                   <!-- Nom de la ligue -->
                                   <div v-if="event.league" class="flex items-center gap-1">
                                     <span class="text-xs text-surface-500 dark:text-surface-400">{{ event.league.name }}</span>
@@ -733,7 +778,6 @@ onMounted(loadBets);
                     
                     <!-- Barre verticale colorée avec icône de résultat qui prend toute la hauteur -->
                     <div class="flex items-stretch">
-                      {{ bet.result }}
                       <div 
                         :class="getResultBarColor(bet.result)" 
                         class="w-4 min-h-full rounded-r-lg flex items-center justify-center relative"
