@@ -13,6 +13,7 @@ use App\Http\Controllers\UserBankrollController;
 use App\Http\Controllers\UserBookmakerController;
 use App\Http\Controllers\TipsterController;
 use App\Http\Controllers\UserSportPreferenceController;
+use App\Http\Controllers\SofaScoreController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -74,6 +75,10 @@ Route::prefix('teams')->group(function () {
     Route::post('/logos/download-all', [TeamLogoController::class, 'downloadAllMissing']);
     Route::get('/{teamId}/logo/download', [TeamLogoController::class, 'downloadLogo']);
 });
+
+// Routes pour les statistiques SofaScore
+Route::get('/stats/tennis/sofascore_id/{sofascoreId}', [SofaScoreController::class, 'getPlayerStatistics']);
+Route::get('/stats/tennis/player/{teamId}', [SofaScoreController::class, 'getTeamStatistics']);
 
 // Routes protégées (commentées temporairement pour le dev)
 /*

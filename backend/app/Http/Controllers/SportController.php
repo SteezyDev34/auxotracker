@@ -17,7 +17,7 @@ class SportController extends Controller
     {
         try {
             $sports = Sport::all();
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $sports
@@ -38,10 +38,10 @@ class SportController extends Controller
     {
         try {
             $leagues = League::where('sport_id', $sportId)
-                           ->with('country:id,name') // Charger la relation country
-                           ->orderBy('name')
-                           ->get(['id', 'name', 'img', 'country_id']); // Inclure country_id
-            
+                ->with('country:id,name') // Charger la relation country
+                ->orderBy('name')
+                ->get(['id', 'name', 'img', 'country_id']); // Inclure country_id
+
             return response()->json([
                 'success' => true,
                 'data' => $leagues
@@ -62,9 +62,9 @@ class SportController extends Controller
     {
         try {
             $teams = Team::where('league_id', $leagueId)
-                        ->orderBy('name')
-                        ->get(['id', 'name', 'nickname', 'img']);
-            
+                ->orderBy('name')
+                ->get(['id', 'name', 'nickname', 'img']);
+
             return response()->json([
                 'success' => true,
                 'data' => $teams
@@ -84,13 +84,13 @@ class SportController extends Controller
     public function getTeamsBySport(Request $request, $sportId): JsonResponse
     {
         try {
-            $teams = Team::whereHas('league', function($query) use ($sportId) {
+            $teams = Team::whereHas('league', function ($query) use ($sportId) {
                 $query->where('sport_id', $sportId);
             })
-            ->with(['league:id,name'])
-            ->orderBy('name')
-            ->get(['id', 'name', 'nickname', 'img', 'league_id']);
-            
+                ->with(['league:id,name'])
+                ->orderBy('name')
+                ->get(['id', 'name', 'nickname', 'img', 'league_id']);
+
             return response()->json([
                 'success' => true,
                 'data' => $teams
@@ -114,35 +114,35 @@ class SportController extends Controller
             $page = (int) $request->get('page', 1);
             $limit = min((int) $request->get('limit', 30), 50); // Limiter à 50 max, défaut 30
             $countryId = $request->get('country_id'); // Filtre optionnel par pays
-            
+
             $query = League::where('sport_id', $sportId)
-                          ->with('country:id,name') // Charger la relation country
-                          ->orderBy('name');
-            
+                ->with('country:id,name') // Charger la relation country
+                ->orderBy('name');
+
             // Appliquer le filtre de recherche si fourni
             if (!empty($search)) {
                 $query->where('name', 'LIKE', '%' . $search . '%');
             }
-            
+
             // Appliquer le filtre par pays si fourni
             if (!empty($countryId)) {
                 $query->where('country_id', $countryId);
             }
-            
+
             // Calculer l'offset
             $offset = ($page - 1) * $limit;
-            
+
             // Récupérer le total pour la pagination
             $total = $query->count();
-            
+
             // Récupérer les résultats avec pagination
             $leagues = $query->skip($offset)
-                           ->take($limit)
-                           ->get(['id', 'name', 'img', 'country_id']); // Inclure country_id
-            
+                ->take($limit)
+                ->get(['id', 'name', 'img', 'country_id']); // Inclure country_id
+
             // Déterminer s'il y a plus de résultats
             $hasMore = ($offset + $limit) < $total;
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $leagues,
@@ -174,42 +174,42 @@ class SportController extends Controller
             $limit = min((int) $request->get('limit', 30), 50); // Limiter à 50 max, défaut 30
             $leagueId = $request->get('league_id'); // Filtre optionnel par ligue
             $countryId = $request->get('country_id'); // Filtre optionnel par pays
-            
-            $query = Team::whereHas('league', function($q) use ($sportId, $countryId) {
+
+            $query = Team::whereHas('league', function ($q) use ($sportId, $countryId) {
                 $q->where('sport_id', $sportId);
-                
+
                 // Appliquer le filtre par pays si fourni
                 if (!empty($countryId)) {
                     $q->where('country_id', $countryId);
                 }
             })
-            ->with(['league:id,name'])
-            ->orderBy('name');
-            
+                ->with(['league:id,name'])
+                ->orderBy('name');
+
             // Appliquer le filtre de recherche si fourni
             if (!empty($search)) {
                 $query->where('name', 'LIKE', '%' . $search . '%');
             }
-            
+
             // Appliquer le filtre par ligue si fourni
             if (!empty($leagueId)) {
                 $query->where('league_id', $leagueId);
             }
-            
+
             // Calculer l'offset
             $offset = ($page - 1) * $limit;
-            
+
             // Récupérer le total pour la pagination
             $total = $query->count();
-            
+
             // Récupérer les résultats avec pagination
             $teams = $query->skip($offset)
-                          ->take($limit)
-                          ->get(['id', 'name', 'nickname', 'img', 'league_id', 'sofascore_id']);
-            
+                ->take($limit)
+                ->get(['id', 'name', 'nickname', 'img', 'league_id', 'sofascore_id']);
+
             // Déterminer s'il y a plus de résultats
             $hasMore = ($offset + $limit) < $total;
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $teams,
@@ -237,20 +237,20 @@ class SportController extends Controller
     {
         try {
             $search = $request->get('search', '');
-            
-            $query = \App\Models\Country::whereHas('leagues', function($q) use ($sportId) {
+
+            $query = \App\Models\Country::whereHas('leagues', function ($q) use ($sportId) {
                 $q->where('sport_id', $sportId);
             })
-            ->select('id', 'name', 'code', 'slug')
-            ->orderBy('name');
-            
+                ->select('id', 'name', 'code', 'slug')
+                ->orderBy('name');
+
             // Appliquer le filtre de recherche si fourni
             if (!empty($search)) {
                 $query->where('name', 'LIKE', '%' . $search . '%');
             }
-            
+
             $countries = $query->get();
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $countries
