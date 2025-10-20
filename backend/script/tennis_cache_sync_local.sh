@@ -2,11 +2,24 @@
 #
 # Script pour :
 #  - Vérifier que Docker tourne, le démarrer sinon
-#  - S’assurer que les conteneurs mariadb + nginx + projet Laravel sont lancés
+#  - S'assurer que les conteneurs mariadb + nginx + projet Laravel sont lancés
 #  - Exécuter les commandes Laravel
 #  - Exécuter ljdsync
 #  - Arrêter le conteneur du site Laravel
 #  - Tout logger dans un fichier de log
+
+# --- Configuration pour compatibilité cron ---
+export PATH="/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
+export HOME="/Users/steeven"
+export USER="steeven"
+
+# Charger le profil utilisateur si disponible
+if [ -f "$HOME/.zshrc" ]; then
+    source "$HOME/.zshrc" 2>/dev/null || true
+fi
+if [ -f "$HOME/.bash_profile" ]; then
+    source "$HOME/.bash_profile" 2>/dev/null || true
+fi
 
 # --- Paramètres ---
 PROJECT_DIR="/Users/steeven/PROJETS/WORKSPACE/NEW BET TRACKER/backend"
@@ -25,18 +38,45 @@ cd "$PROJECT_DIR" || {
 }
 
 # --- Vérifier/relancer Docker Desktop ---
+echo "$(date) : Vérification de l'état de Docker..." 2>&1 | tee -a "$LOG"
+
+# Vérifier si Docker est déjà en cours d'exécution
 if ! docker info >/dev/null 2>&1; then
     echo "$(date) : Docker n'est pas actif, tentative de démarrage..." 2>&1 | tee -a "$LOG"
+    
+    # Vérifier si Docker Desktop est installé
+    if [ ! -d "/Applications/Docker.app" ]; then
+        echo "$(date) : ❌ Docker Desktop n'est pas installé dans /Applications/" 2>&1 | tee -a "$LOG"
+        exit 1
+    fi
+    
+    # Démarrer Docker Desktop
     open --background -a Docker
-    TIMEOUT=120
+    echo "$(date) : Docker Desktop lancé, attente de la disponibilité..." 2>&1 | tee -a "$LOG"
+    
+    # Timeout augmenté à 5 minutes pour Docker Desktop
+    TIMEOUT=300
+    WAIT_TIME=0
     while ! docker info >/dev/null 2>&1; do
-        sleep 10
-        TIMEOUT=$((TIMEOUT-10))
+        sleep 15
+        WAIT_TIME=$((WAIT_TIME+15))
+        TIMEOUT=$((TIMEOUT-15))
+        
+        # Afficher le progrès toutes les minutes
+        if [ $((WAIT_TIME % 60)) -eq 0 ]; then
+            echo "$(date) : Attente Docker... (${WAIT_TIME}s écoulées)" 2>&1 | tee -a "$LOG"
+        fi
+        
         if [ $TIMEOUT -le 0 ]; then
-            echo "$(date) : ❌ Docker ne répond pas, abandon." 2>&1 | tee -a "$LOG"
+            echo "$(date) : ❌ Docker ne répond pas après 5 minutes, abandon." 2>&1 | tee -a "$LOG"
+            echo "$(date) : Vérifiez que Docker Desktop peut démarrer manuellement." 2>&1 | tee -a "$LOG"
             exit 1
         fi
     done
+    
+    echo "$(date) : ✅ Docker est maintenant disponible (après ${WAIT_TIME}s)" 2>&1 | tee -a "$LOG"
+else
+    echo "$(date) : ✅ Docker est déjà actif" 2>&1 | tee -a "$LOG"
 fi
 
 # --- Lancer les conteneurs s'ils sont arrêtés ---

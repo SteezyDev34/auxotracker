@@ -164,9 +164,13 @@ class ImportTennisPlayersFromCache extends Command
             
             // Créer ou mettre à jour le joueur
             if ($existingPlayer) {
-                $existingPlayer->update($basicData);
+                // Exclure le nickname lors de la mise à jour d'un joueur existant
+                $updateData = $basicData;
+                unset($updateData['nickname']);
+                $existingPlayer->update($updateData);
+                $existingPlayer->touch(); // Garantit la mise à jour d'updated_at
                 $this->stats['players_updated']++;
-                $this->line("🔄 Joueur mis à jour: {$name} (ID: {$sofascoreId})");
+                $this->line("🔄 Joueur mis à jour: {$name} (ID: {$sofascoreId}) - nickname préservé");
                 $player = $existingPlayer;
             } else {
                 $player = Team::create($basicData);
@@ -268,6 +272,9 @@ class ImportTennisPlayersFromCache extends Command
             // Mettre à jour le joueur si on a des données
             if (!empty($updates)) {
                 $player->update($updates);
+                $player->touch(); // Garantit la mise à jour d'updated_at
+
+
                 
                 $updateInfo = [];
                 foreach ($updates as $field => $value) {

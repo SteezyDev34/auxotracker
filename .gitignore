@@ -1,3 +1,5 @@
 backend/docker/logs/apache/.log
 backend/docker/logs/apache/error.log
 backend/docker/logs/apache/access.log
+backend/script/logs/tennis_cache_sync_local*.log
+*.log

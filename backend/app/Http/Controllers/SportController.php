@@ -188,7 +188,10 @@ class SportController extends Controller
 
             // Appliquer le filtre de recherche si fourni
             if (!empty($search)) {
-                $query->where('name', 'LIKE', '%' . $search . '%');
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'LIKE', '%' . $search . '%')
+                      ->orWhere('nickname', 'LIKE', '%' . $search . '%');
+                });
             }
 
             // Appliquer le filtre par ligue si fourni

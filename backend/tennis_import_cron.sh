@@ -70,7 +70,7 @@ log_message "Démarrage de l'importation des joueurs depuis le cache..."
 # --force: Forcer la mise à jour des joueurs existants
 # Pas de limite pour traiter tous les fichiers de cache disponibles
 log_message "Exécution de: $PHP_PATH artisan tennis:import-players-from-cache --force"
-"$PHP_PATH" artisan tennis:import-players-from-cache --download-images >> "$LOG_FILE" 2>&1
+"$PHP_PATH" artisan tennis:import-players-from-cache --download-images --force>> "$LOG_FILE" 2>&1
 
 # Vérifier le code de retour
 IMPORT_EXIT_CODE=$?
