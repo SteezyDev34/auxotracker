@@ -1,0 +1,316 @@
+{
+  "tournament": {
+    "name": "Indian Wells, USA, Doubles",
+    "slug": "indian-wells-usa-doubles",
+    "category": {
+      "name": "WTA",
+      "slug": "wta",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 6,
+      "flag": "wta",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة لاعبات التنس",
+          "bn": "ডব্লিউটিএ",
+          "hi": "चैलेंजर",
+          "ru": "WTA"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells, Doubles",
+      "slug": "indian-wells-doubles",
+      "category": {
+        "name": "WTA",
+        "slug": "wta",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 6,
+        "flag": "wta",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة لاعبات التنس",
+            "bn": "ডব্লিউটিএ",
+            "hi": "चैलेंजर",
+            "ru": "WTA"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 206,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2555,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "إنديان ويلز، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176089
+  },
+  "season": {
+    "name": "WTA Indian Wells, USA Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 85597
+  },
+  "roundInfo": {
+    "round": 6,
+    "name": "Round of 32",
+    "cupRoundType": 16
+  },
+  "customId": "yjtjsAJvj",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Chan H-C / Tjen J",
+    "slug": "chan-h-c-tjen-j",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1,
+    "nameCode": "C/T",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1176725,
+    "subTeams": [
+      {
+        "name": "Hao-Ching Chan",
+        "slug": "chan-hao-ching",
+        "shortName": "H. Chan",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 166,
+        "nameCode": "CHA",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "TW",
+          "alpha3": "TWN",
+          "name": "Chinese Taipei",
+          "slug": "chinese-taipei"
+        },
+        "id": 48625,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "هاو-تشينغ تشان",
+            "ru": "Чан, Хао-Чинг"
+          },
+          "shortNameTranslation": {
+            "ar": "ه. تشان"
+          }
+        }
+      },
+      {
+        "name": "Janice Tjen",
+        "slug": "tjen-janice",
+        "shortName": "J. Tjen",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 2960,
+        "nameCode": "TJE",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "ID",
+          "alpha3": "IDN",
+          "name": "Indonesia",
+          "slug": "indonesia"
+        },
+        "id": 291733,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "جانيس تين"
+          },
+          "shortNameTranslation": {
+            "ar": "ج. تين"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "awayTeam": {
+    "name": "Klepac A / Piter K",
+    "slug": "klepac-a-piter-k",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 8,
+    "nameCode": "K/P",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1170473,
+    "subTeams": [
+      {
+        "name": "Andreja Klepac",
+        "slug": "klepac-andreja",
+        "shortName": "A. Klepac",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 68,
+        "nameCode": "KLE",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "SI",
+          "alpha3": "SVN",
+          "name": "Slovenia",
+          "slug": "slovenia"
+        },
+        "id": 18965,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أ. كليباك",
+            "ru": "Анреа Клепак"
+          },
+          "shortNameTranslation": {
+            "ar": "أ. كليباك"
+          }
+        }
+      },
+      {
+        "name": "Katarzyna Piter",
+        "slug": "piter-katarzyna",
+        "shortName": "K. Piter",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 531,
+        "nameCode": "PIT",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "PL",
+          "alpha3": "POL",
+          "name": "Poland",
+          "slug": "poland"
+        },
+        "id": 19731,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كاتارزينا بيتر",
+            "ru": "Питер, Катарина"
+          },
+          "shortNameTranslation": {
+            "ar": "ك. بيتر"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15655139,
+  "slug": "chan-h-c-tjen-klepac-piter",
+  "startTimestamp": 1772761500,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

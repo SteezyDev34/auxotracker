@@ -1,0 +1,230 @@
+{
+  "firstToServe": 1,
+  "tournament": {
+    "name": "Indian Wells, USA",
+    "slug": "indian-wells-usa",
+    "category": {
+      "name": "ATP",
+      "slug": "atp",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 3,
+      "flag": "atp",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفي التنس",
+          "bn": "এটিপি",
+          "hi": "डब्ल्यूटीए",
+          "ru": "ATP"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells",
+      "slug": "indian-wells",
+      "category": {
+        "name": "ATP",
+        "slug": "atp",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 3,
+        "flag": "atp",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفي التنس",
+            "bn": "এটিপি",
+            "hi": "डब्ल्यूटीए",
+            "ru": "ATP"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 7115,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2487,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "بطولة إنديان ويلز",
+          "bn": "ইন্ডিয়ান ওয়েলস",
+          "hi": "इंडियन वेल्स"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176052
+  },
+  "season": {
+    "name": "ATP Indian Wells, USA Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 80797
+  },
+  "roundInfo": {
+    "round": 64,
+    "name": "Round of 128"
+  },
+  "customId": "xIusYtkc",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Jacob Fearnley",
+    "slug": "fearnley-jacob",
+    "shortName": "J. Fearnley",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 4077,
+    "playerTeamInfo": {
+      "id": 4502
+    },
+    "nameCode": "FEA",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "GB",
+      "alpha3": "GBR",
+      "name": "United Kingdom",
+      "slug": "united-kingdom"
+    },
+    "id": 275948,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "جاكوب فيرنلي",
+        "ru": "Фирнли, Джейкоб"
+      },
+      "shortNameTranslation": {
+        "ar": "ج. فيرنلي"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Damir Džumhur",
+    "slug": "dzumhur-damir",
+    "shortName": "D. Džumhur",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 4700,
+    "playerTeamInfo": {
+      "id": 50
+    },
+    "nameCode": "DZU",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "BA",
+      "alpha3": "BIH",
+      "name": "Bosnia & Herzegovina",
+      "slug": "bosnia-and-herzegovina"
+    },
+    "id": 49172,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "دامير دزومهور",
+        "ru": "Джумур, Дамир"
+      },
+      "shortNameTranslation": {
+        "ar": "د. دزومهور",
+        "bn": "ডি. জুমহুর",
+        "hi": "डी. दज़ुम्हुर"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 3,
+    "period2": 3,
+    "point": "15",
+    "normaltime": 0
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772747847
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772750211
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15648699,
+  "slug": "jacob-fearnley-damir-dzumhur",
+  "startTimestamp": 1772744700,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "firstToServe": 1,
+  "tournament": {
+    "name": "Thionville, France",
+    "slug": "thionville-france",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Thionville, France",
+      "slug": "atp-challenger-thionville-france-men-singles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 171,
+      "groundType": "Hardcourt indoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25268,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تيونفيل، فرنسا"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176043
+  },
+  "season": {
+    "name": "ATP Challenger Thionville, France Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87363
+  },
+  "roundInfo": {
+    "round": 5,
+    "name": "Round of 16",
+    "cupRoundType": 8
+  },
+  "customId": "XrIshkIc",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Sebastian Ofner",
+    "slug": "ofner-sebastian",
+    "shortName": "S. Ofner",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 5016,
+    "playerTeamInfo": {
+      "id": 231
+    },
+    "nameCode": "OFN",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "AT",
+      "alpha3": "AUT",
+      "name": "Austria",
+      "slug": "austria"
+    },
+    "id": 83397,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "سيباستيان أوفنر",
+        "bn": "সেবাস্টিয়ান অফনার",
+        "hi": "सेबास्टियन ऑफनर",
+        "ru": "Офнер, Себастиан"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "awayTeam": {
+    "name": "Murphy Cassone",
+    "slug": "cassone-murphy",
+    "shortName": "M. Cassone",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1119,
+    "playerTeamInfo": {
+      "id": 5417
+    },
+    "nameCode": "CAS",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "US",
+      "alpha3": "USA",
+      "name": "USA",
+      "slug": "usa"
+    },
+    "id": 333007,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "مورفي كاسون",
+        "bn": "মারফি ক্যাসোন",
+        "hi": "मर्फी कास्सोने"
+      },
+      "shortNameTranslation": {
+        "ar": "م. كاسون"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 5,
+    "period2": 2,
+    "point": "15",
+    "normaltime": 0
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772724438
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772726355
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624619,
+  "slug": "murphy-cassone-sebastian-ofner",
+  "startTimestamp": 1772721900,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt indoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

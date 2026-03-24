@@ -1,0 +1,357 @@
+{
+  "firstToServe": 1,
+  "tournament": {
+    "name": "Antalya 2, Turkiye, Doubles",
+    "slug": "antalya-2-turkiye-doubles",
+    "category": {
+      "name": "WTA 125",
+      "slug": "wta-125",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 871,
+      "flag": "wta-125",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفات التنس 125",
+          "ru": "WTA 125"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Antalya 2, Turkiye, Doubles",
+      "slug": "wta-125k-antalya-2-turkiye-women-doubles",
+      "category": {
+        "name": "WTA 125",
+        "slug": "wta-125",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 871,
+        "flag": "wta-125",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفات التنس 125",
+            "ru": "WTA 125"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 20,
+      "groundType": "Red clay",
+      "tennisPoints": 125,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25616,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "أنطاليا 2، تركيا، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176051
+  },
+  "season": {
+    "name": "WTA 125K Antalya 2, Turkiye Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87908
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "MPccsjAEi",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Kozyreva M / Shymanovich I",
+    "slug": "kozyreva-m-shymanovich-i",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 61,
+    "nameCode": "K/S",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1073759,
+    "subTeams": [
+      {
+        "name": "Maria Kozyreva",
+        "slug": "kozyreva-maria",
+        "shortName": "M. Kozyreva",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 253,
+        "nameCode": "KOZ",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RU",
+          "alpha3": "RUS",
+          "name": "Russia",
+          "slug": "russia"
+        },
+        "id": 211012,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ماريا كوزيريفا"
+          },
+          "shortNameTranslation": {
+            "ar": "م. كوزيريفا"
+          }
+        }
+      },
+      {
+        "name": "Iryna Shymanovich",
+        "slug": "shymanovich-iryna",
+        "shortName": "I. Shymanovich",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 929,
+        "nameCode": "SHY",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "BY",
+          "alpha3": "BLR",
+          "name": "Belarus",
+          "slug": "belarus"
+        },
+        "id": 92879,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيرينا شيمانوفيتش",
+            "bn": "ইরিনা শায়মানোভিচ",
+            "hi": "इरीना शिमानोविच",
+            "ru": "Шиманович, Ирина"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. شيمانوفيتش"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "كوزيريفا م / شيمانوفيتش إ"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "awayTeam": {
+    "name": "Cengiz B / Öz İ",
+    "slug": "cengiz-b-oz-i",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1,
+    "nameCode": "C/O",
+    "national": false,
+    "type": 2,
+    "country": {
+      "alpha2": "TR",
+      "alpha3": "TUR",
+      "name": "Türkiye",
+      "slug": "turkiye"
+    },
+    "id": 257037,
+    "subTeams": [
+      {
+        "name": "Berfu Cengiz",
+        "slug": "cengiz-berfu",
+        "shortName": "B. Cengiz",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 545,
+        "nameCode": "CEN",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 134342,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "برفو جينجيز",
+            "ru": "Ченгиз, Берфу"
+          },
+          "shortNameTranslation": {
+            "ar": "ب. جينجيز"
+          }
+        }
+      },
+      {
+        "name": "Ipek Oz",
+        "slug": "oz-ipek",
+        "shortName": "I. Oz",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 698,
+        "nameCode": "IPE",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 118052,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيبيك أوز",
+            "ru": "Оз, Ипек"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. أوز",
+            "bn": "আই. ওজ",
+            "hi": "ई. ओज़"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "جينغيز ب / أوز إ",
+        "ru": "Ченгиз Б / Оз И"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 5,
+    "period2": 2,
+    "point": "40",
+    "normaltime": 0
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772714020
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772716038
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624799,
+  "slug": "kozyreva-shymanovich-cengiz-oz-i",
+  "startTimestamp": 1772710200,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

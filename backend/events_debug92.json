@@ -1,0 +1,204 @@
+{
+  "tournament": {
+    "name": "Thionville, France",
+    "slug": "thionville-france",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Thionville, France",
+      "slug": "atp-challenger-thionville-france-men-singles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 171,
+      "groundType": "Hardcourt indoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25268,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تيونفيل، فرنسا"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176043
+  },
+  "season": {
+    "name": "ATP Challenger Thionville, France Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87363
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "hmRsNnTd",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Nicolai Budkov Kjaer",
+    "slug": "budkov-kjaer-nicolai",
+    "shortName": "N. Budkov Kjaer",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 3549,
+    "playerTeamInfo": {
+      "id": 13594
+    },
+    "nameCode": "BUD",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "NO",
+      "alpha3": "NOR",
+      "name": "Norway",
+      "slug": "norway"
+    },
+    "id": 483188,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "نيكولاي بودكوف كيار"
+      },
+      "shortNameTranslation": {
+        "ar": "ن. كيار"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Jan Choinski",
+    "slug": "choinski-jan",
+    "shortName": "J. Choinski",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1857,
+    "playerTeamInfo": {
+      "id": 402
+    },
+    "nameCode": "CHO",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "GB",
+      "alpha3": "GBR",
+      "name": "United Kingdom",
+      "slug": "united-kingdom"
+    },
+    "id": 105607,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "يان تشوينسكي",
+        "bn": "জান চোইনস্কি",
+        "hi": "जान चोइनस्की",
+        "ru": "Чоински, Ян"
+      },
+      "shortNameTranslation": {
+        "ar": "ي. تشوينسكي"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624620,
+  "slug": "nicolai-budkov-kjaer-jan-choinski",
+  "startTimestamp": 1772798400,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt indoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

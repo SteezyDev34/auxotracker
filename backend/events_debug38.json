@@ -1,0 +1,232 @@
+{
+  "firstToServe": 2,
+  "tournament": {
+    "name": "Indian Wells, USA",
+    "slug": "indian-wells-usa",
+    "category": {
+      "name": "WTA",
+      "slug": "wta",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 6,
+      "flag": "wta",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة لاعبات التنس",
+          "bn": "ডব্লিউটিএ",
+          "hi": "चैलेंजर",
+          "ru": "WTA"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells",
+      "slug": "indian-wells",
+      "category": {
+        "name": "WTA",
+        "slug": "wta",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 6,
+        "flag": "wta",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة لاعبات التنس",
+            "bn": "ডব্লিউটিএ",
+            "hi": "चैलेंजर",
+            "ru": "WTA"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 2856,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2619,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "إنديان ويلز",
+          "bn": "ইন্ডিয়ান ওয়েলস",
+          "hi": "इंडियन वेल्स"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176097
+  },
+  "season": {
+    "name": "WTA Indian Wells, USA Women Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 85596
+  },
+  "roundInfo": {
+    "round": 64,
+    "name": "Round of 128"
+  },
+  "customId": "zlkbsFkkc",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Elsa Jacquemot",
+    "slug": "jacquemot-elsa",
+    "shortName": "E. Jacquemot",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 3214,
+    "playerTeamInfo": {
+      "id": 3609
+    },
+    "nameCode": "JAC",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "FR",
+      "alpha3": "FRA",
+      "name": "France",
+      "slug": "france"
+    },
+    "id": 275530,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "إلسا جاكيمو",
+        "bn": "এলসা জ্যাকমোট",
+        "hi": "एल्सा जैक्वेमोट",
+        "ru": "Жакемо, Эльза"
+      },
+      "shortNameTranslation": {
+        "ar": "إ. جاكيمو"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Anna Bondar",
+    "slug": "bondar-anna",
+    "shortName": "A. Bondár",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2718,
+    "playerTeamInfo": {
+      "id": 659
+    },
+    "nameCode": "BON",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "HU",
+      "alpha3": "HUN",
+      "name": "Hungary",
+      "slug": "hungary"
+    },
+    "id": 150574,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "آنا بوندار",
+        "ru": "Бондар, Анна"
+      },
+      "shortNameTranslation": {
+        "ar": "آ. بوندار",
+        "bn": "এ. বোন্ডার",
+        "hi": "ए. बोंडार"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 6,
+    "period2": 5,
+    "period1TieBreak": 5,
+    "point": "30",
+    "normaltime": 0
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 7,
+    "period1TieBreak": 7,
+    "point": "40",
+    "normaltime": 2
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772753362
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772756786
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15648740,
+  "slug": "elsa-jacquemot-anna-bondar",
+  "startTimestamp": 1772748600,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

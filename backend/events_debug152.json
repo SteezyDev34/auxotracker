@@ -1,0 +1,226 @@
+{
+  "tournament": {
+    "name": "ITF M15 Poitiers Men",
+    "slug": "itf-m15-poitiers-men",
+    "category": {
+      "name": "ITF Men",
+      "slug": "itf-men",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 785,
+      "flag": "itf-men",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "اتحاد التنس الدولي للرجال",
+          "ru": "Мужской мировой теннисный тур ITF"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "ITF M15 Poitiers Men",
+      "slug": "itf-m15-poitiers-men",
+      "category": {
+        "name": "ITF Men",
+        "slug": "itf-men",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 785,
+        "flag": "itf-men",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اتحاد التنس الدولي للرجال",
+            "ru": "Мужской мировой теннисный тур ITF"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 6,
+      "groundType": "Hardcourt indoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25319,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "ITF M15 بواتييه للرجال"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 147282,
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ITF M15 بواتييه للرجال"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "season": {
+    "name": "2026",
+    "year": "2026",
+    "editor": false,
+    "id": 90367
+  },
+  "roundInfo": {
+    "round": 5,
+    "name": "Round of 16",
+    "cupRoundType": 8
+  },
+  "customId": "kcYbsPyNi",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Lenny Couturier",
+    "slug": "couturier-lenny",
+    "shortName": "L. Couturier",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 17,
+    "playerTeamInfo": {
+      "id": 30538
+    },
+    "nameCode": "COU",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "FR",
+      "alpha3": "FRA",
+      "name": "France",
+      "slug": "france"
+    },
+    "id": 1096190,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ليني كوتورييه"
+      },
+      "shortNameTranslation": {
+        "ar": "ل. كوتورييه"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Anton Matusevich",
+    "slug": "matusevich-anton",
+    "shortName": "A. Matusevich",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 426,
+    "playerTeamInfo": {
+      "id": 3027
+    },
+    "nameCode": "MAT",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "GB",
+      "alpha3": "GBR",
+      "name": "United Kingdom",
+      "slug": "united-kingdom"
+    },
+    "id": 245110,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "أنتون ماتوسيفيتش",
+        "bn": "অ্যান্টন মাতুসেভিচ",
+        "hi": "एंटोन मतुस्विच",
+        "ru": "Матусевич, Антон"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. ماتوسيفيتش"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 4,
+    "period2": 6,
+    "period2TieBreak": 3,
+    "point": "0"
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 7,
+    "period2TieBreak": 7,
+    "point": "0"
+  },
+  "time": {},
+  "changes": {
+    "changes": [
+      "status.code",
+      "status.description",
+      "status.type"
+    ],
+    "changeTimestamp": 1772715290
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15663309,
+  "slug": "lenny-couturier-anton-matusevich",
+  "startTimestamp": 1772709856,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt indoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

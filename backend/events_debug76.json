@@ -1,0 +1,202 @@
+{
+  "tournament": {
+    "name": "Brasilia, Brazil",
+    "slug": "brasilia-brazil",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Brasilia, Brazil",
+      "slug": "brasilia-brazil",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 193,
+      "groundType": "Red clay",
+      "tennisPoints": 75,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 17382,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "برازيليا، البرازيل"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176019
+  },
+  "season": {
+    "name": "ATP Challenger Brasilia, Brazil Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87352
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "vLLcsxQgd",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Henrique Rocha",
+    "slug": "rocha-henrique",
+    "shortName": "H. Rocha",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 3917,
+    "playerTeamInfo": {
+      "id": 5276
+    },
+    "nameCode": "ROC",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "PT",
+      "alpha3": "PRT",
+      "name": "Portugal",
+      "slug": "portugal"
+    },
+    "id": 341820,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "هنريكي روشا"
+      },
+      "shortNameTranslation": {
+        "ar": "ه. روشا"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Juan Carlos Prado Angelo",
+    "slug": "prado-angelo-juan-carlos",
+    "shortName": "J. Prado Angelo",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1413,
+    "playerTeamInfo": {
+      "id": 5237
+    },
+    "nameCode": "PRA",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "BO",
+      "alpha3": "BOL",
+      "name": "Bolivia",
+      "slug": "bolivia"
+    },
+    "id": 392072,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "خوان كارلوس برادو أنجيلو"
+      },
+      "shortNameTranslation": {
+        "ar": "خ. أنجيلو"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624028,
+  "slug": "juan-carlos-prado-angelo-henrique-rocha",
+  "startTimestamp": 1772803800,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

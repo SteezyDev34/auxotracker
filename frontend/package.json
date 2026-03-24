@@ -4,6 +4,8 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
+        "postbuild": "cp -f deploy/.htaccess dist/.htaccess || true",
+        "prepare:local": "cp -f deploy/.htaccess dist/.htaccess || true && cp -f deploy/.htaccess ../.htaccess || true",
         "preview": "vite preview",
         "lint": "eslint --fix . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
     },

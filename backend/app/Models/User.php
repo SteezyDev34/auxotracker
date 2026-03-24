@@ -146,4 +146,14 @@ class User extends Authenticatable
             ->ordered()
             ->with('sport');
     }
+
+    /**
+     * Obtenir les intérêts de l'utilisateur (pour les investisseurs).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function interets(): HasMany
+    {
+        return $this->hasMany(Interet::class, 'user_id');
+    }
 }

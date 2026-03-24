@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   web:
     build:
-      context: ${DOCKER_DIR}/php83
+      context: ./docker/php83
     container_name: api.auxotracker
     restart: unless-stopped
     ports:
@@ -13,8 +11,6 @@ services:
       - VIRTUAL_PORT=80
       - LETSENCRYPT_HOST=api.auxotracker.lan
       - LETSENCRYPT_EMAIL=your-email@api.auxotracker.lan
-      - HTTP_PROXY=
-      - HTTPS_PROXY=
     networks:
       - shared_network
     volumes:

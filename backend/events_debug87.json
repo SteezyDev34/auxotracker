@@ -1,0 +1,222 @@
+{
+  "firstToServe": 2,
+  "tournament": {
+    "name": "Thionville, France",
+    "slug": "thionville-france",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Thionville, France",
+      "slug": "atp-challenger-thionville-france-men-singles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 171,
+      "groundType": "Hardcourt indoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25268,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تيونفيل، فرنسا"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176043
+  },
+  "season": {
+    "name": "ATP Challenger Thionville, France Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87363
+  },
+  "roundInfo": {
+    "round": 5,
+    "name": "Round of 16",
+    "cupRoundType": 8
+  },
+  "customId": "CpFbsvHRb",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Ugo Blanchet",
+    "slug": "blanchet-ugo",
+    "shortName": "U. Blanchet",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1929,
+    "playerTeamInfo": {
+      "id": 3913
+    },
+    "nameCode": "BLA",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "FR",
+      "alpha3": "FRA",
+      "name": "France",
+      "slug": "france"
+    },
+    "id": 200777,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "أوغو بلانشيت"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. بلانشيت"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Clement Chidekh",
+    "slug": "chidekh-clement",
+    "shortName": "C. Chidekh",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1652,
+    "playerTeamInfo": {
+      "id": 4936
+    },
+    "nameCode": "CHI",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "FR",
+      "alpha3": "FRA",
+      "name": "France",
+      "slug": "france"
+    },
+    "id": 231620,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "كلمنت تشيدخ"
+      },
+      "shortNameTranslation": {
+        "ar": "ك. تشيدخ"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 2,
+    "period2": 2,
+    "point": "15",
+    "normaltime": 0
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772712919
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772714911
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624624,
+  "slug": "clement-chidekh-ugo-blanchet",
+  "startTimestamp": 1772710200,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt indoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

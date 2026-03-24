@@ -1,0 +1,204 @@
+{
+  "tournament": {
+    "name": "Antalya 2, Turkiye",
+    "slug": "antalya-2-turkiye",
+    "category": {
+      "name": "WTA 125",
+      "slug": "wta-125",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 871,
+      "flag": "wta-125",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفات التنس 125",
+          "ru": "WTA 125"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Antalya 2, Turkiye",
+      "slug": "wta-125k-antalya-2-turkiye-women-singles",
+      "category": {
+        "name": "WTA 125",
+        "slug": "wta-125",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 871,
+        "flag": "wta-125",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفات التنس 125",
+            "ru": "WTA 125"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 155,
+      "groundType": "Red clay",
+      "tennisPoints": 125,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25615,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "أنطاليا 2، تركيا"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176050
+  },
+  "season": {
+    "name": "WTA 125K Antalya 2, Turkiye Women Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87907
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "onLsXqMb",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Anhelina Kalinina",
+    "slug": "kalinina-anhelina",
+    "shortName": "A. Kalinina",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 3419,
+    "playerTeamInfo": {
+      "id": 387
+    },
+    "nameCode": "KAL",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "UA",
+      "alpha3": "UKR",
+      "name": "Ukraine",
+      "slug": "ukraine"
+    },
+    "id": 90664,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "أنهيلينا كالينينا",
+        "ru": "Калинина, Ангелина"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. كالينينا",
+        "bn": "এ. কালিনা",
+        "hi": "ए. कलिनिना"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Panna Udvardy",
+    "slug": "udvardy-panna",
+    "shortName": "P. Udvardy",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2286,
+    "playerTeamInfo": {
+      "id": 3454
+    },
+    "nameCode": "UDV",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "HU",
+      "alpha3": "HUN",
+      "name": "Hungary",
+      "slug": "hungary"
+    },
+    "id": 218347,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "بانا أودفاردي"
+      },
+      "shortNameTranslation": {
+        "ar": "ب. أودفاردي",
+        "bn": "পি. উদবর্দী",
+        "hi": "पी. उदवर्डी"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624787,
+  "slug": "panna-udvardy-anhelina-kalinina",
+  "startTimestamp": 1772784000,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

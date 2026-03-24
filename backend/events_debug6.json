@@ -1,0 +1,244 @@
+{
+  "firstToServe": 2,
+  "tournament": {
+    "name": "Indian Wells, USA",
+    "slug": "indian-wells-usa",
+    "category": {
+      "name": "ATP",
+      "slug": "atp",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 3,
+      "flag": "atp",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفي التنس",
+          "bn": "এটিপি",
+          "hi": "डब्ल्यूटीए",
+          "ru": "ATP"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells",
+      "slug": "indian-wells",
+      "category": {
+        "name": "ATP",
+        "slug": "atp",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 3,
+        "flag": "atp",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفي التنس",
+            "bn": "এটিপি",
+            "hi": "डब्ल्यूटीए",
+            "ru": "ATP"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 7115,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2487,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "بطولة إنديان ويلز",
+          "bn": "ইন্ডিয়ান ওয়েলস",
+          "hi": "इंडियन वेल्स"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176052
+  },
+  "season": {
+    "name": "ATP Indian Wells, USA Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 80797
+  },
+  "roundInfo": {
+    "round": 64,
+    "name": "Round of 128"
+  },
+  "customId": "vJgsjpMb",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Fábián Marozsán",
+    "slug": "marozsan-fabian",
+    "shortName": "F. Marozsán",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 7365,
+    "playerTeamInfo": {
+      "id": 2861
+    },
+    "nameCode": "MAR",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "HU",
+      "alpha3": "HUN",
+      "name": "Hungary",
+      "slug": "hungary"
+    },
+    "id": 218259,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "فابيان ماروزسان",
+        "ru": "Марожан, Фабиан"
+      },
+      "shortNameTranslation": {
+        "ar": "ف. ماروزسان",
+        "bn": "এফ. মারোজসান",
+        "hi": "एफ. मरोज़सान"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Roberto Bautista Agut",
+    "slug": "bautista-agut-roberto",
+    "shortName": "R. Bautista Agut",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 7695,
+    "playerTeamInfo": {
+      "id": 18
+    },
+    "nameCode": "BAU",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "ES",
+      "alpha3": "ESP",
+      "name": "Spain",
+      "slug": "spain"
+    },
+    "id": 16720,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "روبرتو باوتيستا أجات",
+        "ru": "Баутиста Агут, Роберто"
+      },
+      "shortNameTranslation": {
+        "ar": "ر. أجات",
+        "bn": "আর. বাউটিস্তা আগুত",
+        "hi": "आर. बाउटिस्टा एगुट"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 1,
+    "display": 1,
+    "period1": 4,
+    "period2": 7,
+    "period3": 4,
+    "period2TieBreak": 7,
+    "point": "40",
+    "normaltime": 1
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 6,
+    "period3": 6,
+    "period2TieBreak": 2,
+    "point": "A",
+    "normaltime": 2
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772757243
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period3",
+      "status.code",
+      "status.description",
+      "status.type",
+      "homeScore.normaltime",
+      "awayScore.current",
+      "awayScore.display",
+      "awayScore.period3",
+      "awayScore.normaltime"
+    ],
+    "changeTimestamp": 1772759798
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15648701,
+  "slug": "fabian-marozsan-roberto-bautista-agut",
+  "startTimestamp": 1772750700,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "firstToServe": 2,
+  "tournament": {
+    "name": "Indian Wells, USA",
+    "slug": "indian-wells-usa",
+    "category": {
+      "name": "ATP",
+      "slug": "atp",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 3,
+      "flag": "atp",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفي التنس",
+          "bn": "এটিপি",
+          "hi": "डब्ल्यूटीए",
+          "ru": "ATP"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells",
+      "slug": "indian-wells",
+      "category": {
+        "name": "ATP",
+        "slug": "atp",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 3,
+        "flag": "atp",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفي التنس",
+            "bn": "এটিপি",
+            "hi": "डब्ल्यूटीए",
+            "ru": "ATP"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 7115,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2487,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "بطولة إنديان ويلز",
+          "bn": "ইন্ডিয়ান ওয়েলস",
+          "hi": "इंडियन वेल्स"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176052
+  },
+  "season": {
+    "name": "ATP Indian Wells, USA Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 80797
+  },
+  "roundInfo": {
+    "round": 64,
+    "name": "Round of 128"
+  },
+  "customId": "PCKcsDJmd",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Daniel Merida",
+    "slug": "merida-aguilar-daniel",
+    "shortName": "D. Merida",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1704,
+    "playerTeamInfo": {
+      "id": 4956
+    },
+    "nameCode": "MER",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "ES",
+      "alpha3": "ESP",
+      "name": "Spain",
+      "slug": "spain"
+    },
+    "id": 338890,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "دانييل مريديا"
+      },
+      "shortNameTranslation": {
+        "ar": "د. مريديا"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Alex Michelsen",
+    "slug": "michelsen-alex",
+    "shortName": "A. Michelsen",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 5628,
+    "playerTeamInfo": {
+      "id": 5333
+    },
+    "nameCode": "MIC",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "US",
+      "alpha3": "USA",
+      "name": "USA",
+      "slug": "usa"
+    },
+    "id": 406728,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "أليكس ميشيلسن",
+        "bn": "অ্যালেক্স মিশেলসেন",
+        "hi": "एलेक्स मिकेलसन"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. ميشيلسن"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 3,
+    "period2": 4,
+    "point": "0",
+    "normaltime": 0
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772754759
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772757154
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15655158,
+  "slug": "alex-michelsen-daniel-merida",
+  "startTimestamp": 1772752200,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

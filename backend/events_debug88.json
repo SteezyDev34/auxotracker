@@ -1,0 +1,229 @@
+{
+  "firstToServe": 2,
+  "tournament": {
+    "name": "Thionville, France",
+    "slug": "thionville-france",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Thionville, France",
+      "slug": "atp-challenger-thionville-france-men-singles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 171,
+      "groundType": "Hardcourt indoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25268,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تيونفيل، فرنسا"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176043
+  },
+  "season": {
+    "name": "ATP Challenger Thionville, France Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87363
+  },
+  "roundInfo": {
+    "round": 5,
+    "name": "Round of 16",
+    "cupRoundType": 8
+  },
+  "customId": "dQrstJQb",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Pierre-Hugues Herbert",
+    "slug": "herbert-pierre-hugues",
+    "shortName": "P. Herbert",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 3172,
+    "playerTeamInfo": {
+      "id": 40
+    },
+    "nameCode": "HER",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "FR",
+      "alpha3": "FRA",
+      "name": "France",
+      "slug": "france"
+    },
+    "id": 44553,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "بيير-يوغ هيربرت",
+        "bn": "পিয়েরে হিউজ হারবার্ট",
+        "hi": "पियरे ह्यूजेस हर्बर्ट",
+        "ru": "Херберт, Пьерр Хьюз"
+      },
+      "shortNameTranslation": {
+        "ar": "ب. هيربرت"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Otto Virtanen",
+    "slug": "virtanen-otto",
+    "shortName": "O. Virtanen",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2949,
+    "playerTeamInfo": {
+      "id": 2945
+    },
+    "nameCode": "VIR",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "FI",
+      "alpha3": "FIN",
+      "name": "Finland",
+      "slug": "finland"
+    },
+    "id": 229218,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "أوتو فيرتانين",
+        "bn": "অটো ভির্তানেন",
+        "hi": "ओट्टो विरतानन",
+        "ru": "Виртанен, Отто"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. فيرتانين"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 5,
+    "period2": 4,
+    "point": "15",
+    "normaltime": 0
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772718824
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772721435
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624622,
+  "slug": "otto-virtanen-pierre-hugues-herbert",
+  "startTimestamp": 1772715300,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt indoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

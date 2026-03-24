@@ -1,0 +1,220 @@
+{
+  "tournament": {
+    "name": "ITF M25 Faro Men",
+    "slug": "itf-m25-faro-men",
+    "category": {
+      "name": "ITF Men",
+      "slug": "itf-men",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 785,
+      "flag": "itf-men",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "اتحاد التنس الدولي للرجال",
+          "ru": "Мужской мировой теннисный тур ITF"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "ITF M25 Faro Men",
+      "slug": "itf-m25-faro-men",
+      "category": {
+        "name": "ITF Men",
+        "slug": "itf-men",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 785,
+        "flag": "itf-men",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اتحاد التنس الدولي للرجال",
+            "ru": "Мужской мировой теннисный тур ITF"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 4,
+      "groundType": "Hardcourt outdoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25198,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "ITF M25 فارو رجال"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 146755,
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ITF M25 فارو للرجال"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "season": {
+    "name": "2026",
+    "year": "2026",
+    "editor": false,
+    "id": 90340
+  },
+  "roundInfo": {
+    "round": 5,
+    "name": "Round of 16",
+    "cupRoundType": 8
+  },
+  "customId": "jMgcsBunc",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Maxwell McKennon",
+    "slug": "mckennon-maxwell",
+    "shortName": "M. McKennon",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 192,
+    "playerTeamInfo": {
+      "id": 12115
+    },
+    "nameCode": "MCK",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "US",
+      "alpha3": "USA",
+      "name": "USA",
+      "slug": "usa"
+    },
+    "id": 266859,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ماكسويل مكينون"
+      },
+      "shortNameTranslation": {
+        "ar": "م. مكينون"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Tiago Torres",
+    "slug": "torres-tiago",
+    "shortName": "T. Torres",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 441,
+    "playerTeamInfo": {
+      "id": 18956
+    },
+    "nameCode": "TOR",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "PT",
+      "alpha3": "PRT",
+      "name": "Portugal",
+      "slug": "portugal"
+    },
+    "id": 283476,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "تياغو توريس"
+      },
+      "shortNameTranslation": {
+        "ar": "ت. توريس"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 5,
+    "period2": 4,
+    "point": "0"
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 6,
+    "point": "0"
+  },
+  "time": {},
+  "changes": {
+    "changes": [
+      "status.code",
+      "status.description",
+      "status.type"
+    ],
+    "changeTimestamp": 1772717580
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15663978,
+  "slug": "tiago-torres-maxwell-mckennon",
+  "startTimestamp": 1772711338,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

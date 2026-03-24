@@ -1,0 +1,343 @@
+{
+  "firstToServe": 2,
+  "tournament": {
+    "name": "Kigali, Rwanda, Doubles",
+    "slug": "kigali-rwanda-doubles",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Kigali 1, Rwanda, Doubles",
+      "slug": "atp-challenger-kigali-1-rwanda-men-doubles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 10,
+      "groundType": "Red clay",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 22025,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "كيغالي 1، رواندا، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176042
+  },
+  "season": {
+    "name": "ATP Challenger Kigali 1, Rwanda Men Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87357
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "zgjeswKqj",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Duda F / Kolar Z",
+    "slug": "duda-f-kolar-z",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2,
+    "nameCode": "D/K",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1166771,
+    "subTeams": [
+      {
+        "name": "Filip Duda",
+        "slug": "duda-filip",
+        "shortName": "F. Duda",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 78,
+        "nameCode": "DUD",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CZ",
+          "alpha3": "CZE",
+          "name": "Czechia",
+          "slug": "czechia"
+        },
+        "id": 210012,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فيليب دودا"
+          },
+          "shortNameTranslation": {
+            "ar": "ف. دودا"
+          }
+        }
+      },
+      {
+        "name": "Zdenek Kolar",
+        "slug": "kolar-zdenek",
+        "shortName": "Z. Kolar",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 1346,
+        "nameCode": "KOL",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CZ",
+          "alpha3": "CZE",
+          "name": "Czechia",
+          "slug": "czechia"
+        },
+        "id": 132558,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "زدينيك كولار",
+            "ru": "Колар, Зденек"
+          },
+          "shortNameTranslation": {
+            "ar": "ز. كولار",
+            "bn": "জেড. কোলার",
+            "hi": "ज़ेड. कोलार"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "awayTeam": {
+    "name": "Latinovic S / Pavlovic L",
+    "slug": "latinovic-s-pavlovic-l",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 5,
+    "nameCode": "L/P",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 522824,
+    "subTeams": [
+      {
+        "name": "Stefan Latinovic",
+        "slug": "latinovic-stefan",
+        "shortName": "S. Latinovic",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 173,
+        "nameCode": "LAT",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RS",
+          "alpha3": "SRB",
+          "name": "Serbia",
+          "slug": "serbia"
+        },
+        "id": 227427,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ستيفان لاتينوفيتش"
+          },
+          "shortNameTranslation": {
+            "ar": "س. لاتينوفيتش"
+          }
+        }
+      },
+      {
+        "name": "Luka Pavlovic",
+        "slug": "pavlovic-luka",
+        "shortName": "L. Pavlovic",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 1078,
+        "nameCode": "PAV",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "FR",
+          "alpha3": "FRA",
+          "name": "France",
+          "slug": "france"
+        },
+        "id": 224534,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "لوكا بافلوفيتش"
+          },
+          "shortNameTranslation": {
+            "ar": "ل. بافلوفيتش"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "لاتينوفيتش س / بافلوفيتش ل"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "homeScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 4,
+    "period2": 3,
+    "point": "15",
+    "normaltime": 0
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772719967
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772722083
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624596,
+  "slug": "duda-kolar-latinovic-pavlovic",
+  "startTimestamp": 1772717400,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

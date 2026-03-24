@@ -1,0 +1,210 @@
+{
+  "tournament": {
+    "name": "Indian Wells, USA",
+    "slug": "indian-wells-usa",
+    "category": {
+      "name": "WTA",
+      "slug": "wta",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 6,
+      "flag": "wta",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة لاعبات التنس",
+          "bn": "ডব্লিউটিএ",
+          "hi": "चैलेंजर",
+          "ru": "WTA"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells",
+      "slug": "indian-wells",
+      "category": {
+        "name": "WTA",
+        "slug": "wta",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 6,
+        "flag": "wta",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة لاعبات التنس",
+            "bn": "ডব্লিউটিএ",
+            "hi": "चैलेंजर",
+            "ru": "WTA"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 2856,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2619,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "إنديان ويلز",
+          "bn": "ইন্ডিয়ান ওয়েলস",
+          "hi": "इंडियन वेल्स"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176097
+  },
+  "season": {
+    "name": "WTA Indian Wells, USA Women Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 85596
+  },
+  "roundInfo": {
+    "round": 32,
+    "name": "Round of 64"
+  },
+  "customId": "iJCsGqJb",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Anastasia Potapova",
+    "slug": "potapova-anastasia",
+    "shortName": "A. Potapova",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 5924,
+    "playerTeamInfo": {
+      "id": 268
+    },
+    "nameCode": "POT",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "AT",
+      "alpha3": "AUT",
+      "name": "Austria",
+      "slug": "austria"
+    },
+    "id": 210831,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "أنستازيا بوتابوفا",
+        "bn": "আনাস্তাসিয়া পোটাপোভা",
+        "hi": "अनास्तासिया पोटापोवा",
+        "ru": "Потапова, Анастасия"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. بوتابوفا"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Jasmine Paolini",
+    "slug": "paolini-jasmine",
+    "shortName": "J. Paolini",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 37406,
+    "playerTeamInfo": {
+      "id": 601
+    },
+    "nameCode": "PAO",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "IT",
+      "alpha3": "ITA",
+      "name": "Italy",
+      "slug": "italy"
+    },
+    "id": 69208,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ياسمين باوليني",
+        "bn": "জেসমিন পাওলিনী",
+        "hi": "जैस्मीन पाओलिनी",
+        "ru": "Паолини, Жасмин"
+      },
+      "shortNameTranslation": {
+        "ar": "ي. باوليني"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15630124,
+  "slug": "anastasia-potapova-jasmine-paolini",
+  "startTimestamp": 1772832000,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

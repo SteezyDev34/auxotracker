@@ -1,0 +1,202 @@
+{
+  "tournament": {
+    "name": "ITF M15 Heraklion Men",
+    "slug": "itf-m15-heraklion-men",
+    "category": {
+      "name": "ITF Men",
+      "slug": "itf-men",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 785,
+      "flag": "itf-men",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "اتحاد التنس الدولي للرجال",
+          "ru": "Мужской мировой теннисный тур ITF"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "ITF M15 Heraklion Men",
+      "slug": "itf-m15-heraklion-men",
+      "category": {
+        "name": "ITF Men",
+        "slug": "itf-men",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 785,
+        "flag": "itf-men",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اتحاد التنس الدولي للرجال",
+            "ru": "Мужской мировой теннисный тур ITF"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 18,
+      "groundType": "Hard",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25561,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "بطولة ITF M15 هيراكليون للرجال"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 148116,
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ITF M15 هيراكليون الرجال"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "season": {
+    "name": "2026",
+    "year": "2026",
+    "editor": false,
+    "id": 90359
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "YNEbsWkYb",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Luca Staeheli",
+    "slug": "staeheli-luca",
+    "shortName": "L. Staeheli",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 154,
+    "playerTeamInfo": {
+      "id": 3029
+    },
+    "nameCode": "STA",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "CH",
+      "alpha3": "CHE",
+      "name": "Switzerland",
+      "slug": "switzerland"
+    },
+    "id": 245546,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "لوكا ستاهايلي"
+      },
+      "shortNameTranslation": {
+        "ar": "ل. ستاهايلي"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Matt Kuhar",
+    "slug": "kuhar-matt",
+    "shortName": "M. Kuhar",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 206,
+    "playerTeamInfo": {
+      "id": 5155
+    },
+    "nameCode": "KUH",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "US",
+      "alpha3": "USA",
+      "name": "USA",
+      "slug": "usa"
+    },
+    "id": 199448,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "مات كوهار"
+      },
+      "shortNameTranslation": {
+        "ar": "م. كوهار"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15670550,
+  "slug": "luca-staeheli-matt-kuhar",
+  "startTimestamp": 1772784000,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hard",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

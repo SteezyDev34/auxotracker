@@ -1,0 +1,230 @@
+{
+  "firstToServe": 2,
+  "tournament": {
+    "name": "Indian Wells, USA",
+    "slug": "indian-wells-usa",
+    "category": {
+      "name": "WTA",
+      "slug": "wta",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 6,
+      "flag": "wta",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة لاعبات التنس",
+          "bn": "ডব্লিউটিএ",
+          "hi": "चैलेंजर",
+          "ru": "WTA"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells",
+      "slug": "indian-wells",
+      "category": {
+        "name": "WTA",
+        "slug": "wta",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 6,
+        "flag": "wta",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة لاعبات التنس",
+            "bn": "ডব্লিউটিএ",
+            "hi": "चैलेंजर",
+            "ru": "WTA"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 2856,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2619,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "إنديان ويلز",
+          "bn": "ইন্ডিয়ান ওয়েলস",
+          "hi": "इंडियन वेल्स"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176097
+  },
+  "season": {
+    "name": "WTA Indian Wells, USA Women Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 85596
+  },
+  "roundInfo": {
+    "round": 64,
+    "name": "Round of 128"
+  },
+  "customId": "mjfbsPpCb",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Francesca Jones",
+    "slug": "jones-francesca",
+    "shortName": "F. Jones",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1889,
+    "playerTeamInfo": {
+      "id": 3290
+    },
+    "nameCode": "JON",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "GB",
+      "alpha3": "GBR",
+      "name": "United Kingdom",
+      "slug": "united-kingdom"
+    },
+    "id": 193290,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "فرانسيسكا جونز",
+        "bn": "ফ্রান্সেসকা জোন্স",
+        "hi": "फ्रांसिस्का जोन्स",
+        "ru": "Джонс, Франческа"
+      },
+      "shortNameTranslation": {
+        "ar": "ف. جونز"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Kayla Day",
+    "slug": "day-kayla",
+    "shortName": "K. Day",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 823,
+    "playerTeamInfo": {
+      "id": 862
+    },
+    "nameCode": "DAY",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "US",
+      "alpha3": "USA",
+      "name": "USA",
+      "slug": "usa"
+    },
+    "id": 137962,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "كايللا داي",
+        "bn": "কাইল ডে",
+        "hi": "कायला डे",
+        "ru": "Дэй, Кайла"
+      },
+      "shortNameTranslation": {
+        "ar": "ك. داي"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 3,
+    "period2": 1,
+    "point": "15",
+    "normaltime": 0
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772748029
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772749842
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15654905,
+  "slug": "francesca-jones-kayla-day",
+  "startTimestamp": 1772744700,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

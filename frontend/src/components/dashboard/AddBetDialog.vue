@@ -1,25 +1,56 @@
 <template>
-  <Dialog v-model:visible="dialogVisible" modal header="Ajouter un pari" :style="{ width: '90vw', maxWidth: '600px' }" @hide="closeDialog" @show="onDialogShow">
-    <AddBetForm ref="addBetFormRef" @bet-created="onBetCreated" @closeDialog="closeDialog" />
+  <Dialog
+    v-model:visible="dialogVisible"
+    modal
+    :header="dialogHeader"
+    :style="{ width: '90vw', maxWidth: '600px' }"
+    @hide="closeDialog"
+    @show="onDialogShow"
+  >
+    <AddBetForm
+      ref="addBetFormRef"
+      :editing-bet="editingBet"
+      @bet-created="onBetCreated"
+      @closeDialog="closeDialog"
+    />
   </Dialog>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import Dialog from 'primevue/dialog';
-import AddBetForm from '@/components/add-bet/AddBetForm.vue';
+import { ref, watch, computed } from "vue";
+import Dialog from "primevue/dialog";
+import AddBetForm from "@/components/add-bet/AddBetForm.vue";
 
 const props = defineProps({
-  visible: Boolean
+  visible: Boolean,
+  editingBet: {
+    type: Object,
+    default: null,
+  },
 });
-const emit = defineEmits(['update:visible', 'bet-created']);
+const emit = defineEmits(["update:visible", "bet-created"]);
 
 const dialogVisible = ref(props.visible);
 const addBetFormRef = ref(null);
+const editingBet = ref(props.editingBet);
 
-watch(() => props.visible, (val) => {
-  dialogVisible.value = val;
+const dialogHeader = computed(() => {
+  return editingBet.value ? "Modifier le pari" : "Ajouter un pari";
 });
+
+watch(
+  () => props.visible,
+  (val) => {
+    dialogVisible.value = val;
+  }
+);
+
+watch(
+  () => props.editingBet,
+  (val) => {
+    editingBet.value = val;
+  }
+);
 
 /**
  * Gérer l'ouverture de la modal
@@ -33,11 +64,11 @@ function onDialogShow() {
 
 function closeDialog() {
   dialogVisible.value = false;
-  emit('update:visible', false);
+  emit("update:visible", false);
 }
 
 function onBetCreated(bet) {
-  emit('bet-created', bet);
+  emit("bet-created", bet);
   closeDialog();
 }
 </script>

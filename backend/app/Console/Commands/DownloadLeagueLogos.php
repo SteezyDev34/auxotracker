@@ -30,40 +30,40 @@ class DownloadLeagueLogos extends Command
     {
         $leagueId = $this->argument('league_id');
         $delay = (int) $this->option('delay');
-        
+
         $this->line("🚀 Début du téléchargement des logos de ligues");
         $this->line("⏱️  Délai entre requêtes: {$delay} seconde(s)");
         $this->line("");
-        
+
         if ($leagueId) {
             // Télécharger les logos d'une ligue spécifique
-            return $this->downloadSingleLeagueLogos($logoService, $leagueId);
+            return $this->downloadSingleLeagueLogos($logoService, $leagueId, (bool)$this->option('force'));
         }
-        
+
         // Récupérer les ligues selon les critères
         $query = League::whereNotNull('sofascore_id');
-        
+
         if ($this->option('empty-img')) {
             $this->info('🔍 Filtrage des ligues avec le champ img vide uniquement...');
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->whereNull('img')
-                  ->orWhere('img', '')
-                  ->orWhere('img', 'NOT LIKE', '%league_logos%');
+                    ->orWhere('img', '')
+                    ->orWhere('img', 'NOT LIKE', '%league_logos%');
             });
         }
-        
+
         $leagues = $query->get();
-        
+
         if ($leagues->isEmpty()) {
             $this->warn('Aucune ligue avec un sofascore_id trouvée.');
             return 0;
         }
-        
+
         $this->info("Traitement de {$leagues->count()} ligues...");
-        
+
         $progressBar = $this->output->createProgressBar($leagues->count());
         $progressBar->start();
-        
+
         $stats = [
             'success' => 0,
             'failed' => 0,
@@ -73,45 +73,27 @@ class DownloadLeagueLogos extends Command
             'dark_only' => 0,
             'both' => 0
         ];
-        
+
         foreach ($leagues as $league) {
-            // Vérifier si les logos existent déjà (fichiers physiques ou champ img renseigné)
-            $lightExists = Storage::disk('public')->exists("league_logos/{$league->id}.png");
-            $darkExists = Storage::disk('public')->exists("league_logos/{$league->id}-dark.png");
-            $imgFieldExists = !empty($league->img) && Storage::disk('public')->exists($league->img);
-            
-            if (!$this->option('force') && ($lightExists || $darkExists || $imgFieldExists)) {
-                $stats['skipped']++;
-                // Mettre à jour le champ img si nécessaire même pour les logos ignorés
-                $result = $logoService->ensureLeagueLogos($league);
-                if ($result && isset($result['img_updated']) && $result['img_updated']) {
+            $result = $logoService->ensureLeagueLogos($league, (bool)$this->option('force'));
+            if ($result) {
+                $stats['success']++;
+                if (isset($result['img_updated']) && $result['img_updated']) {
                     $stats['img_updated']++;
                 }
-            } else {
-                $result = $logoService->ensureLeagueLogos($league);
-                
-                if ($result) {
-                    $stats['success']++;
-                    
-                    // Compter les mises à jour du champ img
-                    if (isset($result['img_updated']) && $result['img_updated']) {
-                        $stats['img_updated']++;
-                    }
-                    
-                    if (isset($result['light']) && isset($result['dark'])) {
-                        $stats['both']++;
-                    } elseif (isset($result['light'])) {
-                        $stats['light_only']++;
-                    } elseif (isset($result['dark'])) {
-                        $stats['dark_only']++;
-                    }
-                } else {
-                    $stats['failed']++;
+                if (isset($result['light']) && isset($result['dark'])) {
+                    $stats['both']++;
+                } elseif (isset($result['light'])) {
+                    $stats['light_only']++;
+                } elseif (isset($result['dark'])) {
+                    $stats['dark_only']++;
                 }
+            } else {
+                $stats['failed']++;
             }
-            
+
             $progressBar->advance();
-            
+
             // Pause pour éviter de surcharger l'API
             if ($delay > 0) {
                 sleep($delay);
@@ -119,10 +101,10 @@ class DownloadLeagueLogos extends Command
                 usleep(500000); // 0.5 seconde par défaut
             }
         }
-        
+
         $progressBar->finish();
         $this->newLine(2);
-        
+
         // Afficher les statistiques
         $this->info('Téléchargement terminé!');
         $this->table(
@@ -138,53 +120,38 @@ class DownloadLeagueLogos extends Command
                 ['Total', $leagues->count()]
             ]
         );
-        
+
         return 0;
     }
 
     /**
      * Télécharge les logos d'une ligue spécifique
-     * 
+     *
      * @param LeagueLogoService $logoService
      * @param int $leagueId
      * @return int
      */
-    private function downloadSingleLeagueLogos(LeagueLogoService $logoService, int $leagueId): int
+    private function downloadSingleLeagueLogos(LeagueLogoService $logoService, int $leagueId, bool $force = false): int
     {
         $this->info("Téléchargement des logos pour la ligue ID: {$leagueId}");
-        
+
         try {
             $league = League::findOrFail($leagueId);
-            
+
             if (!$league->sofascore_id) {
                 $this->error("La ligue '{$league->name}' n'a pas de sofascore_id défini.");
                 return 1;
             }
-            
-            // Vérifier si les logos existent déjà (fichiers physiques ou champ img renseigné)
-            $lightExists = Storage::disk('public')->exists("league_logos/{$league->id}.png");
-            $darkExists = Storage::disk('public')->exists("league_logos/{$league->id}-dark.png");
-            $imgFieldExists = !empty($league->img) && Storage::disk('public')->exists($league->img);
-            
-            if (!$this->option('force') && ($lightExists || $darkExists || $imgFieldExists)) {
-                $this->info("Les logos de la ligue '{$league->name}' existent déjà. Utilisez --force pour forcer le téléchargement.");
-                // Mettre à jour le champ img si nécessaire même si on ne télécharge pas
-                $result = $logoService->ensureLeagueLogos($league);
-                if ($result && isset($result['img_updated']) && $result['img_updated']) {
-                    $this->info("📝 Champ img mis à jour pour la ligue '{$league->name}'");
-                }
-                return 0;
-            }
-            
-            $result = $logoService->ensureLeagueLogos($league);
-            
+
+            $result = $logoService->ensureLeagueLogos($league, $force);
+
             if ($result) {
                 $this->info("✅ Logos téléchargés avec succès pour la ligue '{$league->name}'");
-                
+
                 if (isset($result['img_updated']) && $result['img_updated']) {
                     $this->info("📝 Champ img mis à jour");
                 }
-                
+
                 if (isset($result['light']) && isset($result['dark'])) {
                     $this->info("📁 Logos light et dark téléchargés");
                 } elseif (isset($result['light'])) {
@@ -192,13 +159,12 @@ class DownloadLeagueLogos extends Command
                 } elseif (isset($result['dark'])) {
                     $this->info("📁 Logo dark téléchargé");
                 }
-                
+
                 return 0;
             } else {
                 $this->error("❌ Échec du téléchargement des logos pour la ligue '{$league->name}'");
                 return 1;
             }
-            
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             $this->error("Ligue avec l'ID {$leagueId} introuvable.");
             return 1;

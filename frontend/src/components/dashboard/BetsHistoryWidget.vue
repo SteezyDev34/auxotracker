@@ -1,15 +1,16 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { BetService } from '@/service/BetService';
-import { SportService } from '@/service/SportService';
-import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import AddBetDialog from './AddBetDialog.vue';
-import Button from 'primevue/button';
-import Chip from 'primevue/chip';
-import Tooltip from 'primevue/tooltip';
-import { useBetResults } from '@/composables/useBetResults';
-import { useLayout } from '@/layout/composables/layout';
+import { ref, onMounted, computed } from "vue";
+import { BetService } from "@/service/BetService";
+import { SportService } from "@/service/SportService";
+import { format, parseISO, startOfWeek, endOfWeek } from "date-fns";
+import { fr } from "date-fns/locale";
+import AddBetDialog from "./AddBetDialog.vue";
+import Button from "primevue/button";
+import Chip from "primevue/chip";
+import Tooltip from "primevue/tooltip";
+import { useBetResults } from "@/composables/useBetResults";
+import { useLayout } from "@/layout/composables/layout";
+import { useAuth } from "@/composables/useAuth";
 
 // Enregistrement des directives
 const vTooltip = Tooltip;
@@ -18,11 +19,13 @@ const vTooltip = Tooltip;
 const bets = ref([]);
 const sports = ref([]);
 const loading = ref(false);
-const error = ref('');
+const error = ref("");
 const expandedMonths = ref(new Set());
 const expandedBets = ref(new Set());
 const showAddBetDialog = ref(false);
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
+const editingBet = ref(null);
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
 
 // Composable pour les résultats de paris
 const { resultValues, getResultClass, getResultLabel } = useBetResults();
@@ -30,11 +33,13 @@ const { resultValues, getResultClass, getResultLabel } = useBetResults();
 // Composable pour le thème
 const { isDarkTheme } = useLayout();
 
+// Composable pour l'authentification
+const { canCreateBets } = useAuth();
 
 // Fonction utilitaire pour récupérer les informations d'un sport par son ID
 function getSportInfo(sportId) {
   if (!sportId || !sports.value.length) return null;
-  return sports.value.find(sport => sport.id === sportId);
+  return sports.value.find((sport) => sport.id === sportId);
 }
 
 // Charger tous les sports
@@ -43,23 +48,30 @@ async function loadSports() {
     const sportsData = await SportService.getSports();
     sports.value = sportsData;
   } catch (e) {
-    console.error('❌ Erreur lors du chargement des sports:', e);
+    console.error("❌ Erreur lors du chargement des sports:", e);
   }
 }
 
 // Charger tous les paris
 async function loadBets() {
   loading.value = true;
-  error.value = '';
+  error.value = "";
   try {
     const response = await BetService.getBets();
     if (response.success) {
-      bets.value = response.data || [];
+      const rawBets = Array.isArray(response.data) ? response.data : [];
+      // Tri simple par date de pari croissante (du plus ancien au plus récent)
+      const sortedBets = [...rawBets].sort((a, b) => {
+        const betDateA = a?.bet_date ? new Date(a.bet_date).getTime() : 0;
+        const betDateB = b?.bet_date ? new Date(b.bet_date).getTime() : 0;
+        return betDateA - betDateB;
+      });
+      bets.value = sortedBets;
     } else {
-      error.value = 'Erreur lors du chargement des paris';
+      error.value = "Erreur lors du chargement des paris";
     }
   } catch (e) {
-    error.value = 'Impossible de charger les paris.';
+    error.value = "Impossible de charger les paris.";
   } finally {
     loading.value = false;
   }
@@ -67,90 +79,137 @@ async function loadBets() {
 
 // Organiser les paris par mois
 const betsByMonth = computed(() => {
-  const grouped = {};
-  
-  bets.value.forEach(bet => {
+  const grouped = new Map();
+
+  bets.value.forEach((bet) => {
+    if (!bet?.bet_date) {
+      return;
+    }
+
     const betDate = parseISO(bet.bet_date);
-    const monthKey = format(betDate, 'yyyy-MM');
-    const monthLabel = format(betDate, 'MMMM yyyy', { locale: fr });
-    
-    if (!grouped[monthKey]) {
-      grouped[monthKey] = {
+    const monthKey = format(betDate, "yyyy-MM");
+    const monthLabel = format(betDate, "MMMM yyyy", { locale: fr });
+    const lastUpdated = bet?.updated_at
+      ? new Date(bet.updated_at).getTime()
+      : new Date(bet.bet_date).getTime();
+
+    if (!grouped.has(monthKey)) {
+      grouped.set(monthKey, {
+        key: monthKey,
         label: monthLabel,
         bets: [],
         totalProfit: 0,
-        totalStake: 0
-      };
+        totalStake: 0,
+        latestUpdate: lastUpdated,
+      });
     }
-    
-    grouped[monthKey].bets.push(bet);
-    grouped[monthKey].totalStake += parseFloat(bet.stake || 0);
-    
-    // Calculer le profit/perte
+
+    const monthGroup = grouped.get(monthKey);
+    monthGroup.bets.push(bet);
+    monthGroup.totalStake += parseFloat(bet.stake || 0);
+
     if (bet.result === resultValues.WIN) {
-      grouped[monthKey].totalProfit += (parseFloat(bet.stake) * parseFloat(bet.global_odds)) - parseFloat(bet.stake);
+      monthGroup.totalProfit +=
+        parseFloat(bet.stake) * parseFloat(bet.global_odds) -
+        parseFloat(bet.stake);
     } else if (bet.result === resultValues.LOST) {
-      grouped[monthKey].totalProfit -= parseFloat(bet.stake);
+      monthGroup.totalProfit -= parseFloat(bet.stake);
     }
+
+    monthGroup.latestUpdate = Math.max(monthGroup.latestUpdate, lastUpdated);
   });
-  
-  // Trier par mois décroissant
-  return Object.entries(grouped)
-    .sort(([a], [b]) => b.localeCompare(a))
-    .map(([key, value]) => ({ key, ...value }));
+
+  return Array.from(grouped.values())
+    .sort((a, b) => b.key.localeCompare(a.key))
+    .map(({ latestUpdate, ...rest }) => rest);
 });
-
-
 
 // Organiser les paris d'un mois par semaine
 function getBetsByWeek(monthBets) {
-  const grouped = {};
-  
-  monthBets.forEach(bet => {
-    const betDate = parseISO(bet.bet_date);
-    const weekStart = startOfWeek(betDate, { weekStartsOn: 1 }); // Lundi
-    const weekKey = format(weekStart, 'yyyy-MM-dd');
-    const weekLabel = `Semaine ${format(weekStart, 'w', { locale: fr })}`;
-    const dateRange = `${format(weekStart, 'dd MMM', { locale: fr })} - ${format(endOfWeek(weekStart, { weekStartsOn: 1 }), 'dd MMM', { locale: fr })}`;
-    
-    if (!grouped[weekKey]) {
-      grouped[weekKey] = {
-        label: weekLabel,
-        dateRange: dateRange,
-        bets: []
-      };
+  const grouped = new Map();
+
+  monthBets.forEach((bet) => {
+    if (!bet?.bet_date) {
+      return;
     }
-    
-    grouped[weekKey].bets.push(bet);
+
+    const betDate = parseISO(bet.bet_date);
+    const weekStart = startOfWeek(betDate, { weekStartsOn: 1 });
+    const weekKey = format(weekStart, "yyyy-MM-dd");
+    const weekLabel = `Semaine ${format(weekStart, "w", { locale: fr })}`;
+    const dateRange = `${format(weekStart, "dd MMM", { locale: fr })} - ${format(endOfWeek(weekStart, { weekStartsOn: 1 }), "dd MMM", { locale: fr })}`;
+    const lastUpdated = bet?.updated_at
+      ? new Date(bet.updated_at).getTime()
+      : new Date(bet.bet_date).getTime();
+
+    if (!grouped.has(weekKey)) {
+      grouped.set(weekKey, {
+        key: weekKey,
+        label: weekLabel,
+        dateRange,
+        bets: [],
+        latestUpdate: lastUpdated,
+      });
+    }
+
+    const weekGroup = grouped.get(weekKey);
+    weekGroup.bets.push(bet);
+    weekGroup.latestUpdate = Math.max(weekGroup.latestUpdate, lastUpdated);
   });
-  
-  return Object.entries(grouped)
-    .sort(([a], [b]) => b.localeCompare(a))
-    .map(([key, value]) => ({ key, ...value }));
+
+  return Array.from(grouped.values())
+    .sort((a, b) => b.key.localeCompare(a.key))
+    .map(({ latestUpdate, ...rest }) => {
+      // Trier les paris de la semaine du plus ancien au plus récent
+      rest.bets = [...rest.bets].sort((betA, betB) => {
+        const dateA = betA?.bet_date ? new Date(betA.bet_date).getTime() : 0;
+        const dateB = betB?.bet_date ? new Date(betB.bet_date).getTime() : 0;
+        return dateB - dateA;
+      });
+      return rest;
+    });
 }
 
 // Organiser les paris d'une semaine par jour
 function getBetsByDay(weekBets) {
-  const grouped = {};
-  
-  weekBets.forEach(bet => {
-    const betDate = parseISO(bet.bet_date);
-    const dayKey = format(betDate, 'yyyy-MM-dd');
-    const dayLabel = format(betDate, 'EEEE dd MMMM', { locale: fr });
-    
-    if (!grouped[dayKey]) {
-      grouped[dayKey] = {
-        label: dayLabel,
-        bets: []
-      };
+  const grouped = new Map();
+
+  weekBets.forEach((bet) => {
+    if (!bet?.bet_date) {
+      return;
     }
-    
-    grouped[dayKey].bets.push(bet);
+
+    const betDate = parseISO(bet.bet_date);
+    const dayKey = format(betDate, "yyyy-MM-dd");
+    const dayLabel = format(betDate, "EEEE dd MMMM", { locale: fr });
+    const lastUpdated = bet?.updated_at
+      ? new Date(bet.updated_at).getTime()
+      : new Date(bet.bet_date).getTime();
+
+    if (!grouped.has(dayKey)) {
+      grouped.set(dayKey, {
+        key: dayKey,
+        label: dayLabel,
+        bets: [],
+        latestUpdate: lastUpdated,
+      });
+    }
+
+    const dayGroup = grouped.get(dayKey);
+    dayGroup.bets.push(bet);
+    dayGroup.latestUpdate = Math.max(dayGroup.latestUpdate, lastUpdated);
   });
-  
-  return Object.entries(grouped)
-    .sort(([a], [b]) => b.localeCompare(a))
-    .map(([key, value]) => ({ key, ...value }));
+
+  return Array.from(grouped.values())
+    .sort((a, b) => b.key.localeCompare(a.key))
+    .map((dayObj) => {
+      dayObj.bets = [...dayObj.bets].sort((betA, betB) => {
+        const dateA = betA?.bet_date ? new Date(betA.bet_date).getTime() : 0;
+        const dateB = betB?.bet_date ? new Date(betB.bet_date).getTime() : 0;
+        return dateA - dateB;
+      });
+      return dayObj;
+    });
 }
 
 // Basculer l'expansion d'un mois
@@ -171,44 +230,48 @@ function toggleBetEvents(betId) {
   }
 }
 
-
-
 // Obtenir la couleur de la barre pour le résultat du pari
 function getResultBarColor(result) {
   switch (result) {
-    case resultValues.WIN: return 'bg-green-500 dark:bg-green-400';
-    case resultValues.LOST: return 'bg-red-500 dark:bg-red-400';
-    case 'pending': return 'bg-surface-300 dark:bg-surface-600';
-    case resultValues.VOID: return 'bg-surface-500 dark:bg-surface-400';
-    case 'refunded': return 'bg-primary-500 dark:bg-primary-400';
-    default: return 'bg-surface-400 dark:bg-surface-500';
+    case resultValues.WIN:
+      return "bg-green-500 dark:bg-green-400";
+    case resultValues.LOST:
+      return "bg-red-500 dark:bg-red-400";
+    case "pending":
+      return "bg-surface-300 dark:bg-surface-600";
+    case resultValues.VOID:
+      return "bg-surface-500 dark:bg-surface-400";
+    case "refunded":
+      return "bg-primary-500 dark:bg-primary-400";
+    default:
+      return "bg-surface-400 dark:bg-surface-500";
   }
 }
 
 // Obtenir l'icône SVG pour le résultat du pari
 function getResultIcon(result) {
   switch (result) {
-    case resultValues.WIN: 
+    case resultValues.WIN:
       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
       </svg>`;
-    case resultValues.LOST: 
+    case resultValues.LOST:
       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
       </svg>`;
-    case resultValues.VOID: 
-       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
+    case resultValues.VOID:
+      return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
          <path d="M4,11H20V13H4V11Z"/>
        </svg>`;
-    case 'pending':
-       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
+    case "pending":
+      return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
          <path d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.24,7.76C15.07,6.58 13.53,6 12,6V12L7.76,16.24C10.1,18.58 13.9,18.58 16.24,16.24C18.59,13.9 18.59,10.1 16.24,7.76Z"/>
        </svg>`;
-    case 'refunded': 
+    case "refunded":
       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
         <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
       </svg>`;
-    default: 
+    default:
       return `<svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="currentColor">
         <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/>
       </svg>`;
@@ -218,7 +281,10 @@ function getResultIcon(result) {
 // Calculer le profit/perte d'un pari
 function calculateProfitLoss(bet) {
   if (bet.result === resultValues.WIN) {
-    return (parseFloat(bet.stake) * parseFloat(bet.global_odds)) - parseFloat(bet.stake);
+    return (
+      parseFloat(bet.stake) * parseFloat(bet.global_odds) -
+      parseFloat(bet.stake)
+    );
   } else if (bet.result === resultValues.LOST) {
     return -parseFloat(bet.stake);
   }
@@ -227,31 +293,31 @@ function calculateProfitLoss(bet) {
 
 // Construire l'URL du logo d'une équipe
 function getTeamLogoUrl(team) {
-  if (!team || !team.img) return '';
+  if (!team || !team.img) return "";
   return `${apiBaseUrl}/storage/${team.img}`;
 }
 
 // Construire l'URL du logo d'une ligue
 function getLeagueLogoUrl(league) {
-  if (!league || !league.img) return '';
+  if (!league || !league.img) return "";
   return `${apiBaseUrl}/storage/${league.img}`;
 }
 
 // Construire l'URL du drapeau d'un pays
 function getCountryFlagUrl(country) {
-  if (!country || !country.flag) return '';
+  if (!country || !country.flag) return "";
   return `${apiBaseUrl}/storage/${country.flag}`;
 }
 
 // Obtenir l'icône du sport
 function getSportIcon(sport) {
-  if (!sport || !sport.icon) return '';
+  if (!sport || !sport.icon) return "";
   return `${apiBaseUrl}/storage/${sport.icon}`;
 }
 
 // Construire l'URL de l'icône d'un sport
 function getSportIconUrl(sport) {
-  if (!sport || !sport.img) return '';
+  if (!sport || !sport.img) return "";
   return `${apiBaseUrl}/storage/${sport.img}`;
 }
 
@@ -262,13 +328,13 @@ function isMultiEventBet(bet) {
 
 // Obtenir le nom du match pour un événement
 function getEventMatchName(event) {
-  if (!event.team1 || !event.team2) return 'Match non défini';
+  if (!event.team1 || !event.team2) return "Match non défini";
   return `${event.team1.name} - ${event.team2.name}`;
 }
 
 // Obtenir les informations du marché pour un événement
 function getEventMarketInfo(event) {
-  return event.market || 'Marché non défini';
+  return event.market || "Marché non défini";
 }
 
 // Obtenir le nom du match avec les logos des équipes
@@ -284,18 +350,23 @@ function getMatchName(bet) {
             </div>
           </div>
         `,
-        text: `Combiné ${bet.events.length} événements`
+        text: `Combiné ${bet.events.length} événements`,
       };
     }
-    
+
     // Si un seul événement
     const event = bet.events[0];
     if (event.team1 && event.team2) {
       // Utiliser l'URL de l'API pour accéder aux logos d'équipes
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
-      const team1Logo = event.team1.img ? `<img src="${apiBaseUrl}/storage/${event.team1.img}" alt="${event.team1.name}" class="w-6 h-6 rounded-full object-cover" />` : '';
-      const team2Logo = event.team2.img ? `<img src="${apiBaseUrl}/storage/${event.team2.img}" alt="${event.team2.name}" class="w-6 h-6 rounded-full object-cover" />` : '';
-      
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+      const team1Logo = event.team1.img
+        ? `<img src="${apiBaseUrl}/storage/${event.team1.img}" alt="${event.team1.name}" class="w-6 h-6 rounded-full object-cover" />`
+        : "";
+      const team2Logo = event.team2.img
+        ? `<img src="${apiBaseUrl}/storage/${event.team2.img}" alt="${event.team2.name}" class="w-6 h-6 rounded-full object-cover" />`
+        : "";
+
       return {
         html: `
           <div class="flex items-center gap-2">
@@ -306,13 +377,13 @@ function getMatchName(bet) {
              ${team2Logo}
           </div>
         `,
-        text: `${event.team1.name} - ${event.team2.name}`
+        text: `${event.team1.name} - ${event.team2.name}`,
       };
     }
   }
   return {
-    html: `<span>${bet.match_name || 'Match non spécifié'}</span>`,
-    text: bet.match_name || 'Match non spécifié'
+    html: `<span>${bet.match_name || "Match non spécifié"}</span>`,
+    text: bet.match_name || "Match non spécifié",
   };
 }
 
@@ -324,7 +395,7 @@ function getLeagueName(bet) {
       return event.league.name;
     }
   }
-  return 'Ligue non spécifiée';
+  return "Ligue non spécifiée";
 }
 
 // Obtenir les informations de la ligue
@@ -332,11 +403,14 @@ function getLeagueInfo(bet) {
   if (bet.events && bet.events.length > 0) {
     const event = bet.events[0];
     if (event.league) {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
-      
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+
       // Logo de la ligue
-      const leagueLogo = event.league.id ? `<img src="${apiBaseUrl}/storage/league_logos/${event.league.id}${isDarkTheme ? '-dark' : ''}.png" alt="${event.league.name}" class="w-4 h-4 rounded object-cover" />` : '';
-      
+      const leagueLogo = event.league.id
+        ? `<img src="${apiBaseUrl}/storage/league_logos/${event.league.id}${isDarkTheme ? "-dark" : ""}.png" alt="${event.league.name}" class="w-4 h-4 rounded object-cover" />`
+        : "";
+
       return {
         html: `
           <div class="flex items-center">
@@ -344,13 +418,13 @@ function getLeagueInfo(bet) {
             <span>${event.league.name}</span>
           </div>
         `,
-        text: event.league.name
+        text: event.league.name,
       };
     }
   }
   return {
-    html: '<span>Ligue non spécifiée</span>',
-    text: 'Ligue non spécifiée'
+    html: "<span>Ligue non spécifiée</span>",
+    text: "Ligue non spécifiée",
   };
 }
 
@@ -359,33 +433,32 @@ function getCountryInfo(bet) {
   if (bet.events && bet.events.length > 0) {
     // Si plusieurs événements (pari combiné)
     if (bet.events.length > 1) {
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
 
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
-      
       // Récupérer le sport du premier événement pour l'icône
       const firstEvent = bet.events[0];
-      let sportIcon = '';
+      let sportIcon = "";
 
-      
       if (firstEvent.league.sport_id) {
         const sportInfo = getSportInfo(firstEvent.league.sport_id);
         if (sportInfo && sportInfo.slug) {
-          sportIcon = `<img src="${apiBaseUrl}/storage/sport_icons/${sportInfo.slug}${isDarkTheme ? '-dark' : ''}.svg" alt="${sportInfo.name}" class="w-5 h-5 object-contain" onerror="this.style.display='none'" />`;
+          sportIcon = `<img src="${apiBaseUrl}/storage/sport_icons/${sportInfo.slug}${isDarkTheme ? "-dark" : ""}.svg" alt="${sportInfo.name}" class="w-5 h-5 object-contain" onerror="this.style.display='none'" />`;
         }
       }
-      
+
       // Icône de sport par défaut si aucune image trouvée
       if (!sportIcon) {
         sportIcon = `<svg viewBox="0 0 32 32" class="w-5 h-5" focusable="false" role="img">
           <path d="M16 0a16 16 0 100 32 16 16 0 000-32zm1 5l5-3 2 1 2 2 1 1 1 1v1l-1 4-5 2-5-4zM4 7l1-1 1-1 2-2 2-1 5 3v5l-5 4-5-2-1-4V7zm0 17l-1-1-1-2v-1l-1-1v-2l3-4 6 2 1 7-2 3zm16 7h-2-1a14 14 0 01-2 0h-1-1l-3-5 2-4h8l2 4zm11-12l-1 1v1l-1 2-1 1-5 1-2-3 1-7 6-2 3 4v2z"></path>
         </svg>`;
       }
-      
+
       // Collecter les pays uniques des événements
       const uniqueCountries = new Set();
       const uniqueLeagues = new Set();
-      
-      bet.events.forEach(event => {
+
+      bet.events.forEach((event) => {
         if (event.league) {
           if (event.league.country && event.league.country.id) {
             uniqueCountries.add(event.league.country.id);
@@ -395,14 +468,21 @@ function getCountryInfo(bet) {
           uniqueLeagues.add(event.league.name);
         }
       });
-      
+
       // Afficher les drapeaux des pays uniques (max 3)
-      const countryFlags = Array.from(uniqueCountries).slice(0, 3).map(countryId => 
-        `<img src="${apiBaseUrl}/storage/country_flags/${countryId}.png" alt="Pays" class="w-3 h-3 rounded object-cover" onerror="this.style.display='none'" />`
-      ).join('');
-      
-      const moreCountries = uniqueCountries.size > 3 ? `<span class="text-xs text-gray-500">+${uniqueCountries.size - 3}</span>` : '';
-      
+      const countryFlags = Array.from(uniqueCountries)
+        .slice(0, 3)
+        .map(
+          (countryId) =>
+            `<img src="${apiBaseUrl}/storage/country_flags/${countryId}.png" alt="Pays" class="w-3 h-3 rounded object-cover" onerror="this.style.display='none'" />`
+        )
+        .join("");
+
+      const moreCountries =
+        uniqueCountries.size > 3
+          ? `<span class="text-xs text-gray-500">+${uniqueCountries.size - 3}</span>`
+          : "";
+
       return {
         html: `
           <div class="flex items-center gap-1">
@@ -411,49 +491,52 @@ function getCountryInfo(bet) {
             ${moreCountries}
           </div>
         `,
-        text: `${uniqueCountries.size} pays`
+        text: `${uniqueCountries.size} pays`,
       };
     }
-    
+
     // Si un seul événement
     const event = bet.events[0];
     if (event.league) {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.auxotracker.lan';
-      
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+
       // Récupérer l'icône du sport
-      let sportIcon = '';
+      let sportIcon = "";
       if (event.league.sport_id) {
         const sportInfo = getSportInfo(event.league.sport_id);
         if (sportInfo && sportInfo.slug) {
-          sportIcon = `<img src="${apiBaseUrl}/storage/sport_icons/${sportInfo.slug}${isDarkTheme ? '-dark' : ''}.svg" alt="${sportInfo.name}" class="w-4 h-4 object-contain" onerror="this.style.display='none'" />`;
+          sportIcon = `<img src="${apiBaseUrl}/storage/sport_icons/${sportInfo.slug}${isDarkTheme ? "-dark" : ""}.svg" alt="${sportInfo.name}" class="w-4 h-4 object-contain" onerror="this.style.display='none'" />`;
         }
       }
-      
+
       // Icône de sport par défaut si aucune image trouvée
       if (!sportIcon) {
         sportIcon = `<svg viewBox="0 0 32 32" class="w-4 h-4" focusable="false" role="img">
           <path d="M16 0a16 16 0 100 32 16 16 0 000-32zm1 5l5-3 2 1 2 2 1 1 1 1v1l-1 4-5 2-5-4zM4 7l1-1 1-1 2-2 2-1 5 3v5l-5 4-5-2-1-4V7zm0 17l-1-1-1-2v-1l-1-1v-2l3-4 6 2 1 7-2 3zm16 7h-2-1a14 14 0 01-2 0h-1-1l-3-5 2-4h8l2 4zm11-12l-1 1v1l-1 2-1 1-5 1-2-3 1-7 6-2 3 4v2z"></path>
         </svg>`;
       }
-      
+
       // Vérifier différentes structures possibles pour le pays
       let countryId = null;
       let countryName = null;
-      
+
       if (event.league.country && event.league.country.id) {
         countryId = event.league.country.id;
         countryName = event.league.country.name;
       } else if (event.league.country_id) {
         countryId = event.league.country_id;
-        countryName = event.league.country_name || 'Pays';
+        countryName = event.league.country_name || "Pays";
       }
-      
+
       // Logo de la ligue
-      const leagueLogo = event.league.id ? `<img src="${apiBaseUrl}/storage/league_logos/${event.league.id}${isDarkTheme ? '-dark' : ''}.png" alt="${event.league.name}" class="w-4 h-4 rounded object-cover" />` : '';
-      
+      const leagueLogo = event.league.id
+        ? `<img src="${apiBaseUrl}/storage/league_logos/${event.league.id}${isDarkTheme ? "-dark" : ""}.png" alt="${event.league.name}" class="w-4 h-4 rounded object-cover" />`
+        : "";
+
       if (countryId && countryName) {
         const countryLogo = `<img src="${apiBaseUrl}/storage/country_flags/${countryId}.png" alt="${countryName}" class="w-4 h-4 rounded object-cover" onerror="this.style.display='none'" />`;
-        
+
         return {
           html: `
             <div class="flex items-center gap-1">
@@ -462,7 +545,7 @@ function getCountryInfo(bet) {
               ${leagueLogo}
             </div>
           `,
-          text: countryName
+          text: countryName,
         };
       } else {
         // Si pas de pays, afficher seulement l'icône de sport et la ligue
@@ -473,14 +556,14 @@ function getCountryInfo(bet) {
               ${leagueLogo}
             </div>
           `,
-          text: 'Sport'
+          text: "Sport",
         };
       }
     }
   }
   return {
-    html: 'tst',
-    text: ''
+    html: "",
+    text: "",
   };
 }
 
@@ -493,14 +576,14 @@ function getMarketInfo(bet) {
     if (bet.events.length > 1) {
       // Collecter les marchés uniques
       const uniqueMarkets = new Set();
-      bet.events.forEach(event => {
+      bet.events.forEach((event) => {
         if (event.market) {
           uniqueMarkets.add(event.market);
         } else if (event.type) {
           uniqueMarkets.add(event.type);
         }
       });
-      
+
       if (uniqueMarkets.size > 0) {
         const markets = Array.from(uniqueMarkets);
         if (markets.length === 1) {
@@ -509,9 +592,9 @@ function getMarketInfo(bet) {
           return `${markets.length} marchés différents`; // Marchés mixtes
         }
       }
-      return 'Marchés combinés';
+      return "Marchés combinés";
     }
-    
+
     // Si un seul événement
     const event = bet.events[0];
     if (event.market) {
@@ -521,17 +604,26 @@ function getMarketInfo(bet) {
     }
   }
   // Fallback vers bet_code si event.market n'est pas disponible
-  return bet.bet_code || bet.bet_type || 'Marché non spécifié';
+  return bet.bet_code || bet.bet_type || "Marché non spécifié";
 }
 
 // Gérer l'ajout d'un nouveau pari
 function openAddBetDialog() {
+  editingBet.value = null;
+  showAddBetDialog.value = true;
+}
+
+// Gérer l'édition d'un pari existant
+function openEditBetDialog(bet) {
+  editingBet.value = bet;
   showAddBetDialog.value = true;
 }
 
 function onBetCreated(newBet) {
-  // Recharger la liste des paris après ajout
+  // Recharger la liste des paris après ajout/modification
   loadBets();
+  // Réinitialiser le pari en cours d'édition
+  editingBet.value = null;
 }
 
 onMounted(() => {
@@ -545,8 +637,9 @@ onMounted(() => {
     <div class="card-header">
       <div class="flex justify-between items-center">
         <h5 class="text-xl font-semibold mb-0">Historique des Paris</h5>
-        <!-- Bouton avec animation de survol -->
-        <Button 
+        <!-- Bouton avec animation de survol - Visible uniquement pour les utilisateurs autorisés -->
+        <Button
+          v-if="canCreateBets"
           @click="openAddBetDialog"
           class="animated-add-button"
           severity="success"
@@ -559,43 +652,63 @@ onMounted(() => {
         </Button>
       </div>
     </div>
-    
+
     <div v-if="loading" class="p-6 text-center">
       <i class="pi pi-spin pi-spinner text-2xl"></i>
       <p class="mt-2 text-muted-color">Chargement des paris...</p>
     </div>
-    
+
     <div v-else-if="error" class="p-6 text-center text-red-600">
       <i class="pi pi-exclamation-triangle text-2xl"></i>
       <p class="mt-2">{{ error }}</p>
     </div>
-    
-    <div v-else-if="betsByMonth.length === 0" class="p-6 text-center text-muted-color">
+
+    <div
+      v-else-if="betsByMonth.length === 0"
+      class="p-6 text-center text-muted-color"
+    >
       <i class="pi pi-info-circle text-2xl"></i>
       <p class="mt-2">Aucun pari trouvé</p>
     </div>
-    
+
     <div v-else class="p-6">
       <!-- Liste des mois -->
       <div v-for="month in betsByMonth" :key="month.key" class="mb-4">
         <!-- En-tête du mois -->
-        <div 
+        <div
           @click="toggleMonth(month.key)"
           class="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg cursor-pointer transition-colors border-2 border-surface-200 dark:border-surface-700 hover:border-surface-300 dark:hover:border-surface-600"
         >
           <div class="flex items-center gap-3">
-            <i :class="expandedMonths.has(month.key) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="text-sm"></i>
+            <i
+              :class="
+                expandedMonths.has(month.key)
+                  ? 'pi pi-chevron-down'
+                  : 'pi pi-chevron-right'
+              "
+              class="text-sm"
+            ></i>
             <div>
-              <h6 class="font-semibold text-lg capitalize">{{ month.label }}</h6>
+              <h6 class="font-semibold text-lg capitalize">
+                {{ month.label }}
+              </h6>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-lg font-semibold" :class="month.totalProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-              {{ month.totalProfit >= 0 ? '+' : '' }}{{ month.totalProfit.toFixed(2) }}€
+            <div
+              class="text-lg font-semibold"
+              :class="
+                month.totalProfit >= 0
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-red-600 dark:text-red-400'
+              "
+            >
+              {{ month.totalProfit >= 0 ? "+" : ""
+              }}{{ month.totalProfit.toFixed(2) }}€
             </div>
           </div>
         </div>
-        
+
         <!-- Contenu du mois (semaines) -->
         <div v-if="expandedMonths.has(month.key)" class="ml-2 mt-3 space-y-4">
           <div v-for="week in getBetsByWeek(month.bets)" :key="week.key">
@@ -604,185 +717,366 @@ onMounted(() => {
               <div class="flex items-center gap-2">
                 <i class="pi pi-calendar text-sm text-muted-color"></i>
                 <div>
-                  <h6 class="font-medium text-sm text-surface-900 dark:text-surface-100">{{ week.label }}</h6>
+                  <h6
+                    class="font-medium text-sm text-surface-900 dark:text-surface-100"
+                  >
+                    {{ week.label }}
+                  </h6>
                 </div>
               </div>
             </div>
-            
+
             <!-- Contenu de la semaine (jours) -->
             <div class="ml-2 space-y-3">
               <div v-for="day in getBetsByDay(week.bets)" :key="day.key">
                 <!-- En-tête du jour -->
-                <div class="text-sm font-medium text-surface-700 dark:text-surface-300 mb-2 capitalize">{{ day.label }}</div>
-                
+                <div
+                  class="text-sm font-medium text-surface-700 dark:text-surface-300 mb-2 capitalize"
+                >
+                  {{ day.label }}
+                </div>
+
                 <!-- Paris du jour -->
                 <div class="space-y-2 mb-4">
-                  <div 
-                    v-for="bet in day.bets" 
+                  <div
+                    v-for="bet in day.bets"
                     :key="bet.id"
-                    class="flex bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg hover:shadow-sm transition-shadow"
+                    class="flex bg-surface-0 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-lg hover:shadow-sm transition-shadow cursor-pointer hover:border-primary-300 dark:hover:border-primary-600"
+                    @click="openEditBetDialog(bet)"
+                    v-tooltip.top="'Cliquer pour éditer ce pari'"
                   >
                     <!-- Contenu principal -->
                     <div class="flex-1 p-3 relative">
                       <!-- Événements du pari -->
-                      <div v-if="bet.events && bet.events.length > 0" class="mb-3">
+                      <div
+                        v-if="bet.events && bet.events.length > 0"
+                        class="mb-3"
+                      >
                         <!-- Si un seul événement -->
-                        <div v-if="bet.events.length === 1" class="bg-surface-50 dark:bg-surface-800 rounded-lg p-3">
+                        <div
+                          v-if="bet.events.length === 1"
+                          class="bg-surface-50 dark:bg-surface-800 rounded-lg p-3"
+                        >
                           <div class="event-card text-center">
                             <!-- Informations sport, pays et ligue -->
-                            <div class="flex items-center justify-center gap-2 mb-2">
+                            <div
+                              class="flex items-center justify-center gap-2 mb-2"
+                            >
                               <div v-html="getCountryInfo(bet).html"></div>
                               <!-- Nom de la ligue -->
-                              <div v-if="bet.events[0].league" class="flex items-center gap-1">
-                                <span class="text-xs text-surface-500 dark:text-surface-400">{{ bet.events[0].league.name }}</span>
+                              <div
+                                v-if="bet.events[0].league"
+                                class="flex items-center gap-1"
+                              >
+                                <span
+                                  class="text-xs text-surface-500 dark:text-surface-400"
+                                  >{{ bet.events[0].league.name }}</span
+                                >
                               </div>
                             </div>
                             <!-- Logo des équipes -->
-                            <div v-if="bet.events[0].team1 && bet.events[0].team2" class="flex items-center justify-center gap-2 mb-2">
-                              <div class="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300">
-                                <img 
-                                  v-if="bet.events[0].team1.img" 
-                                  :src="getTeamLogoUrl(bet.events[0].team1)" 
-                                  :alt="bet.events[0].team1.name" 
+                            <div
+                              v-if="bet.events[0].team1 && bet.events[0].team2"
+                              class="flex items-center justify-center gap-2 mb-2"
+                            >
+                              <div
+                                class="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300"
+                              >
+                                <img
+                                  v-if="bet.events[0].team1.img"
+                                  :src="getTeamLogoUrl(bet.events[0].team1)"
+                                  :alt="bet.events[0].team1.name"
                                   class="w-6 h-6 rounded-full object-cover"
-                                  @error="$event.target.style.display='none'"
+                                  @error="$event.target.style.display = 'none'"
                                 />
-                                <span v-if="!bet.events[0].team1.img" class="text-xs">{{ bet.events[0].team1.name.charAt(0) }}</span>
+                                <span
+                                  v-if="!bet.events[0].team1.img"
+                                  class="text-xs"
+                                  >{{
+                                    bet.events[0].team1.name.charAt(0)
+                                  }}</span
+                                >
                               </div>
-                              <span class="text-sm font-medium text-surface-800 dark:text-surface-200">{{ bet.events[0].team1.name }}</span>
-                              <span class="text-xs text-surface-500 dark:text-surface-400"> - </span>
-                              <span class="text-sm font-medium text-surface-800 dark:text-surface-200">{{ bet.events[0].team2.name }}</span>
-                              <div class="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300">
-                                <img 
-                                  v-if="bet.events[0].team2.img" 
-                                  :src="getTeamLogoUrl(bet.events[0].team2)" 
-                                  :alt="bet.events[0].team2.name" 
+                              <span
+                                class="text-sm font-medium text-surface-800 dark:text-surface-200"
+                                >{{ bet.events[0].team1.name }}</span
+                              >
+                              <span
+                                class="text-xs text-surface-500 dark:text-surface-400"
+                              >
+                                -
+                              </span>
+                              <span
+                                class="text-sm font-medium text-surface-800 dark:text-surface-200"
+                                >{{ bet.events[0].team2.name }}</span
+                              >
+                              <div
+                                class="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300"
+                              >
+                                <img
+                                  v-if="bet.events[0].team2.img"
+                                  :src="getTeamLogoUrl(bet.events[0].team2)"
+                                  :alt="bet.events[0].team2.name"
                                   class="w-6 h-6 rounded-full object-cover"
-                                  @error="$event.target.style.display='none'"
+                                  @error="$event.target.style.display = 'none'"
                                 />
-                                <span v-if="!bet.events[0].team2.img" class="text-xs">{{ bet.events[0].team2.name.charAt(0) }}</span>
+                                <span
+                                  v-if="!bet.events[0].team2.img"
+                                  class="text-xs"
+                                  >{{
+                                    bet.events[0].team2.name.charAt(0)
+                                  }}</span
+                                >
                               </div>
                             </div>
-                            <div class="text-xs text-surface-600 dark:text-surface-400 mb-2">
-                              {{ bet.events[0].market || bet.events[0].type || 'Marché non spécifié' }}
+                            <div
+                              class="text-xs text-surface-600 dark:text-surface-400 mb-2"
+                            >
+                              {{
+                                bet.events[0].market ||
+                                bet.events[0].type ||
+                                "Marché non spécifié"
+                              }}
                             </div>
-
                           </div>
                         </div>
-                        
+
                         <!-- Si plusieurs événements (accordéon) -->
                         <div v-else class="space-y-2">
-                          <div 
-                            @click="toggleBetEvents(bet.id)"
+                          <div
+                            @click.stop="toggleBetEvents(bet.id)"
                             class="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-3 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
                           >
                             <div class="flex items-center justify-between">
                               <div class="flex items-center gap-2">
-                                <i :class="expandedBets.has(bet.id) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="text-sm text-primary-600 dark:text-primary-400"></i>
-                                <span class="text-sm font-medium text-primary-800 dark:text-primary-200">
-                                  Pari combiné - {{ bet.events.length }} événements
+                                <i
+                                  :class="
+                                    expandedBets.has(bet.id)
+                                      ? 'pi pi-chevron-down'
+                                      : 'pi pi-chevron-right'
+                                  "
+                                  class="text-sm text-primary-600 dark:text-primary-400"
+                                ></i>
+                                <span
+                                  class="text-sm font-medium text-primary-800 dark:text-primary-200"
+                                >
+                                  Pari combiné -
+                                  {{ bet.events.length }} événements
                                 </span>
                               </div>
                             </div>
                           </div>
-                          
+
                           <!-- Liste des événements (accordéon) -->
-                          <div v-if="expandedBets.has(bet.id)" class="space-y-2">
-                            <div 
-                              v-for="(event, index) in bet.events" 
+                          <div
+                            v-if="expandedBets.has(bet.id)"
+                            class="space-y-2"
+                          >
+                            <div
+                              v-for="(event, index) in bet.events"
                               :key="index"
                               class="bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-lg p-3 text-center"
                             >
                               <!-- Informations sport, pays et ligue pour chaque événement -->
-                                <div class="flex items-center justify-center gap-2 mb-2">
-                                  <div v-html="getCountryInfo({events: [event]}).html"></div>
-                                  <!-- Nom de la ligue -->
-                                  <div v-if="event.league" class="flex items-center gap-1">
-                                    <span class="text-xs text-surface-500 dark:text-surface-400">{{ event.league.name }}</span>
-                                  </div>
+                              <div
+                                class="flex items-center justify-center gap-2 mb-2"
+                              >
+                                <div
+                                  v-html="
+                                    getCountryInfo({ events: [event] }).html
+                                  "
+                                ></div>
+                                <!-- Nom de la ligue -->
+                                <div
+                                  v-if="event.league"
+                                  class="flex items-center gap-1"
+                                >
+                                  <span
+                                    class="text-xs text-surface-500 dark:text-surface-400"
+                                    >{{ event.league.name }}</span
+                                  >
                                 </div>
-                              <div class="flex items-center justify-center mb-2">
+                              </div>
+                              <div
+                                class="flex items-center justify-center mb-2"
+                              >
                                 <div class="flex items-center gap-2">
                                   <!-- Logo des équipes -->
-                                  <div v-if="event.team1 && event.team2" class="flex items-center gap-2">
-                                    <div class="w-5 h-5 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300">
-                                      <img 
-                                        v-if="event.team1.img" 
-                                        :src="getTeamLogoUrl(event.team1)" 
-                                        :alt="event.team1.name" 
+                                  <div
+                                    v-if="event.team1 && event.team2"
+                                    class="flex items-center gap-2"
+                                  >
+                                    <div
+                                      class="w-5 h-5 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300"
+                                    >
+                                      <img
+                                        v-if="event.team1.img"
+                                        :src="getTeamLogoUrl(event.team1)"
+                                        :alt="event.team1.name"
                                         class="w-5 h-5 rounded-full object-cover"
-                                        @error="$event.target.style.display='none'"
+                                        @error="
+                                          $event.target.style.display = 'none'
+                                        "
                                       />
-                                      <span v-if="!event.team1.img" class="text-xs">{{ event.team1.name.charAt(0) }}</span>
+                                      <span
+                                        v-if="!event.team1.img"
+                                        class="text-xs"
+                                        >{{ event.team1.name.charAt(0) }}</span
+                                      >
                                     </div>
-                                    <span class="text-sm font-medium text-surface-800 dark:text-surface-200">{{ event.team1.name }}</span>
-                                    <span class="text-xs text-surface-500 dark:text-surface-400"> - </span>
-                                    <span class="text-sm font-medium text-surface-800 dark:text-surface-200">{{ event.team2.name }}</span>
-                                    <div class="w-5 h-5 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300">
-                                      <img 
-                                        v-if="event.team2.img" 
-                                        :src="getTeamLogoUrl(event.team2)" 
-                                        :alt="event.team2.name" 
+                                    <span
+                                      class="text-sm font-medium text-surface-800 dark:text-surface-200"
+                                      >{{ event.team1.name }}</span
+                                    >
+                                    <span
+                                      class="text-xs text-surface-500 dark:text-surface-400"
+                                    >
+                                      -
+                                    </span>
+                                    <span
+                                      class="text-sm font-medium text-surface-800 dark:text-surface-200"
+                                      >{{ event.team2.name }}</span
+                                    >
+                                    <div
+                                      class="w-5 h-5 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center text-xs font-bold text-surface-600 dark:text-surface-300"
+                                    >
+                                      <img
+                                        v-if="event.team2.img"
+                                        :src="getTeamLogoUrl(event.team2)"
+                                        :alt="event.team2.name"
                                         class="w-5 h-5 rounded-full object-cover"
-                                        @error="$event.target.style.display='none'"
+                                        @error="
+                                          $event.target.style.display = 'none'
+                                        "
                                       />
-                                      <span v-if="!event.team2.img" class="text-xs">{{ event.team2.name.charAt(0) }}</span>
+                                      <span
+                                        v-if="!event.team2.img"
+                                        class="text-xs"
+                                        >{{ event.team2.name.charAt(0) }}</span
+                                      >
                                     </div>
                                   </div>
                                 </div>
                               </div>
-                              
-                              <div class="text-xs text-surface-600 dark:text-surface-400">
-                                {{ event.market || event.type || 'Marché non spécifié' }}
+
+                              <div
+                                class="text-xs text-surface-600 dark:text-surface-400"
+                              >
+                                {{
+                                  event.market ||
+                                  event.type ||
+                                  "Marché non spécifié"
+                                }}
                               </div>
                               <div v-if="event.odd" class="flex justify-end">
-                                <Chip :label="parseFloat(event.odd).toFixed(2)" severity="info" class="text-xs font-medium" />
+                                <Chip
+                                  :label="parseFloat(event.odd).toFixed(2)"
+                                  severity="info"
+                                  class="text-xs font-medium"
+                                />
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                      
+
                       <!-- Informations financières en grille 2x2 sur mobile -->
-                      <div class="grid grid-cols-2 gap-2 md:flex md:gap-3 md:justify-center">
+                      <div
+                        class="grid grid-cols-2 gap-2 md:flex md:gap-3 md:justify-center"
+                      >
                         <!-- Carte Cote -->
-                        <div class="bg-surface-50 dark:bg-surface-800 rounded-lg p-2 text-center">
-                          <div class="text-sm font-medium text-surface-900 dark:text-surface-100">{{ parseFloat(bet.global_odds).toFixed(3) }}</div>
-                          <div class="text-xs text-surface-500 dark:text-surface-400 mt-1">Cote</div>
+                        <div
+                          class="bg-surface-50 dark:bg-surface-800 rounded-lg p-2 text-center"
+                        >
+                          <div
+                            class="text-sm font-medium text-surface-900 dark:text-surface-100"
+                          >
+                            {{ parseFloat(bet.global_odds).toFixed(3) }}
+                          </div>
+                          <div
+                            class="text-xs text-surface-500 dark:text-surface-400 mt-1"
+                          >
+                            Cote
+                          </div>
                         </div>
-                        
+
                         <!-- Carte Mise -->
-                        <div class="bg-surface-50 dark:bg-surface-800 rounded-lg p-2 text-center">
-                          <div class="text-sm font-medium text-surface-900 dark:text-surface-100">{{ parseFloat(bet.stake).toFixed(2) }}€</div>
-                          <div class="text-xs text-surface-500 dark:text-surface-400 mt-1">Mise</div>
+                        <div
+                          class="bg-surface-50 dark:bg-surface-800 rounded-lg p-2 text-center"
+                        >
+                          <div
+                            class="text-sm font-medium text-surface-900 dark:text-surface-100"
+                          >
+                            {{ parseFloat(bet.stake).toFixed(2) }}€
+                          </div>
+                          <div
+                            class="text-xs text-surface-500 dark:text-surface-400 mt-1"
+                          >
+                            Mise
+                          </div>
                         </div>
-                        
+
                         <!-- Carte Gain -->
-                        <div class="bg-purple-50 dark:bg-blue-900/20 rounded-lg p-2 text-center">
-                          <div class="text-sm font-medium text-blue-900 dark:text-purple-100">{{ (parseFloat(bet.stake) * parseFloat(bet.global_odds)).toFixed(2) }}€</div>
-                          <div class="text-xs text-blue-600 dark:text-blue-400 mt-1">Gain</div>
+                        <div
+                          class="bg-purple-50 dark:bg-blue-900/20 rounded-lg p-2 text-center"
+                        >
+                          <div
+                            class="text-sm font-medium text-blue-900 dark:text-purple-100"
+                          >
+                            {{
+                              (
+                                parseFloat(bet.stake) *
+                                parseFloat(bet.global_odds)
+                              ).toFixed(2)
+                            }}€
+                          </div>
+                          <div
+                            class="text-xs text-blue-600 dark:text-blue-400 mt-1"
+                          >
+                            Gain
+                          </div>
                         </div>
-                        
+
                         <!-- Carte Bénéfice -->
-                        <div class="rounded-lg p-2 text-center" :class="calculateProfitLoss(bet) >= 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'">
-                          <div 
+                        <div
+                          class="rounded-lg p-2 text-center"
+                          :class="
+                            calculateProfitLoss(bet) >= 0
+                              ? 'bg-green-50 dark:bg-green-900/20'
+                              : 'bg-red-50 dark:bg-red-900/20'
+                          "
+                        >
+                          <div
                             class="text-sm font-medium"
-                            :class="calculateProfitLoss(bet) >= 0 ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'"
+                            :class="
+                              calculateProfitLoss(bet) >= 0
+                                ? 'text-green-900 dark:text-green-100'
+                                : 'text-red-900 dark:text-red-100'
+                            "
                           >
                             {{ calculateProfitLoss(bet).toFixed(2) }}€
                           </div>
-                          <div class="text-xs mt-1" :class="calculateProfitLoss(bet) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">Bénéfice</div>
+                          <div
+                            class="text-xs mt-1"
+                            :class="
+                              calculateProfitLoss(bet) >= 0
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-red-600 dark:text-red-400'
+                            "
+                          >
+                            Bénéfice
+                          </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <!-- Barre verticale colorée avec icône de résultat qui prend toute la hauteur -->
                     <div class="flex items-stretch">
-                      <div 
-                        :class="getResultBarColor(bet.result)" 
+                      <div
+                        :class="getResultBarColor(bet.result)"
                         class="w-4 min-h-full rounded-r-lg flex items-center justify-center relative"
                       >
-                        <div 
+                        <div
                           class="absolute inset-0 flex items-center justify-center"
                           v-html="getResultIcon(bet.result)"
                         ></div>
@@ -796,20 +1090,19 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    
-    <!-- Dialog d'ajout de pari -->
-    <AddBetDialog 
-      v-model:visible="showAddBetDialog" 
+
+    <!-- Dialog d'ajout/édition de pari -->
+    <AddBetDialog
+      v-model:visible="showAddBetDialog"
+      :editing-bet="editingBet"
       @bet-created="onBetCreated"
     />
   </div>
 </template>
 
 <style scoped>
-
-
 .card-header {
-  @apply p-3
+  padding: 0.75rem;
 }
 
 /* Styles pour le bouton animé */

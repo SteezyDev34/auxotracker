@@ -1,0 +1,205 @@
+{
+  "tournament": {
+    "name": "ITF M25 Faro Men",
+    "slug": "itf-m25-faro-men",
+    "category": {
+      "name": "ITF Men",
+      "slug": "itf-men",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 785,
+      "flag": "itf-men",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "اتحاد التنس الدولي للرجال",
+          "ru": "Мужской мировой теннисный тур ITF"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "ITF M25 Faro Men",
+      "slug": "itf-m25-faro-men",
+      "category": {
+        "name": "ITF Men",
+        "slug": "itf-men",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 785,
+        "flag": "itf-men",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اتحاد التنس الدولي للرجال",
+            "ru": "Мужской мировой теннисный тур ITF"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 4,
+      "groundType": "Hardcourt outdoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25198,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "ITF M25 فارو رجال"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 146755,
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ITF M25 فارو للرجال"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "season": {
+    "name": "2026",
+    "year": "2026",
+    "editor": false,
+    "id": 90340
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "WPAbstTJd",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Michele Ribecai",
+    "slug": "ribecai-michele",
+    "shortName": "M. Ribecai",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 404,
+    "playerTeamInfo": {
+      "id": 12731
+    },
+    "nameCode": "RIB",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "IT",
+      "alpha3": "ITA",
+      "name": "Italy",
+      "slug": "italy"
+    },
+    "id": 462168,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ميشيل ريبكاي"
+      },
+      "shortNameTranslation": {
+        "ar": "م. ريبكاي"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Tiago Cacao",
+    "slug": "cacao-tiago",
+    "shortName": "T. Cação",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 354,
+    "playerTeamInfo": {
+      "id": 2510
+    },
+    "nameCode": "CAC",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "PT",
+      "alpha3": "PRT",
+      "name": "Portugal",
+      "slug": "portugal"
+    },
+    "id": 189546,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "تياغو كاكاو",
+        "ru": "Какау, Тиагу"
+      },
+      "shortNameTranslation": {
+        "ar": "ت. كاكاو",
+        "bn": "টি. টিয়াগো",
+        "hi": "टी. काकाओ"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15670744,
+  "slug": "michele-ribecai-tiago-cacao",
+  "startTimestamp": 1772798400,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

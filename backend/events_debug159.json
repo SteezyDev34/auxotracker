@@ -1,0 +1,202 @@
+{
+  "tournament": {
+    "name": "ITF M15 Poitiers Men",
+    "slug": "itf-m15-poitiers-men",
+    "category": {
+      "name": "ITF Men",
+      "slug": "itf-men",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 785,
+      "flag": "itf-men",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "اتحاد التنس الدولي للرجال",
+          "ru": "Мужской мировой теннисный тур ITF"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "ITF M15 Poitiers Men",
+      "slug": "itf-m15-poitiers-men",
+      "category": {
+        "name": "ITF Men",
+        "slug": "itf-men",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 785,
+        "flag": "itf-men",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اتحاد التنس الدولي للرجال",
+            "ru": "Мужской мировой теннисный тур ITF"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 6,
+      "groundType": "Hardcourt indoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25319,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "ITF M15 بواتييه للرجال"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 147282,
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ITF M15 بواتييه للرجال"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "season": {
+    "name": "2026",
+    "year": "2026",
+    "editor": false,
+    "id": 90367
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "AtbdsFBbe",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Mathys Domenc",
+    "slug": "domenc-mathys",
+    "shortName": "M. Domenc",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 66,
+    "playerTeamInfo": {
+      "id": 26215
+    },
+    "nameCode": "DOM",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "FR",
+      "alpha3": "FRA",
+      "name": "France",
+      "slug": "france"
+    },
+    "id": 503830,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ماثيس دومينك"
+      },
+      "shortNameTranslation": {
+        "ar": "م. دومينك"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Leonardo Rossi",
+    "slug": "rossi-leonardo",
+    "shortName": "L. Rossi",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 260,
+    "playerTeamInfo": {
+      "id": 5620
+    },
+    "nameCode": "ROS",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "IT",
+      "alpha3": "ITA",
+      "name": "Italy",
+      "slug": "italy"
+    },
+    "id": 378425,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ليوناردو روسي"
+      },
+      "shortNameTranslation": {
+        "ar": "ل. روسي"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15670749,
+  "slug": "mathys-domenc-leonardo-rossi",
+  "startTimestamp": 1772805600,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt indoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

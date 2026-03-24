@@ -11,34 +11,33 @@ class TeamLogoService
 {
     /**
      * Vérifie et télécharge le logo d'une équipe si nécessaire
-     * 
+     *
      * @param Team $team
      * @return string|null Le chemin du logo ou null si échec
      */
-    public function ensureTeamLogo(Team $team): ?string
+    public function ensureTeamLogo(Team $team, bool $force = false): ?string
     {
-        // Vérifier si le logo existe déjà
         $logoPath = "team_logos/{$team->id}.png";
-        
-        if (Storage::disk('public')->exists($logoPath)) {
+
+        if (Storage::disk('public')->exists($logoPath) && !$force) {
             // Mettre à jour le champ img si nécessaire
             if ($team->img !== $logoPath) {
                 $team->update(['img' => $logoPath]);
             }
             return $logoPath;
         }
-        
+
         // Télécharger le logo depuis Sofascore si sofascore_id existe
         if ($team->sofascore_id) {
             return $this->downloadTeamLogo($team);
         }
-        
+
         return null;
     }
-    
+
     /**
      * Télécharge le logo d'une équipe depuis l'API Sofascore
-     * 
+     *
      * @param Team $team
      * @return string|null Le chemin du logo ou null si échec
      */
@@ -50,81 +49,80 @@ class TeamLogoService
             $this->getAlternativeHeaders(),
             $this->getMinimalHeaders()
         ];
-        
+
         foreach ($strategies as $index => $headers) {
             try {
                 $logoUrl = "https://api.sofascore.com/api/v1/team/{$team->sofascore_id}/image";
-                
+
                 Log::info("Tentative de téléchargement du logo pour l'équipe {$team->name}", [
-                     'strategy' => ($index + 1),
-                     'sofascore_id' => $team->sofascore_id,
-                     'url' => $logoUrl
-                 ]);
-                
+                    'strategy' => ($index + 1),
+                    'sofascore_id' => $team->sofascore_id,
+                    'url' => $logoUrl
+                ]);
+
                 $response = Http::timeout(30)
                     ->withHeaders($headers)
                     ->get($logoUrl);
-                
+
                 if ($response->successful()) {
                     $logoPath = "team_logos/{$team->id}.png";
-                    
+
                     // Créer le dossier s'il n'existe pas
                     Storage::disk('public')->makeDirectory('team_logos');
-                    
+
                     // Sauvegarder l'image
                     Storage::disk('public')->put($logoPath, $response->body());
-                    
+
                     // Mettre à jour le champ img de l'équipe
                     $team->update(['img' => $logoPath]);
-                    
+
                     Log::info("Logo téléchargé avec succès pour l'équipe {$team->name}", [
-                         'path' => $logoPath,
-                         'strategy' => ($index + 1),
-                         'file_size' => strlen($response->body())
-                     ]);
-                    
+                        'path' => $logoPath,
+                        'strategy' => ($index + 1),
+                        'file_size' => strlen($response->body())
+                    ]);
+
                     return $logoPath;
                 }
-                
+
                 // Gestion spécifique des erreurs 403 et 404
                 if (in_array($response->status(), [403, 404])) {
                     Log::info("Logo non disponible pour l'équipe {$team->name} (HTTP {$response->status()}) - Stratégie " . ($index + 1), [
-                         'sofascore_id' => $team->sofascore_id,
-                         'status' => $response->status(),
-                         'headers_used' => array_keys($headers)
-                     ]);
-                    
+                        'sofascore_id' => $team->sofascore_id,
+                        'status' => $response->status(),
+                        'headers_used' => array_keys($headers)
+                    ]);
+
                     // Attendre avant la prochaine tentative pour éviter les blocages
                     if ($index < count($strategies) - 1) {
                         sleep(3); // Délai plus long pour éviter les erreurs 403
                     }
                     continue;
                 }
-                
+
                 Log::warning("Échec du téléchargement du logo pour l'équipe {$team->name} - Stratégie " . ($index + 1), [
-                     'sofascore_id' => $team->sofascore_id,
-                     'status' => $response->status(),
-                     'response_body' => substr($response->body(), 0, 200)
-                 ]);
-                
+                    'sofascore_id' => $team->sofascore_id,
+                    'status' => $response->status(),
+                    'response_body' => substr($response->body(), 0, 200)
+                ]);
             } catch (\Exception $e) {
                 Log::error("Erreur lors du téléchargement du logo pour l'équipe {$team->name} - Stratégie " . ($index + 1), [
-                     'error' => $e->getMessage(),
-                     'sofascore_id' => $team->sofascore_id,
-                     'exception_type' => get_class($e)
-                 ]);
+                    'error' => $e->getMessage(),
+                    'sofascore_id' => $team->sofascore_id,
+                    'exception_type' => get_class($e)
+                ]);
             }
         }
-        
+
         // Toutes les stratégies ont échoué
         Log::error("Toutes les stratégies de téléchargement ont échoué pour l'équipe {$team->name}", [
             'sofascore_id' => $team->sofascore_id,
             'strategies_tried' => count($strategies)
         ]);
-        
+
         return null;
     }
-    
+
     /**
      * Obtient les en-têtes par défaut pour les requêtes HTTP
      * Simule un navigateur Chrome sur macOS pour contourner la détection de bot
@@ -147,10 +145,10 @@ class TeamLogoService
             'Referer' => 'https://www.sofascore.com/'
         ];
     }
-    
+
     /**
      * Retourne des en-têtes alternatifs pour contourner les blocages
-     * 
+     *
      * @return array
      */
     private function getAlternativeHeaders(): array
@@ -163,10 +161,10 @@ class TeamLogoService
             'Pragma' => 'no-cache'
         ];
     }
-    
+
     /**
      * Retourne des en-têtes minimaux
-     * 
+     *
      * @return array
      */
     private function getMinimalHeaders(): array
@@ -176,41 +174,41 @@ class TeamLogoService
             'Accept' => '*/*'
         ];
     }
-    
+
     /**
      * Process all missing logos for all teams
-     * 
+     *
      * @return array Processing statistics
-     * 
+     *
      * To run this method, use the following command in Artisan Tinker:
      * app(App\Services\TeamLogoService::class)->processAllMissingLogos();
      */
     public function processAllMissingLogos(): array
     {
         $teams = Team::whereNotNull('sofascore_id')
-                    ->where(function($query) {
-                        $query->whereNull('img')
-                              ->orWhere('img', '');
-                    })
-                    ->get();
-        
+            ->where(function ($query) {
+                $query->whereNull('img')
+                    ->orWhere('img', '');
+            })
+            ->get();
+
         $stats = [
             'total' => $teams->count(),
             'success' => 0,
             'failed' => 0,
             'skipped' => 0
         ];
-        
+
         foreach ($teams as $team) {
             $result = $this->ensureTeamLogo($team);
-            
+
             if ($result) {
                 $stats['success']++;
             } else {
                 $stats['failed']++;
             }
         }
-        
+
         return $stats;
     }
 }

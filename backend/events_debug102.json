@@ -1,0 +1,336 @@
+{
+  "firstToServe": 1,
+  "tournament": {
+    "name": "Hersonissos, Greece, Doubles",
+    "slug": "hersonissos-greece-doubles",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Hersonissos, Greece, Doubles",
+      "slug": "atp-challenger-hersonissos-greece-men-doubles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 14,
+      "groundType": "Hardcourt outdoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25271,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "هيرسونيسوس، اليونان، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176039
+  },
+  "season": {
+    "name": "ATP Challenger Hersonissos, Greece Men Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87368
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "fvvjslvvj",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Bass F / Genov A",
+    "slug": "bass-f-genov-a",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1,
+    "nameCode": "B/G",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1176005,
+    "subTeams": [
+      {
+        "name": "Finn Bass",
+        "slug": "bass-finn",
+        "shortName": "F. Bass",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 195,
+        "nameCode": "BAS",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "GB",
+          "alpha3": "GBR",
+          "name": "United Kingdom",
+          "slug": "united-kingdom"
+        },
+        "id": 182086,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فين باس"
+          },
+          "shortNameTranslation": {
+            "ar": "ف. باس"
+          }
+        }
+      },
+      {
+        "name": "Anthony Genov",
+        "slug": "genov-anthony",
+        "shortName": "A. Genov",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 140,
+        "nameCode": "GEN",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "BG",
+          "alpha3": "BGR",
+          "name": "Bulgaria",
+          "slug": "bulgaria"
+        },
+        "id": 332112,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أنتوني جينوف"
+          },
+          "shortNameTranslation": {
+            "ar": "أ. جينوف"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "awayTeam": {
+    "name": "Thomson C / Whitehouse M",
+    "slug": "thomson-c-whitehouse-m",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 3,
+    "nameCode": "T/W",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1176011,
+    "subTeams": [
+      {
+        "name": "Connor Thomson",
+        "slug": "thomson-connor",
+        "shortName": "C. Thomson",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 94,
+        "nameCode": "THO",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "GB",
+          "alpha3": "GBR",
+          "name": "United Kingdom",
+          "slug": "united-kingdom"
+        },
+        "id": 245111,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كونور طومسون",
+            "ru": "Томсон, Коннор"
+          },
+          "shortNameTranslation": {
+            "ar": "ك. طومسون"
+          }
+        }
+      },
+      {
+        "name": "Mark Whitehouse",
+        "slug": "whitehouse-mark",
+        "shortName": "M. Whitehouse",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 166,
+        "nameCode": "WHI",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "GB",
+          "alpha3": "GBR",
+          "name": "United Kingdom",
+          "slug": "united-kingdom"
+        },
+        "id": 95939,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "مارك وايتهاوس",
+            "ru": "Уайтхаус, Марк"
+          },
+          "shortNameTranslation": {
+            "ar": "م. وايتهاوس"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 4,
+    "period2": 4,
+    "point": "15",
+    "normaltime": 0
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772711580
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772714353
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624572,
+  "slug": "thomson-whitehouse-bass-genov",
+  "startTimestamp": 1772708400,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

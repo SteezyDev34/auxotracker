@@ -1,0 +1,210 @@
+{
+  "tournament": {
+    "name": "Indian Wells, USA",
+    "slug": "indian-wells-usa",
+    "category": {
+      "name": "WTA",
+      "slug": "wta",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 6,
+      "flag": "wta",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة لاعبات التنس",
+          "bn": "ডব্লিউটিএ",
+          "hi": "चैलेंजर",
+          "ru": "WTA"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells",
+      "slug": "indian-wells",
+      "category": {
+        "name": "WTA",
+        "slug": "wta",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 6,
+        "flag": "wta",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة لاعبات التنس",
+            "bn": "ডব্লিউটিএ",
+            "hi": "चैलेंजर",
+            "ru": "WTA"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 2856,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2619,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "إنديان ويلز",
+          "bn": "ইন্ডিয়ান ওয়েলস",
+          "hi": "इंडियन वेल्स"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176097
+  },
+  "season": {
+    "name": "WTA Indian Wells, USA Women Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 85596
+  },
+  "roundInfo": {
+    "round": 32,
+    "name": "Round of 64"
+  },
+  "customId": "VZAbsDmRb",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Anna Blinkova",
+    "slug": "blinkova-anna",
+    "shortName": "A. Blinkova",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 3135,
+    "playerTeamInfo": {
+      "id": 336
+    },
+    "nameCode": "BLI",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "RU",
+      "alpha3": "RUS",
+      "name": "Russia",
+      "slug": "russia"
+    },
+    "id": 189995,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "آنا بلينكوفا",
+        "ru": "Блинкова, Анна"
+      },
+      "shortNameTranslation": {
+        "ar": "آ. بلينكوفا",
+        "bn": "এ. ব্লিঙ্কোভা",
+        "hi": "ए. ब्लिंकवा"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Amanda Anisimova",
+    "slug": "anisimova-amanda",
+    "shortName": "A. Anisimova",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 17596,
+    "playerTeamInfo": {
+      "id": 240
+    },
+    "nameCode": "ANI",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "US",
+      "alpha3": "USA",
+      "name": "USA",
+      "slug": "usa"
+    },
+    "id": 230628,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "أماندا أنيسيموفا",
+        "bn": "আমান্ডা আনিসিমোভা",
+        "hi": "अमांडा अनीसिमोवा",
+        "ru": "Анисимова, Аманда"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. أنيسيموفا"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15630146,
+  "slug": "amanda-anisimova-anna-blinkova",
+  "startTimestamp": 1772856000,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

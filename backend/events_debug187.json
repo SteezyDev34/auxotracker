@@ -1,0 +1,225 @@
+{
+  "tournament": {
+    "name": "ITF M25 Faro Men",
+    "slug": "itf-m25-faro-men",
+    "category": {
+      "name": "ITF Men",
+      "slug": "itf-men",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 785,
+      "flag": "itf-men",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "اتحاد التنس الدولي للرجال",
+          "ru": "Мужской мировой теннисный тур ITF"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "ITF M25 Faro Men",
+      "slug": "itf-m25-faro-men",
+      "category": {
+        "name": "ITF Men",
+        "slug": "itf-men",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 785,
+        "flag": "itf-men",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اتحاد التنس الدولي للرجال",
+            "ru": "Мужской мировой теннисный тур ITF"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 4,
+      "groundType": "Hardcourt outdoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25198,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "ITF M25 فارو رجال"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 146755,
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ITF M25 فارو للرجال"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "season": {
+    "name": "2026",
+    "year": "2026",
+    "editor": false,
+    "id": 90340
+  },
+  "roundInfo": {
+    "round": 5,
+    "name": "Round of 16",
+    "cupRoundType": 8
+  },
+  "customId": "CWxsNunc",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Mario Gonzalez Fernandez",
+    "slug": "gonzalez-fernandez-mario",
+    "shortName": "M. González Fernandez",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 257,
+    "playerTeamInfo": {
+      "id": 5051
+    },
+    "nameCode": "GON",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "ES",
+      "alpha3": "ESP",
+      "name": "Spain",
+      "slug": "spain"
+    },
+    "id": 283488,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ماريو غونزاليس فرنانديز"
+      },
+      "shortNameTranslation": {
+        "ar": "م. فرنانديز"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Joao Domingues",
+    "slug": "domingues-joao",
+    "shortName": "J. Domingues",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 550,
+    "playerTeamInfo": {
+      "id": 298
+    },
+    "nameCode": "DOM",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "PT",
+      "alpha3": "PRT",
+      "name": "Portugal",
+      "slug": "portugal"
+    },
+    "id": 57327,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "جواو دومينغيز",
+        "bn": "জোয়াও ডমিঙ্গেস",
+        "hi": "जोआओ डोमिंग्स",
+        "ru": "Домингес, Жоао"
+      },
+      "shortNameTranslation": {
+        "ar": "ج. دومينغيز"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 5,
+    "period2": 6,
+    "period2TieBreak": 4,
+    "point": "0"
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 7,
+    "period2TieBreak": 7,
+    "point": "0"
+  },
+  "time": {},
+  "changes": {
+    "changes": [
+      "status.code",
+      "status.description",
+      "status.type"
+    ],
+    "changeTimestamp": 1772720181
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15663283,
+  "slug": "mario-gonzalez-fernandez-joao-domingues",
+  "startTimestamp": 1772711692,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

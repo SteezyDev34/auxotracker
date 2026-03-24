@@ -1,10 +1,14 @@
 <template>
   <div class="flex flex-col gap-2">
-    <AutoComplete 
-      :ref="(el) => { if (el) countryRef = el }"
-      :id="`country_${eventIndex}`" 
-      v-model="selectedCountry" 
-      :suggestions="countrySearchResults || []" 
+    <AutoComplete
+      :ref="
+        (el) => {
+          if (el) countryRef = el;
+        }
+      "
+      :id="`country_${eventIndex}`"
+      v-model="selectedCountry"
+      :suggestions="countrySearchResults || []"
       @complete="onSearchCountries"
       @focus="onCountryDropdownShow"
       @click="onCountryDropdownShow"
@@ -31,28 +35,31 @@
       <template #chip="slotProps">
         <div class="flex items-center gap-2">
           <!-- Drapeau du pays sélectionné -->
-          <img 
+          <img
             v-if="slotProps.value && slotProps.value.id"
-            :src="`${apiBaseUrl}/storage/country_flags/${slotProps.value.id}.png`" 
+            :src="`${apiBaseUrl}/storage/country_flags/${slotProps.value.id}.png`"
             :alt="slotProps.value.name"
-            class="w-4 h-4 rounded object-cover flex-shrink-0" 
-            @error="$event.target.style.display='none'"
+            class="w-4 h-4 rounded object-cover flex-shrink-0"
+            @error="$event.target.style.display = 'none'"
           />
           <!-- Nom du pays sélectionné -->
-          <span>{{ slotProps.value ? slotProps.value.name : '' }}</span>
+          <span>{{ slotProps.value ? slotProps.value.name : "" }}</span>
         </div>
       </template>
-      
+
       <!-- Template pour les options du dropdown -->
       <template #option="slotProps">
-        <div class="flex items-center gap-2 truncate max-w-full" :title="slotProps.option.name">
+        <div
+          class="flex items-center gap-2 truncate max-w-full"
+          :title="slotProps.option.name"
+        >
           <!-- Drapeau du pays -->
-          <img 
+          <img
             v-if="slotProps.option.id"
-            :src="`${apiBaseUrl}/storage/country_flags/${slotProps.option.id}.png`" 
+            :src="`${apiBaseUrl}/storage/country_flags/${slotProps.option.id}.png`"
             :alt="slotProps.option.name"
-            class="w-4 h-4 rounded object-cover flex-shrink-0" 
-            @error="$event.target.style.display='none'"
+            class="w-4 h-4 rounded object-cover flex-shrink-0"
+            @error="$event.target.style.display = 'none'"
           />
           <!-- Nom du pays -->
           <span class="truncate">{{ slotProps.option.name }}</span>
@@ -64,56 +71,84 @@
 </template>
 
 <script>
-import AutoComplete from 'primevue/autocomplete';
-import { SportService } from '@/service/SportService';
+import AutoComplete from "primevue/autocomplete";
+import { SportService } from "@/service/SportService";
 
 export default {
-  name: 'CountryField',
+  name: "CountryField",
   components: {
-    AutoComplete
+    AutoComplete,
   },
   props: {
     modelValue: {
       type: Object,
-      default: () => null
+      default: () => null,
     },
     eventIndex: {
       type: Number,
-      required: true
+      required: true,
     },
     sportId: {
       type: [Number, String],
-      default: null
+      default: null,
     },
     error: {
       type: String,
-      default: ''
-    }
+      default: "",
+    },
   },
-  emits: ['update:modelValue', 'country-select', 'country-change', 'country-clear'],
+  emits: [
+    "update:modelValue",
+    "country-select",
+    "country-change",
+    "country-clear",
+  ],
   setup() {
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-    
+    const apiBaseUrl =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
     return {
-      apiBaseUrl
+      apiBaseUrl,
     };
   },
   data() {
     return {
-      selectedCountry: this.modelValue,
+      selectedCountry: [],
       countrySearchResults: [],
       countriesData: [], // Stocke tous les pays chargés pour ce sport
       countryRef: null,
       isLoading: false,
-      dropdownOpeningInProgress: false
-    }
+      dropdownOpeningInProgress: false,
+    };
   },
   watch: {
     modelValue: {
       handler(newVal) {
+        console.log(
+          `🎯 CountryField watcher - modelValue reçu:`,
+          newVal,
+          "Type:",
+          typeof newVal
+        );
         this.selectedCountry = newVal;
+        // S'assurer que les pays sélectionnés sont dans countrySearchResults
+        if (newVal && newVal.length > 0) {
+          console.log(
+            `📋 Ajout de ${newVal.length} pays à countrySearchResults`
+          );
+          newVal.forEach((country) => {
+            console.log(`  - Country:`, country, "ID:", country?.id);
+            if (!this.countrySearchResults.find((c) => c.id === country.id)) {
+              this.countrySearchResults.push(country);
+              console.log(`    ✅ Ajouté à countrySearchResults`);
+            } else {
+              console.log(`    ℹ️ Déjà présent dans countrySearchResults`);
+            }
+          });
+        }
       },
-      deep: true
+      deep: true,
+      immediate: true,
     },
     sportId: {
       handler(newSportId) {
@@ -123,8 +158,8 @@ export default {
           this.resetCountryData();
         }
       },
-      immediate: true
-    }
+      immediate: true,
+    },
   },
   methods: {
     /**
@@ -133,18 +168,27 @@ export default {
      */
     async loadCountriesBySport(sportId) {
       if (!sportId) return;
-      
+
       try {
         this.isLoading = true;
-        console.log('🔄 Chargement des pays pour le sport:', sportId);
-        
+        console.log("🔄 Chargement des pays pour le sport:", sportId);
+
         const countriesData = await SportService.getCountriesBySport(sportId);
         this.countriesData = countriesData;
         this.countrySearchResults = [...countriesData];
-        
-        console.log('✅ Pays chargés pour le sport', sportId, ':', countriesData.length, 'pays');
+
+        console.log(
+          "✅ Pays chargés pour le sport",
+          sportId,
+          ":",
+          countriesData.length,
+          "pays"
+        );
       } catch (error) {
-        console.error('❌ Erreur lors du chargement des pays par sport:', error);
+        console.error(
+          "❌ Erreur lors du chargement des pays par sport:",
+          error
+        );
         this.countriesData = [];
         this.countrySearchResults = [];
       } finally {
@@ -157,8 +201,8 @@ export default {
      * @param {Object} event - Événement de recherche
      */
     onSearchCountries(event) {
-      const query = event.query || '';
-      
+      const query = event.query || "";
+
       // Si aucun sport n'est sélectionné, ne pas afficher de pays
       if (!this.sportId) {
         this.countrySearchResults = [];
@@ -171,7 +215,7 @@ export default {
         return;
       }
 
-      if (query.trim() === '') {
+      if (query.trim() === "") {
         // Afficher tous les pays disponibles pour ce sport
         this.countrySearchResults = [...this.countriesData];
       } else {
@@ -180,8 +224,13 @@ export default {
           return country.name.toLowerCase().includes(query.toLowerCase());
         });
       }
-      
-      console.log('🔍 Recherche pays avec query:', query, 'Résultats:', this.countrySearchResults.length);
+
+      console.log(
+        "🔍 Recherche pays avec query:",
+        query,
+        "Résultats:",
+        this.countrySearchResults.length
+      );
     },
 
     /**
@@ -192,12 +241,12 @@ export default {
       if (this.dropdownOpeningInProgress) {
         return;
       }
-      
+
       // Marquer l'ouverture comme en cours
       this.dropdownOpeningInProgress = true;
-      
-      console.log('🔽 Dropdown pays ouvert pour événement', this.eventIndex);
-      
+
+      console.log("🔽 Dropdown pays ouvert pour événement", this.eventIndex);
+
       // Si aucun sport sélectionné, ne rien faire
       if (!this.sportId) {
         // Réinitialiser le drapeau après un court délai
@@ -210,17 +259,20 @@ export default {
       // Charger les pays si nécessaire
       if (!this.countriesData || this.countriesData.length === 0) {
         this.loadCountriesBySport(this.sportId);
-      } else if (!this.countrySearchResults || this.countrySearchResults.length === 0) {
+      } else if (
+        !this.countrySearchResults ||
+        this.countrySearchResults.length === 0
+      ) {
         this.countrySearchResults = [...this.countriesData];
       }
 
       // Forcer l'ouverture du dropdown
       this.$nextTick(() => {
-        if (this.countryRef && typeof this.countryRef.show === 'function') {
+        if (this.countryRef && typeof this.countryRef.show === "function") {
           this.countryRef.show();
-          console.log('✅ Dropdown pays forcé à s\'ouvrir');
+          console.log("✅ Dropdown pays forcé à s'ouvrir");
         }
-        
+
         // Réinitialiser le drapeau
         setTimeout(() => {
           this.dropdownOpeningInProgress = false;
@@ -236,27 +288,32 @@ export default {
       if (event.value) {
         // Remplacer l'élément existant par le nouveau pays sélectionné
         this.selectedCountry = [event.value];
-        
+
         // Émettre la mise à jour du modèle
-        this.$emit('update:modelValue', this.selectedCountry);
-        
+        this.$emit("update:modelValue", this.selectedCountry);
+
         // Émettre l'événement de sélection pour le parent
-        this.$emit('country-select', event, this.eventIndex);
-        
+        this.$emit("country-select", event, this.eventIndex);
+
         // Émettre l'événement de changement
-        this.$emit('country-change', this.eventIndex);
-        
-        console.log('✅ Pays sélectionné pour événement', this.eventIndex, ':', event.value.name);
-        
+        this.$emit("country-change", this.eventIndex);
+
+        console.log(
+          "✅ Pays sélectionné pour événement",
+          this.eventIndex,
+          ":",
+          event.value.name
+        );
+
         // Fermer le dropdown après sélection
         this.$nextTick(() => {
           this.closeDropdownAndBlur();
         });
       } else {
         this.selectedCountry = [];
-        this.$emit('update:modelValue', this.selectedCountry);
-        this.$emit('country-change', this.eventIndex);
-        console.log('✅ Pays désélectionné pour événement', this.eventIndex);
+        this.$emit("update:modelValue", this.selectedCountry);
+        this.$emit("country-change", this.eventIndex);
+        console.log("✅ Pays désélectionné pour événement", this.eventIndex);
       }
     },
 
@@ -264,32 +321,35 @@ export default {
      * Gérer l'effacement du pays sélectionné
      */
     onCountryClear() {
-      this.$emit('country-clear', this.eventIndex);
+      this.$emit("country-clear", this.eventIndex);
       // Réinitialiser la valeur sélectionnée
       this.selectedCountry = [];
       // Émettre la mise à jour du modèle
-      this.$emit('update:modelValue', this.selectedCountry);
-      console.log('🗑️ Pays effacé pour événement', this.eventIndex);
+      this.$emit("update:modelValue", this.selectedCountry);
+      console.log("🗑️ Pays effacé pour événement", this.eventIndex);
     },
 
     /**
      * Gérer le clic sur le bouton dropdown
      */
     async onDropdownClick() {
-      console.log('🔽 Clic sur le bouton dropdown pays pour événement', this.eventIndex);
-      
+      console.log(
+        "🔽 Clic sur le bouton dropdown pays pour événement",
+        this.eventIndex
+      );
+
       // Si aucun sport sélectionné, ne rien faire
       if (!this.sportId) {
         return;
       }
-      
+
       // Charger les pays si nécessaire
       if (!this.countriesData || this.countriesData.length === 0) {
         await this.loadCountriesBySport(this.sportId);
       }
-      
+
       // Déclencher la recherche avec une chaîne vide pour afficher tous les pays
-      this.onSearchCountries({ query: '' });
+      this.onSearchCountries({ query: "" });
     },
 
     /**
@@ -299,7 +359,7 @@ export default {
       this.selectedCountry = [];
       this.countriesData = [];
       this.countrySearchResults = [];
-      this.$emit('update:modelValue', this.selectedCountry);
+      this.$emit("update:modelValue", this.selectedCountry);
     },
 
     /**
@@ -311,15 +371,17 @@ export default {
         if (this.countryRef.hide) {
           this.countryRef.hide();
         }
-        
+
         // Retirer le focus du champ de saisie
-        const inputElement = this.countryRef.$el?.querySelector('input') || this.countryRef.$el?.querySelector('.p-inputtext');
+        const inputElement =
+          this.countryRef.$el?.querySelector("input") ||
+          this.countryRef.$el?.querySelector(".p-inputtext");
         if (inputElement) {
           inputElement.blur();
-          console.log('✅ Focus retiré du champ pays après sélection');
+          console.log("✅ Focus retiré du champ pays après sélection");
         }
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>

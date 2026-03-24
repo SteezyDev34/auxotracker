@@ -1,0 +1,209 @@
+{
+  "tournament": {
+    "name": "Indian Wells, USA",
+    "slug": "indian-wells-usa",
+    "category": {
+      "name": "ATP",
+      "slug": "atp",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 3,
+      "flag": "atp",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفي التنس",
+          "bn": "এটিপি",
+          "hi": "डब्ल्यूटीए",
+          "ru": "ATP"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells",
+      "slug": "indian-wells",
+      "category": {
+        "name": "ATP",
+        "slug": "atp",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 3,
+        "flag": "atp",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفي التنس",
+            "bn": "এটিপি",
+            "hi": "डब्ल्यूटीए",
+            "ru": "ATP"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 7115,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2487,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "بطولة إنديان ويلز",
+          "bn": "ইন্ডিয়ান ওয়েলস",
+          "hi": "इंडियन वेल्स"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176052
+  },
+  "season": {
+    "name": "ATP Indian Wells, USA Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 80797
+  },
+  "roundInfo": {
+    "round": 32,
+    "name": "Round of 64"
+  },
+  "customId": "nTxsIfV",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Matteo Berrettini",
+    "slug": "berrettini-matteo",
+    "shortName": "M. Berrettini",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 38015,
+    "playerTeamInfo": {
+      "id": 56
+    },
+    "nameCode": "BER",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "IT",
+      "alpha3": "ITA",
+      "name": "Italy",
+      "slug": "italy"
+    },
+    "id": 112783,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ماتيو بيريتيني",
+        "ru": "Берреттини, Маттео"
+      },
+      "shortNameTranslation": {
+        "ar": "م. بيريتيني",
+        "bn": "এম. বেরেটিনি",
+        "hi": "एम. बेरेटिनी"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Alexander Zverev",
+    "slug": "zverev-alexander",
+    "shortName": "A. Zverev",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 77689,
+    "playerTeamInfo": {
+      "id": 3
+    },
+    "nameCode": "ZVE",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "DE",
+      "alpha3": "DEU",
+      "name": "Germany",
+      "slug": "germany"
+    },
+    "id": 57163,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ألكسندر زفيريف",
+        "bn": "আলেকজান্ডার জাভেরেভ",
+        "hi": "अलेक्ज़ेंडर ज़्वेरेव",
+        "ru": "Зверев, Александер"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. زفيريف"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15625015,
+  "slug": "matteo-berrettini-alexander-zverev",
+  "startTimestamp": 1772823600,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

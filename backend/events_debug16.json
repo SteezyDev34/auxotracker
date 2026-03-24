@@ -1,0 +1,207 @@
+{
+  "tournament": {
+    "name": "Indian Wells, USA",
+    "slug": "indian-wells-usa",
+    "category": {
+      "name": "ATP",
+      "slug": "atp",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 3,
+      "flag": "atp",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفي التنس",
+          "bn": "এটিপি",
+          "hi": "डब्ल्यूटीए",
+          "ru": "ATP"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells",
+      "slug": "indian-wells",
+      "category": {
+        "name": "ATP",
+        "slug": "atp",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 3,
+        "flag": "atp",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفي التنس",
+            "bn": "এটিপি",
+            "hi": "डब्ल्यूटीए",
+            "ru": "ATP"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 7115,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2487,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "بطولة إنديان ويلز",
+          "bn": "ইন্ডিয়ান ওয়েলস",
+          "hi": "इंडियन वेल्स"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176052
+  },
+  "season": {
+    "name": "ATP Indian Wells, USA Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 80797
+  },
+  "roundInfo": {
+    "round": 64,
+    "name": "Round of 128"
+  },
+  "customId": "VMEbsKfed",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Michael Zheng",
+    "slug": "zheng-michael",
+    "shortName": "M. Zheng",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1380,
+    "playerTeamInfo": {
+      "id": 5270
+    },
+    "nameCode": "ZHE",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "US",
+      "alpha3": "USA",
+      "name": "USA",
+      "slug": "usa"
+    },
+    "id": 385285,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "مايكل زينغ",
+        "bn": "মাইকেল ঝেং",
+        "hi": "माइकल झेंग"
+      },
+      "shortNameTranslation": {
+        "ar": "م. زينغ"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Vit Kopřiva",
+    "slug": "kopriva-vit",
+    "shortName": "V. Kopřiva",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 3507,
+    "playerTeamInfo": {
+      "id": 2652
+    },
+    "nameCode": "KOP",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "CZ",
+      "alpha3": "CZE",
+      "name": "Czechia",
+      "slug": "czechia"
+    },
+    "id": 199395,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "فيت كوبريفا"
+      },
+      "shortNameTranslation": {
+        "ar": "ف. كوبريفا",
+        "bn": "ভি. কোপ্রিভা",
+        "hi": "वी. कोप्रिवा"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15665411,
+  "slug": "michael-zheng-vit-kopriva",
+  "startTimestamp": 1772766600,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

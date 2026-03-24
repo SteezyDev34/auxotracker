@@ -1,0 +1,224 @@
+{
+  "tournament": {
+    "name": "ITF M15 Poitiers Men",
+    "slug": "itf-m15-poitiers-men",
+    "category": {
+      "name": "ITF Men",
+      "slug": "itf-men",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 785,
+      "flag": "itf-men",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "اتحاد التنس الدولي للرجال",
+          "ru": "Мужской мировой теннисный тур ITF"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "ITF M15 Poitiers Men",
+      "slug": "itf-m15-poitiers-men",
+      "category": {
+        "name": "ITF Men",
+        "slug": "itf-men",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 785,
+        "flag": "itf-men",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اتحاد التنس الدولي للرجال",
+            "ru": "Мужской мировой теннисный тур ITF"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 6,
+      "groundType": "Hardcourt indoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25319,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "ITF M15 بواتييه للرجال"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 147282,
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ITF M15 بواتييه للرجال"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "season": {
+    "name": "2026",
+    "year": "2026",
+    "editor": false,
+    "id": 90367
+  },
+  "roundInfo": {
+    "round": 5,
+    "name": "Round of 16",
+    "cupRoundType": 8
+  },
+  "customId": "idwbsqlqc",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Maxence Beauge",
+    "slug": "beauge-maxence",
+    "shortName": "M. Beauge",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 237,
+    "playerTeamInfo": {
+      "id": 2434
+    },
+    "nameCode": "BEA",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "FR",
+      "alpha3": "FRA",
+      "name": "France",
+      "slug": "france"
+    },
+    "id": 177658,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ماكسنس بوج"
+      },
+      "shortNameTranslation": {
+        "ar": "م. بوج"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Nicolas Ifi",
+    "slug": "ifi-nicolas",
+    "shortName": "N. Ifi",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 149,
+    "playerTeamInfo": {
+      "id": 14634
+    },
+    "nameCode": "IFI",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "BE",
+      "alpha3": "BEL",
+      "name": "Belgium",
+      "slug": "belgium"
+    },
+    "id": 290566,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "نيكولا إيفي"
+      },
+      "shortNameTranslation": {
+        "ar": "ن. إيفي"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 7,
+    "period1TieBreak": 7,
+    "period2TieBreak": 7,
+    "point": "0"
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 6,
+    "period2": 6,
+    "period1TieBreak": 4,
+    "period2TieBreak": 5,
+    "point": "0"
+  },
+  "time": {},
+  "changes": {
+    "changes": [
+      "status.code",
+      "status.description",
+      "status.type"
+    ],
+    "changeTimestamp": 1772724956
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15663306,
+  "slug": "nicolas-ifi-maxence-beauge",
+  "startTimestamp": 1772716634,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt indoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

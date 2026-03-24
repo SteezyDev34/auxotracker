@@ -1,0 +1,205 @@
+{
+  "tournament": {
+    "name": "Brasilia, Brazil",
+    "slug": "brasilia-brazil",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Brasilia, Brazil",
+      "slug": "brasilia-brazil",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 193,
+      "groundType": "Red clay",
+      "tennisPoints": 75,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 17382,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "برازيليا، البرازيل"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176019
+  },
+  "season": {
+    "name": "ATP Challenger Brasilia, Brazil Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87352
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "xMfcsZNFc",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Adolfo Daniel Vallejo",
+    "slug": "vallejo-daniel",
+    "shortName": "A. Vallejo",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2146,
+    "playerTeamInfo": {
+      "id": 5354
+    },
+    "nameCode": "VAL",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "PY",
+      "alpha3": "PRY",
+      "name": "Paraguay",
+      "slug": "paraguay"
+    },
+    "id": 326949,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "أدولفو دانييل فاليخو"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. فاليخو"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Facundo Diaz Acosta",
+    "slug": "diaz-acosta-facundo",
+    "shortName": "F. D. Acosta",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2932,
+    "playerTeamInfo": {
+      "id": 3088
+    },
+    "nameCode": "DIA",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "AR",
+      "alpha3": "ARG",
+      "name": "Argentina",
+      "slug": "argentina"
+    },
+    "id": 264372,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "فاكوندو دياز أكوستا",
+        "ru": "Диас Акоста, Факундо"
+      },
+      "shortNameTranslation": {
+        "ar": "ف. أكوستا",
+        "bn": "এফ. দিয়াজ অ্যাকোস্টা",
+        "hi": "एफ. डियाज़ अकॉस्टा"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624022,
+  "slug": "adolfo-daniel-vallejo-facundo-diaz-acosta",
+  "startTimestamp": 1772823600,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

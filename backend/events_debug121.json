@@ -1,0 +1,322 @@
+{
+  "tournament": {
+    "name": "Thionville, France, Doubles",
+    "slug": "thionville-france-doubles",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Thionville, France, Doubles",
+      "slug": "atp-challenger-thionville-france-men-doubles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 11,
+      "groundType": "Hardcourt indoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25269,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تيونفيل، فرنسا، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176044
+  },
+  "season": {
+    "name": "ATP Challenger Thionville, France Men Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87364
+  },
+  "roundInfo": {
+    "round": 28,
+    "name": "Semifinals",
+    "cupRoundType": 2
+  },
+  "customId": "TnuisiOtj",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "C. Harper / D. Stevenson",
+    "slug": "harper-c-stevenson-d",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 24,
+    "nameCode": "H/S",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1048193,
+    "subTeams": [
+      {
+        "name": "Cleeve Harper",
+        "slug": "harper-cleeve",
+        "shortName": "C. Harper",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 177,
+        "nameCode": "HAR",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CA",
+          "alpha3": "CAN",
+          "name": "Canada",
+          "slug": "canada"
+        },
+        "id": 289201,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كليف هاربر"
+          },
+          "shortNameTranslation": {
+            "ar": "ك. هاربر"
+          }
+        }
+      },
+      {
+        "name": "David Stevenson",
+        "slug": "stevenson-david",
+        "shortName": "D. Stevenson",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 76,
+        "nameCode": "STE",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "GB",
+          "alpha3": "GBR",
+          "name": "United Kingdom",
+          "slug": "united-kingdom"
+        },
+        "id": 236314,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ديفيد ستيفنسون"
+          },
+          "shortNameTranslation": {
+            "ar": "د. ستيفنسون"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "سي. هاربر / دي. ستيفنسون"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "awayTeam": {
+    "name": "Liutarevich I / Pieczonka F",
+    "slug": "liutarevich-i-pieczonka-f",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 11,
+    "nameCode": "L/P",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1171958,
+    "subTeams": [
+      {
+        "name": "Ivan Liutarevich",
+        "slug": "liutarevich-ivan",
+        "shortName": "I. Liutarevich",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 137,
+        "nameCode": "LIU",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "BY",
+          "alpha3": "BLR",
+          "name": "Belarus",
+          "slug": "belarus"
+        },
+        "id": 113889,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيفان ليوتاريفيتش",
+            "ru": "Лютаревич, Иван"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. ليوتاريفيتش"
+          }
+        }
+      },
+      {
+        "name": "Filip Pieczonka",
+        "slug": "pieczonka-filip",
+        "shortName": "F. Pieczonka",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 354,
+        "nameCode": "PIE",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "PL",
+          "alpha3": "POL",
+          "name": "Poland",
+          "slug": "poland"
+        },
+        "id": 324576,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فيليب بيشونكا"
+          },
+          "shortNameTranslation": {
+            "ar": "ف. بيشونكا"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624646,
+  "slug": "liutarevich-pieczonka-c-harper-stevenson",
+  "startTimestamp": 1772802600,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt indoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

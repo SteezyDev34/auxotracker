@@ -62,4 +62,14 @@ class UserBankroll extends Model
     {
         return $this->hasMany(UserBookmaker::class, 'users_bankrolls_id');
     }
+
+    /**
+     * Obtenir les paris associés à cette bankroll.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bets(): HasMany
+    {
+        return $this->hasMany(Bet::class, 'bankroll_id');
+    }
 }
