@@ -1,194 +1,345 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from "vue";
 
-import AppMenuItem from './AppMenuItem.vue';
-import { useRouter } from 'vue-router';
+import AppMenuItem from "./AppMenuItem.vue";
+import { useRouter } from "vue-router";
+import { useAuth } from "@/composables/useAuth.js";
+
 const router = useRouter();
+const {
+  user,
+  isAdmin,
+  canAccessBasicFeatures,
+  canCreateBets,
+  canAccessTools,
+  canAccessAdvancedFeatures,
+  canAccessProfile,
+  canAccessProfileInfo,
+  canAccessFullProfile,
+  canAccessInterets,
+  initAuth,
+  logout: authLogout,
+} = useAuth();
+
 const logout = () => {
-    localStorage.removeItem('token'); // Supprime le token de l'utilisateur
-    router.push('/auth/login'); // Redirige vers la page de connexion
+  authLogout();
 };
-const model = ref([
-    {
-        items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
-    },
-    {
-        label: 'Paris',
-        items: [
-            { label: 'Mes paris', icon: 'pi pi-fw pi-list', to: '/mes-paris' },
-            { label: 'Ajouter un pari', icon: 'pi pi-fw pi-plus', to: '/ajouter-pari' }
-        ]
-    },
-    {
-        label: 'Mon Profil',
-        items: [
-            { label: 'Mes informations', icon: 'pi pi-fw pi-user', to: '/profile/mes-informations' },
-            { label: 'Mes Sports', icon: 'pi pi-fw pi-star', to: '/profile/sports' },
-            { label: 'Mes Bankrolls', icon: 'pi pi-fw pi-dollar', to: '/profile/bankrolls' },
-            { label: 'Mes Tipsters', icon: 'pi pi-fw pi-users', to: '/profile/tipsters' },
 
-        ]
-    },
+// Initialiser l'authentification au montage du composant
+onMounted(async () => {
+  await initAuth();
+});
+// Menu dynamique qui se met à jour selon les rôles de l'utilisateur
+const model = computed(() => {
+  const baseMenu = [
     {
-        label: 'Mes Outils',
-        items: [
-            { label: 'Tous les calculateurs', icon: 'pi pi-fw pi-calculator', to: '/mes-outils' },
-            { label: 'Remboursé si Nul', icon: 'pi pi-fw pi-shield', to: '/mes-outils/rembourse-si-nul' },
-            { label: 'Double Chance', icon: 'pi pi-fw pi-copy', to: '/mes-outils/double-chance' },
-            { label: 'Taux de Retour Joueur', icon: 'pi pi-fw pi-percentage', to: '/mes-outils/taux-retour-joueur' },
-            { label: 'Dutching', icon: 'pi pi-fw pi-sitemap', to: '/mes-outils/dutching' }
-        ]
+      items: [{ label: "Dashboard", icon: "pi pi-fw pi-home", to: "/" }],
     },
-    {
-        label: 'Simulateur',
-        items: [
-            { label: 'Martingale', icon: 'pi pi-fw pi-chart-line', to: '/simulateur/martingale' }
-        ]
-    },
-    {
-        label: 'UI Components',
-        items: [
-            { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout' },
-            { label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/uikit/input' },
-            { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', class: 'rotated-icon' },
-            { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table' },
-            { label: 'List', icon: 'pi pi-fw pi-list', to: '/uikit/list' },
-            { label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },
-            { label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/uikit/panel' },
-            { label: 'Overlay', icon: 'pi pi-fw pi-clone', to: '/uikit/overlay' },
-            { label: 'Media', icon: 'pi pi-fw pi-image', to: '/uikit/media' },
-            { label: 'Menu', icon: 'pi pi-fw pi-bars', to: '/uikit/menu' },
-            { label: 'Message', icon: 'pi pi-fw pi-comment', to: '/uikit/message' },
-            { label: 'File', icon: 'pi pi-fw pi-file', to: '/uikit/file' },
-            { label: 'Chart', icon: 'pi pi-fw pi-chart-bar', to: '/uikit/charts' },
-            { label: 'Timeline', icon: 'pi pi-fw pi-calendar', to: '/uikit/timeline' },
-            { label: 'Misc', icon: 'pi pi-fw pi-circle', to: '/uikit/misc' },
+  ];
 
-        ]
-    },
-    {
-        label: 'Pages',
-        icon: 'pi pi-fw pi-briefcase',
-        to: '/pages',
-        items: [
-            {
-                label: 'Landing',
-                icon: 'pi pi-fw pi-globe',
-                to: '/landing'
-            },
-            {
-                label: 'Auth',
-                icon: 'pi pi-fw pi-user',
-                items: [
-                    {
-                        label: 'Login',
-                        icon: 'pi pi-fw pi-sign-in',
-                        to: '/auth/login'
-                    },
-                    {
-                        label: 'Error',
-                        icon: 'pi pi-fw pi-times-circle',
-                        to: '/auth/error'
-                    },
-                    {
-                        label: 'Access Denied',
-                        icon: 'pi pi-fw pi-lock',
-                        to: '/auth/access'
-                    }
-                ]
-            },
-            {
-                label: 'Crud',
-                icon: 'pi pi-fw pi-pencil',
-                to: '/pages/crud'
-            },
-            {
-                label: 'Not Found',
-                icon: 'pi pi-fw pi-exclamation-circle',
-                to: '/pages/notfound'
-            },
-            {
-                label: 'Empty',
-                icon: 'pi pi-fw pi-circle-off',
-                to: '/pages/empty'
-            }
-        ]
-    },
-    {
-        label: 'Hierarchy',
-        items: [
-            {
-                label: 'Submenu 1',
-                icon: 'pi pi-fw pi-bookmark',
-                items: [
-                    {
-                        label: 'Submenu 1.1',
-                        icon: 'pi pi-fw pi-bookmark',
-                        items: [
-                            { label: 'Submenu 1.1.1', icon: 'pi pi-fw pi-bookmark' },
-                            { label: 'Submenu 1.1.2', icon: 'pi pi-fw pi-bookmark' },
-                            { label: 'Submenu 1.1.3', icon: 'pi pi-fw pi-bookmark' }
-                        ]
-                    },
-                    {
-                        label: 'Submenu 1.2',
-                        icon: 'pi pi-fw pi-bookmark',
-                        items: [{ label: 'Submenu 1.2.1', icon: 'pi pi-fw pi-bookmark' }]
-                    }
-                ]
-            },
-            {
-                label: 'Submenu 2',
-                icon: 'pi pi-fw pi-bookmark',
-                items: [
-                    {
-                        label: 'Submenu 2.1',
-                        icon: 'pi pi-fw pi-bookmark',
-                        items: [
-                            { label: 'Submenu 2.1.1', icon: 'pi pi-fw pi-bookmark' },
-                            { label: 'Submenu 2.1.2', icon: 'pi pi-fw pi-bookmark' }
-                        ]
-                    },
-                    {
-                        label: 'Submenu 2.2',
-                        icon: 'pi pi-fw pi-bookmark',
-                        items: [{ label: 'Submenu 2.2.1', icon: 'pi pi-fw pi-bookmark' }]
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        label: 'Get Started',
-        items: [
-            {
-                label: 'Documentation',
-                icon: 'pi pi-fw pi-book',
-                to: '/documentation'
-            },
-            {
-                label: 'View Source',
-                icon: 'pi pi-fw pi-github',
-                url: 'https://github.com/primefaces/sakai-vue',
-                target: '_blank'
-            }
-        ]
-    },
-    {
-        items: [{ label: 'Déconnexion', icon: 'pi pi-sign-out', to: '/auth/login', command: logout, class: 'text-red-500' }]
+  // Section Paris - construction dynamique selon les rôles
+  const parisItems = [
+    { label: "Mes paris", icon: "pi pi-fw pi-list", to: "/mes-paris" },
+  ];
+
+  // Ajouter un pari - accessible seulement aux users (pas investor)
+  if (canCreateBets.value) {
+    parisItems.push({
+      label: "Ajouter un pari",
+      icon: "pi pi-fw pi-plus",
+      to: "/ajouter-pari",
+    });
+  }
+
+  baseMenu.push({
+    label: "Paris",
+    items: parisItems,
+  });
+
+  // Section Mon Profil - construction dynamique selon les rôles
+  if (canAccessProfileInfo.value) {
+    const profileItems = [];
+
+    // Mes informations - accessible à tous (user + investor)
+    profileItems.push({
+      label: "Mes informations",
+      icon: "pi pi-fw pi-user",
+      to: "/profile/mes-informations",
+    });
+
+    // Mes Intérêts - accessible uniquement aux investors
+    if (canAccessInterets.value) {
+      profileItems.push({
+        label: "Mes Intérêts",
+        icon: "pi pi-fw pi-chart-line",
+        to: "/profile/interets",
+      });
     }
 
+    // Sections avancées du profil - accessible uniquement aux users (pas investor)
+    if (canAccessFullProfile.value) {
+      profileItems.push(
+        {
+          label: "Mes Sports",
+          icon: "pi pi-fw pi-star",
+          to: "/profile/sports",
+        },
+        {
+          label: "Mes Bankrolls",
+          icon: "pi pi-fw pi-dollar",
+          to: "/profile/bankrolls",
+        },
+        {
+          label: "Mes Tipsters",
+          icon: "pi pi-fw pi-users",
+          to: "/profile/tipsters",
+        }
+      );
+    }
 
-]);
+    baseMenu.push({
+      label: "Mon Profil",
+      items: profileItems,
+    });
+  }
+
+  // Sections Outils et Simulateur - accessibles aux users seulement (pas investor)
+  if (canAccessTools.value) {
+    baseMenu.push(
+      {
+        label: "Mes Outils",
+        items: [
+          {
+            label: "Tous les calculateurs",
+            icon: "pi pi-fw pi-calculator",
+            to: "/mes-outils",
+          },
+          {
+            label: "Remboursé si Nul",
+            icon: "pi pi-fw pi-shield",
+            to: "/mes-outils/rembourse-si-nul",
+          },
+          {
+            label: "Double Chance",
+            icon: "pi pi-fw pi-copy",
+            to: "/mes-outils/double-chance",
+          },
+          {
+            label: "Taux de Retour Joueur",
+            icon: "pi pi-fw pi-percentage",
+            to: "/mes-outils/taux-retour-joueur",
+          },
+          {
+            label: "Dutching",
+            icon: "pi pi-fw pi-sitemap",
+            to: "/mes-outils/dutching",
+          },
+        ],
+      },
+      {
+        label: "Simulateur",
+        items: [
+          {
+            label: "Martingale",
+            icon: "pi pi-fw pi-chart-line",
+            to: "/simulateur/martingale",
+          },
+        ],
+      }
+    );
+  }
+
+  // Ajouter UI Components seulement pour les administrateurs
+  if (isAdmin.value) {
+    baseMenu.push(
+      {
+        label: "UI Components",
+        items: [
+          {
+            label: "Form Layout",
+            icon: "pi pi-fw pi-id-card",
+            to: "/uikit/formlayout",
+          },
+          {
+            label: "Input",
+            icon: "pi pi-fw pi-check-square",
+            to: "/uikit/input",
+          },
+          {
+            label: "Button",
+            icon: "pi pi-fw pi-mobile",
+            to: "/uikit/button",
+            class: "rotated-icon",
+          },
+          { label: "Table", icon: "pi pi-fw pi-table", to: "/uikit/table" },
+          { label: "List", icon: "pi pi-fw pi-list", to: "/uikit/list" },
+          { label: "Tree", icon: "pi pi-fw pi-share-alt", to: "/uikit/tree" },
+          { label: "Panel", icon: "pi pi-fw pi-tablet", to: "/uikit/panel" },
+          { label: "Overlay", icon: "pi pi-fw pi-clone", to: "/uikit/overlay" },
+          { label: "Media", icon: "pi pi-fw pi-image", to: "/uikit/media" },
+          { label: "Menu", icon: "pi pi-fw pi-bars", to: "/uikit/menu" },
+          {
+            label: "Message",
+            icon: "pi pi-fw pi-comment",
+            to: "/uikit/message",
+          },
+          { label: "File", icon: "pi pi-fw pi-file", to: "/uikit/file" },
+          {
+            label: "Chart",
+            icon: "pi pi-fw pi-chart-bar",
+            to: "/uikit/charts",
+          },
+          {
+            label: "Timeline",
+            icon: "pi pi-fw pi-calendar",
+            to: "/uikit/timeline",
+          },
+          { label: "Misc", icon: "pi pi-fw pi-circle", to: "/uikit/misc" },
+        ],
+      },
+      {
+        label: "Pages",
+        icon: "pi pi-fw pi-briefcase",
+        to: "/pages",
+        items: [
+          {
+            label: "Landing",
+            icon: "pi pi-fw pi-globe",
+            to: "/landing",
+          },
+          {
+            label: "Auth",
+            icon: "pi pi-fw pi-user",
+            items: [
+              {
+                label: "Login",
+                icon: "pi pi-fw pi-sign-in",
+                to: "/auth/login",
+              },
+              {
+                label: "Error",
+                icon: "pi pi-fw pi-times-circle",
+                to: "/auth/error",
+              },
+              {
+                label: "Access Denied",
+                icon: "pi pi-fw pi-lock",
+                to: "/auth/access",
+              },
+            ],
+          },
+          {
+            label: "Crud",
+            icon: "pi pi-fw pi-pencil",
+            to: "/pages/crud",
+          },
+          {
+            label: "Not Found",
+            icon: "pi pi-fw pi-exclamation-circle",
+            to: "/pages/notfound",
+          },
+          {
+            label: "Empty",
+            icon: "pi pi-fw pi-circle-off",
+            to: "/pages/empty",
+          },
+        ],
+      },
+      {
+        label: "Hierarchy",
+        items: [
+          {
+            label: "Submenu 1",
+            icon: "pi pi-fw pi-bookmark",
+            items: [
+              {
+                label: "Submenu 1.1",
+                icon: "pi pi-fw pi-bookmark",
+                items: [
+                  { label: "Submenu 1.1.1", icon: "pi pi-fw pi-bookmark" },
+                  { label: "Submenu 1.1.2", icon: "pi pi-fw pi-bookmark" },
+                  { label: "Submenu 1.1.3", icon: "pi pi-fw pi-bookmark" },
+                ],
+              },
+              {
+                label: "Submenu 1.2",
+                icon: "pi pi-fw pi-bookmark",
+                items: [
+                  { label: "Submenu 1.2.1", icon: "pi pi-fw pi-bookmark" },
+                ],
+              },
+            ],
+          },
+          {
+            label: "Submenu 2",
+            icon: "pi pi-fw pi-bookmark",
+            items: [
+              {
+                label: "Submenu 2.1",
+                icon: "pi pi-fw pi-bookmark",
+                items: [
+                  { label: "Submenu 2.1.1", icon: "pi pi-fw pi-bookmark" },
+                  { label: "Submenu 2.1.2", icon: "pi pi-fw pi-bookmark" },
+                ],
+              },
+              {
+                label: "Submenu 2.2",
+                icon: "pi pi-fw pi-bookmark",
+                items: [
+                  { label: "Submenu 2.2.1", icon: "pi pi-fw pi-bookmark" },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        label: "Get Started",
+        items: [
+          {
+            label: "Documentation",
+            icon: "pi pi-fw pi-book",
+            to: "/documentation",
+          },
+          {
+            label: "View Source",
+            icon: "pi pi-fw pi-github",
+            url: "https://github.com/SteezyDev34/auxotracker",
+            target: "_blank",
+          },
+        ],
+      }
+    );
+  }
+
+  return [
+    ...baseMenu,
+    {
+      items: [
+        {
+          label: "Déconnexion",
+          icon: "pi pi-sign-out",
+          to: "/auth/login",
+          command: logout,
+          class: "text-red-500",
+        },
+      ],
+    },
+  ];
+});
 </script>
 
 <template>
-    <ul class="layout-menu">
-        <template v-for="(item, i) in model" :key="item">
-            <app-menu-item v-if="!item.separator" :item="item" :index="i"></app-menu-item>
-            <li v-if="item.separator" class="menu-separator"></li>
-        </template>
-    </ul>
+  <ul class="layout-menu">
+    <template v-for="(item, i) in model" :key="item">
+      <app-menu-item
+        v-if="!item.separator"
+        :item="item"
+        :index="i"
+      ></app-menu-item>
+      <li v-if="item.separator" class="menu-separator"></li>
+    </template>
+  </ul>
 </template>
 
 <style lang="scss" scoped></style>

@@ -1,0 +1,203 @@
+{
+  "tournament": {
+    "name": "Antalya 2, Turkiye",
+    "slug": "antalya-2-turkiye",
+    "category": {
+      "name": "WTA 125",
+      "slug": "wta-125",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 871,
+      "flag": "wta-125",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفات التنس 125",
+          "ru": "WTA 125"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Antalya 2, Turkiye",
+      "slug": "wta-125k-antalya-2-turkiye-women-singles",
+      "category": {
+        "name": "WTA 125",
+        "slug": "wta-125",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 871,
+        "flag": "wta-125",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفات التنس 125",
+            "ru": "WTA 125"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 155,
+      "groundType": "Red clay",
+      "tennisPoints": 125,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25615,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "أنطاليا 2، تركيا"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176050
+  },
+  "season": {
+    "name": "WTA 125K Antalya 2, Turkiye Women Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87907
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "ovJbsgrbc",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Moyuka Uchijima",
+    "slug": "uchijima-moyuka",
+    "shortName": "M. Uchijima",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2316,
+    "playerTeamInfo": {
+      "id": 861
+    },
+    "nameCode": "UCH",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "JP",
+      "alpha3": "JPN",
+      "name": "Japan",
+      "slug": "japan"
+    },
+    "id": 253356,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "مويكا أوتشيجيما",
+        "bn": "ময়ুকা উচিজিমা",
+        "hi": "मोयुका उचिजिमा",
+        "ru": "Учижима, Моюка"
+      },
+      "shortNameTranslation": {
+        "ar": "م. أوتشيجيما"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Maja Chwalinska",
+    "slug": "chwalinska-maja",
+    "shortName": "M. Chwalinska",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 3907,
+    "playerTeamInfo": {
+      "id": 848
+    },
+    "nameCode": "CHW",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "PL",
+      "alpha3": "POL",
+      "name": "Poland",
+      "slug": "poland"
+    },
+    "id": 211014,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "مايا شوالينسكا",
+        "ru": "Свалинска, Майя"
+      },
+      "shortNameTranslation": {
+        "ar": "م. شوالينسكا",
+        "bn": "এম. চোয়ালিস্কা",
+        "hi": "एम. च्वालिंस्का"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624786,
+  "slug": "moyuka-uchijima-maja-chwalinska",
+  "startTimestamp": 1772784000,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

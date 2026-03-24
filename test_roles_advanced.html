@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Système de Rôles - AuxoTracker</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .success {
+        background-color: #d4edda;
+        border-left: 4px solid #28a745;
+        color: #155724;
+      }
+      .error {
+        background-color: #f8d7da;
+        border-left: 4px solid #dc3545;
+        color: #721c24;
+      }
+      .info {
+        background-color: #d1ecf1;
+        border-left: 4px solid #17a2b8;
+        color: #0c5460;
+      }
+      .warning {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        color: #856404;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button.secondary {
+        background: #6c757d;
+      }
+      button.danger {
+        background: #dc3545;
+      }
+      input {
+        padding: 8px;
+        margin: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .role-section {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .role-card {
+        flex: 1;
+        min-width: 300px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      th {
+        background-color: #f8f9fa;
+      }
+      .status-ok {
+        color: #28a745;
+        font-weight: bold;
+      }
+      .status-forbidden {
+        color: #dc3545;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔐 Test du Système de Rôles - AuxoTracker</h1>
+
+      <div class="card info">
+        <h3>📋 Instructions de Test</h3>
+        <ol>
+          <li>Connectez-vous avec différents comptes selon les rôles</li>
+          <li>
+            Testez l'accès aux différentes sections selon le tableau des
+            permissions
+          </li>
+          <li>
+            Vérifiez que les redirections et restrictions fonctionnent
+            correctement
+          </li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>🔑 Connexion</h3>
+        <input type="email" id="email" placeholder="Email" value="" />
+        <input
+          type="password"
+          id="password"
+          placeholder="Mot de passe"
+          value=""
+        />
+        <button onclick="login()">Se connecter</button>
+        <button class="secondary" onclick="logout()">Déconnexion</button>
+        <div id="userInfo" style="margin-top: 10px"></div>
+      </div>
+
+      <div class="role-section">
+        <div class="role-card card">
+          <h3>👤 Tests Rôle USER</h3>
+          <p><strong>Accès complet :</strong> Profil, Outils, Simulateur</p>
+          <button onclick="testUserAccess()">Tester accès User</button>
+          <div id="userResults"></div>
+        </div>
+
+        <div class="role-card card">
+          <h3>💼 Tests Rôle INVESTOR</h3>
+          <p>
+            <strong>Accès limité :</strong> Seules les infos profil, Outils,
+            Simulateur
+          </p>
+          <button onclick="testInvestorAccess()">Tester accès Investor</button>
+          <div id="investorResults"></div>
+        </div>
+
+        <div class="role-card card">
+          <h3>⚙️ Tests Rôle ADMIN</h3>
+          <p><strong>Accès étendu :</strong> Tout + UI Components</p>
+          <button onclick="testAdminAccess()">Tester accès Admin</button>
+          <div id="adminResults"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Tableau des Permissions</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Section / Route</th>
+              <th>User</th>
+              <th>Investor</th>
+              <th>Admin</th>
+              <th>SuperAdmin</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dashboard</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+            </tr>
+            <tr>
+              <td>Paris (Mes paris, Ajouter)</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+            </tr>
+            <tr>
+              <td>Mon Profil → Mes informations</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+            </tr>
+            <tr>
+              <td>Mon Profil → Sports, Bankrolls, Tipsters</td>
+              <td class="status-ok">✅</td>
+              <td class="status-forbidden">❌</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+            </tr>
+            <tr>
+              <td>Mes Outils</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+            </tr>
+            <tr>
+              <td>Simulateur</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+            </tr>
+            <tr>
+              <td>UI Components</td>
+              <td class="status-forbidden">❌</td>
+              <td class="status-forbidden">❌</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+            </tr>
+            <tr>
+              <td>Administration</td>
+              <td class="status-forbidden">❌</td>
+              <td class="status-forbidden">❌</td>
+              <td class="status-ok">✅</td>
+              <td class="status-ok">✅</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>🧪 Tests API Avancés</h3>
+        <button onclick="testApiEndpoints()">Tester endpoints API</button>
+        <div id="apiResults"></div>
+      </div>
+
+      <div id="logs" class="card">
+        <h3>📝 Logs des Tests</h3>
+        <div
+          id="logContent"
+          style="
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+          "
+        ></div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE =
+        window.location.hostname === "localhost"
+          ? "http://api.auxotracker.lan:8080/api"
+          : "https://api.auxotracker.lan/api";
+
+      let token = localStorage.getItem("token") || "";
+      let currentUser = null;
+
+      // Fonction pour ajouter des logs
+      function addLog(message, type = "info") {
+        const logs = document.getElementById("logContent");
+        const timestamp = new Date().toLocaleTimeString();
+        const logClass =
+          type === "success"
+            ? "status-ok"
+            : type === "error"
+            ? "status-forbidden"
+            : "";
+        logs.innerHTML += `<div class="${logClass}"><strong>[${timestamp}]</strong> ${message}</div>`;
+        logs.scrollTop = logs.scrollHeight;
+      }
+
+      // Fonction utilitaire pour les requêtes API
+      async function makeRequest(url, options = {}) {
+        try {
+          const response = await fetch(`${API_BASE}${url}`, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+              ...options.headers,
+            },
+            ...options,
+          });
+
+          const data = await response.json();
+          return { success: response.ok, data, status: response.status };
+        } catch (error) {
+          return { success: false, error: error.message, status: 0 };
+        }
+      }
+
+      // Connexion
+      async function login() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        if (!email || !password) {
+          addLog("❌ Veuillez saisir email et mot de passe", "error");
+          return;
+        }
+
+        const result = await makeRequest("/login", {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (result.success && result.data.token) {
+          token = result.data.token;
+          localStorage.setItem("token", token);
+          currentUser = result.data.user;
+
+          document.getElementById("userInfo").innerHTML = `
+                    <div class="success" style="padding: 10px; border-radius: 4px; margin-top: 10px;">
+                        <strong>Connecté:</strong> ${currentUser.email} 
+                        <strong>Rôle:</strong> ${currentUser.role || "user"}
+                    </div>
+                `;
+
+          addLog(
+            `✅ Connexion réussie - ${currentUser.email} (${
+              currentUser.role || "user"
+            })`,
+            "success"
+          );
+        } else {
+          addLog(
+            `❌ Erreur de connexion: ${result.data?.message || result.error}`,
+            "error"
+          );
+        }
+      }
+
+      // Déconnexion
+      function logout() {
+        localStorage.removeItem("token");
+        token = "";
+        currentUser = null;
+        document.getElementById("userInfo").innerHTML = "";
+        addLog("🚪 Déconnexion effectuée", "info");
+      }
+
+      // Tests spécifiques par rôle
+      async function testUserAccess() {
+        const results = document.getElementById("userResults");
+        results.innerHTML = "<h4>Tests en cours...</h4>";
+
+        const tests = [
+          { name: "Profil complet", url: "/profile/sports" },
+          { name: "Mes Outils", url: "/mes-outils" },
+          {
+            name: "UI Components (devrait échouer)",
+            url: "/uikit/formlayout",
+            shouldFail: true,
+          },
+        ];
+
+        let html = "<h4>Résultats:</h4><ul>";
+        for (const test of tests) {
+          const result = await makeRequest(test.url);
+          const success = test.shouldFail ? !result.success : result.success;
+          const icon = success ? "✅" : "❌";
+          html += `<li>${icon} ${test.name} (${result.status})</li>`;
+          addLog(
+            `${icon} User test: ${test.name} - ${result.status}`,
+            success ? "success" : "error"
+          );
+        }
+        html += "</ul>";
+        results.innerHTML = html;
+      }
+
+      async function testInvestorAccess() {
+        const results = document.getElementById("investorResults");
+        results.innerHTML = "<h4>Tests en cours...</h4>";
+
+        const tests = [
+          { name: "Mes informations (OK)", url: "/profile/mes-informations" },
+          {
+            name: "Sports (devrait échouer)",
+            url: "/profile/sports",
+            shouldFail: true,
+          },
+          { name: "Mes Outils (OK)", url: "/mes-outils" },
+          {
+            name: "UI Components (devrait échouer)",
+            url: "/uikit/formlayout",
+            shouldFail: true,
+          },
+        ];
+
+        let html = "<h4>Résultats:</h4><ul>";
+        for (const test of tests) {
+          const result = await makeRequest(test.url);
+          const success = test.shouldFail ? !result.success : result.success;
+          const icon = success ? "✅" : "❌";
+          html += `<li>${icon} ${test.name} (${result.status})</li>`;
+          addLog(
+            `${icon} Investor test: ${test.name} - ${result.status}`,
+            success ? "success" : "error"
+          );
+        }
+        html += "</ul>";
+        results.innerHTML = html;
+      }
+
+      async function testAdminAccess() {
+        const results = document.getElementById("adminResults");
+        results.innerHTML = "<h4>Tests en cours...</h4>";
+
+        const tests = [
+          { name: "UI Components", url: "/uikit/formlayout" },
+          { name: "Admin Users", url: "/admin/users" },
+          { name: "Admin Stats", url: "/admin/stats" },
+        ];
+
+        let html = "<h4>Résultats:</h4><ul>";
+        for (const test of tests) {
+          const result = await makeRequest(test.url);
+          const icon = result.success ? "✅" : "❌";
+          html += `<li>${icon} ${test.name} (${result.status})</li>`;
+          addLog(
+            `${icon} Admin test: ${test.name} - ${result.status}`,
+            result.success ? "success" : "error"
+          );
+        }
+        html += "</ul>";
+        results.innerHTML = html;
+      }
+
+      async function testApiEndpoints() {
+        const results = document.getElementById("apiResults");
+        results.innerHTML = "<h4>Tests API en cours...</h4>";
+
+        if (!currentUser) {
+          results.innerHTML =
+            '<div class="error">Veuillez vous connecter d\'abord</div>';
+          return;
+        }
+
+        const endpoints = [
+          { name: "User Info", url: "/user", roles: ["all"] },
+          {
+            name: "Profile Info",
+            url: "/profile/mes-informations",
+            roles: ["user", "investor", "admin"],
+          },
+          {
+            name: "Sports Profile",
+            url: "/profile/sports",
+            roles: ["user", "admin"],
+          },
+          {
+            name: "Admin Users",
+            url: "/admin/users",
+            roles: ["admin", "superadmin"],
+          },
+          {
+            name: "UI Form Layout",
+            url: "/uikit/formlayout",
+            roles: ["admin", "superadmin"],
+          },
+        ];
+
+        let html = "<h4>Résultats API:</h4><table>";
+        html +=
+          "<tr><th>Endpoint</th><th>Status</th><th>Attendu</th><th>Résultat</th></tr>";
+
+        for (const endpoint of endpoints) {
+          const result = await makeRequest(endpoint.url);
+          const userRole = currentUser.role || "user";
+          const shouldHaveAccess =
+            endpoint.roles.includes("all") || endpoint.roles.includes(userRole);
+          const actualAccess = result.success;
+          const correct = shouldHaveAccess === actualAccess;
+
+          const statusIcon = result.success ? "✅" : "❌";
+          const expectIcon = shouldHaveAccess ? "✅" : "❌";
+          const resultIcon = correct ? "✅" : "❌";
+
+          html += `<tr>
+                    <td>${endpoint.name}</td>
+                    <td>${statusIcon} ${result.status}</td>
+                    <td>${expectIcon} ${
+            shouldHaveAccess ? "Autorisé" : "Refusé"
+          }</td>
+                    <td>${resultIcon} ${correct ? "Correct" : "Incorrect"}</td>
+                </tr>`;
+
+          addLog(
+            `${resultIcon} API ${endpoint.name}: ${result.status} (attendu: ${
+              shouldHaveAccess ? "OK" : "Refusé"
+            })`,
+            correct ? "success" : "error"
+          );
+        }
+
+        html += "</table>";
+        results.innerHTML = html;
+      }
+
+      // Initialisation
+      if (token) {
+        makeRequest("/user").then((result) => {
+          if (result.success) {
+            currentUser = result.data;
+            document.getElementById("userInfo").innerHTML = `
+                        <div class="success" style="padding: 10px; border-radius: 4px; margin-top: 10px;">
+                            <strong>Connecté:</strong> ${currentUser.email} 
+                            <strong>Rôle:</strong> ${currentUser.role || "user"}
+                        </div>
+                    `;
+            addLog(
+              `🔄 Session restaurée - ${currentUser.email} (${
+                currentUser.role || "user"
+              })`,
+              "info"
+            );
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

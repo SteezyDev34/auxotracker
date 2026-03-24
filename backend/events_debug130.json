@@ -1,0 +1,330 @@
+{
+  "tournament": {
+    "name": "Antalya 2, Turkiye, Doubles",
+    "slug": "antalya-2-turkiye-doubles",
+    "category": {
+      "name": "WTA 125",
+      "slug": "wta-125",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 871,
+      "flag": "wta-125",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفات التنس 125",
+          "ru": "WTA 125"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Antalya 2, Turkiye, Doubles",
+      "slug": "wta-125k-antalya-2-turkiye-women-doubles",
+      "category": {
+        "name": "WTA 125",
+        "slug": "wta-125",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 871,
+        "flag": "wta-125",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفات التنس 125",
+            "ru": "WTA 125"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 20,
+      "groundType": "Red clay",
+      "tennisPoints": 125,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25616,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "أنطاليا 2، تركيا، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176051
+  },
+  "season": {
+    "name": "WTA 125K Antalya 2, Turkiye Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87908
+  },
+  "roundInfo": {
+    "round": 28,
+    "name": "Semifinals",
+    "cupRoundType": 2
+  },
+  "customId": "YkdcsjUMd",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Jakupovic D / Radisic N",
+    "slug": "jakupovic-d-radisic-n",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 29,
+    "nameCode": "J/R",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 469709,
+    "subTeams": [
+      {
+        "name": "Dalila Jakupovic",
+        "slug": "jakupovic-dalila",
+        "shortName": "D. Jakupovic",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 415,
+        "nameCode": "JAK",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "SI",
+          "alpha3": "SVN",
+          "name": "Slovenia",
+          "slug": "slovenia"
+        },
+        "id": 52533,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دليلة جاكوبوفيتش",
+            "ru": "Якупович, Далила"
+          },
+          "shortNameTranslation": {
+            "ar": "د. جاكوبوفيتش",
+            "bn": "ডি. জাকুপোভিচ",
+            "hi": "डी. जाकुपोविच"
+          }
+        }
+      },
+      {
+        "name": "Nika Radišić",
+        "slug": "radisic-nika",
+        "shortName": "N. Radišić",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 177,
+        "nameCode": "RAD",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "SI",
+          "alpha3": "SVN",
+          "name": "Slovenia",
+          "slug": "slovenia"
+        },
+        "id": 268808,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "نيكا راديشيش"
+          },
+          "shortNameTranslation": {
+            "ar": "ن. راديشيش"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ياكوبوفيتش د / راديسيتش ن"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "awayTeam": {
+    "name": "Kolodziejova M / Maleckova J",
+    "slug": "kolodziejova-m-maleckova-j",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 39,
+    "nameCode": "K/M",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 258048,
+    "subTeams": [
+      {
+        "name": "Jesika Maleckova",
+        "slug": "maleckova-jesika",
+        "shortName": "J. Maleckova",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 241,
+        "nameCode": "MAL",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CZ",
+          "alpha3": "CZE",
+          "name": "Czechia",
+          "slug": "czechia"
+        },
+        "id": 46428,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "جيسيكا مالكوفا",
+            "ru": "Джесика Малечкова"
+          },
+          "shortNameTranslation": {
+            "ar": "ج. مالكوفا",
+            "bn": "জে. মালেকোভা",
+            "hi": "जे. मलेकोवा"
+          }
+        }
+      },
+      {
+        "name": "Miriam Skoch",
+        "slug": "kolodziejova-miriam",
+        "shortName": "M. Skoch",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 176,
+        "nameCode": "KOL",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CZ",
+          "alpha3": "CZE",
+          "name": "Czechia",
+          "slug": "czechia"
+        },
+        "id": 182054,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "مريم سكوخ",
+            "ru": "Колодзиёва, Мириам"
+          },
+          "shortNameTranslation": {
+            "ar": "م. سكوخ"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "كولودزييوا م / ماليتسكووا ج",
+        "ru": "Колодзиёва М / Джесика Малечкова"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624795,
+  "slug": "jakupovic-radisic-kolodziejova-maleckova",
+  "startTimestamp": 1772788200,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

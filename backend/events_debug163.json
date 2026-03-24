@@ -1,0 +1,224 @@
+{
+  "tournament": {
+    "name": "ITF M15 Sharm El Sheikh 6 Men ",
+    "slug": "itf-m15-sharm-el-sheikh-6-men",
+    "category": {
+      "name": "ITF Men",
+      "slug": "itf-men",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 785,
+      "flag": "itf-men",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "اتحاد التنس الدولي للرجال",
+          "ru": "Мужской мировой теннисный тур ITF"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "ITF M15 Sharm El Sheikh 6 Men ",
+      "slug": "itf-m15-sharm-el-sheikh-6-men",
+      "category": {
+        "name": "ITF Men",
+        "slug": "itf-men",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 785,
+        "flag": "itf-men",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اتحاد التنس الدولي للرجال",
+            "ru": "Мужской мировой теннисный тур ITF"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 7,
+      "groundType": "Hardcourt outdoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25325,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "ITF M15 شرم الشيخ 6 للرجال"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 147288,
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ITF M15 شرم الشيخ 6 للرجال"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "season": {
+    "name": "2026",
+    "year": "2026",
+    "editor": false,
+    "id": 90372
+  },
+  "roundInfo": {
+    "round": 5,
+    "name": "Round of 16",
+    "cupRoundType": 8
+  },
+  "customId": "AlBcsyKQd",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Ognjen Milic",
+    "slug": "milic-ognjen",
+    "shortName": "O. Milic",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 530,
+    "playerTeamInfo": {
+      "id": 20887
+    },
+    "nameCode": "MIL",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "RS",
+      "alpha3": "SRB",
+      "name": "Serbia",
+      "slug": "serbia"
+    },
+    "id": 479273,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "أوغنيين ميليتش"
+      },
+      "shortNameTranslation": {
+        "ar": "أ. ميليتش"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Karim Ibrahim",
+    "slug": "ibrahim-karim",
+    "shortName": "K. Ibrahim",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 96,
+    "playerTeamInfo": {
+      "id": 13661
+    },
+    "nameCode": "IBR",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "EG",
+      "alpha3": "EGY",
+      "name": "Egypt",
+      "slug": "egypt"
+    },
+    "id": 315575,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "كريم إبراهيم"
+      },
+      "shortNameTranslation": {
+        "ar": "ك. إبراهيم"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 7,
+    "period1TieBreak": 9,
+    "period2TieBreak": 7,
+    "point": "0"
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 6,
+    "period2": 6,
+    "period1TieBreak": 7,
+    "period2TieBreak": 3,
+    "point": "0"
+  },
+  "time": {},
+  "changes": {
+    "changes": [
+      "status.code",
+      "status.description",
+      "status.type"
+    ],
+    "changeTimestamp": 1772717364
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15663217,
+  "slug": "ognjen-milic-karim-ibrahim",
+  "startTimestamp": 1772709291,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

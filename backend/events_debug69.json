@@ -1,0 +1,330 @@
+{
+  "tournament": {
+    "name": "Indian Wells, USA, Doubles",
+    "slug": "indian-wells-usa-doubles",
+    "category": {
+      "name": "WTA",
+      "slug": "wta",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 6,
+      "flag": "wta",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة لاعبات التنس",
+          "bn": "ডব্লিউটিএ",
+          "hi": "चैलेंजर",
+          "ru": "WTA"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells, Doubles",
+      "slug": "indian-wells-doubles",
+      "category": {
+        "name": "WTA",
+        "slug": "wta",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 6,
+        "flag": "wta",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة لاعبات التنس",
+            "bn": "ডব্লিউটিএ",
+            "hi": "चैलेंजर",
+            "ru": "WTA"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 206,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2555,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "إنديان ويلز، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176089
+  },
+  "season": {
+    "name": "WTA Indian Wells, USA Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 85597
+  },
+  "roundInfo": {
+    "round": 6,
+    "name": "Round of 32",
+    "cupRoundType": 16
+  },
+  "customId": "cZCcsCJvj",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Andreeva M / Mboko V",
+    "slug": "andreeva-m-mboko-v",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2,
+    "nameCode": "A/M",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1176727,
+    "subTeams": [
+      {
+        "name": "Mirra Andreeva",
+        "slug": "andreeva-mirra",
+        "shortName": "M. Andreeva",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 25079,
+        "nameCode": "AND",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RU",
+          "alpha3": "RUS",
+          "name": "Russia",
+          "slug": "russia"
+        },
+        "id": 406776,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ميرا أندرييفا",
+            "bn": "মিরা আন্দ্রেভা",
+            "hi": "मिर्रा आंद्रेवा"
+          },
+          "shortNameTranslation": {
+            "ar": "م. أندرييفا"
+          }
+        }
+      },
+      {
+        "name": "Victoria Mboko",
+        "slug": "mboko-victoria",
+        "shortName": "V. Mboko",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 8664,
+        "nameCode": "MBO",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CA",
+          "alpha3": "CAN",
+          "name": "Canada",
+          "slug": "canada"
+        },
+        "id": 386338,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فيكتوريا مبوكوا"
+          },
+          "shortNameTranslation": {
+            "ar": "ف. مبوكوا"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "awayTeam": {
+    "name": "Mertens E / Zhang S",
+    "slug": "mertens-e-zhang-s",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 108,
+    "nameCode": "MZH",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 319952,
+    "subTeams": [
+      {
+        "name": "Elise Mertens",
+        "slug": "mertens-elise",
+        "shortName": "E. Mertens",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 8040,
+        "nameCode": "MER",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "BE",
+          "alpha3": "BEL",
+          "name": "Belgium",
+          "slug": "belgium"
+        },
+        "id": 78551,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إليز ميرتينس",
+            "ru": "Мертенс, Элисе"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. ميرتينس",
+            "bn": "ই. মার্টেনস",
+            "hi": "ई. मर्टेंस"
+          }
+        }
+      },
+      {
+        "name": "Shuai Zhang",
+        "slug": "zhang-shuai",
+        "shortName": "S. Zhang",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 3485,
+        "nameCode": "ZHA",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CN",
+          "alpha3": "CHN",
+          "name": "China",
+          "slug": "china"
+        },
+        "id": 19607,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "شواي تشانغ",
+            "bn": "এস হুয়াই ঝাং",
+            "hi": "शुआई झांग",
+            "ru": "Чжан, Шай"
+          },
+          "shortNameTranslation": {
+            "ar": "ش. تشانغ"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ميرتينس إ / زانغ س",
+        "ru": "Мертенс Э / Чжан Ш"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15655141,
+  "slug": "andreeva-mboko-mertens-zhang",
+  "startTimestamp": 1772838000,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

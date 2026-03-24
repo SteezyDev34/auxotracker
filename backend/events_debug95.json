@@ -1,0 +1,205 @@
+{
+  "tournament": {
+    "name": "Thionville, France",
+    "slug": "thionville-france",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Thionville, France",
+      "slug": "atp-challenger-thionville-france-men-singles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 171,
+      "groundType": "Hardcourt indoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25268,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تيونفيل، فرنسا"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176043
+  },
+  "season": {
+    "name": "ATP Challenger Thionville, France Men Singles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87363
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "XrIsjdFb",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Sebastian Ofner",
+    "slug": "ofner-sebastian",
+    "shortName": "S. Ofner",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 5016,
+    "playerTeamInfo": {
+      "id": 231
+    },
+    "nameCode": "OFN",
+    "disabled": false,
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "AT",
+      "alpha3": "AUT",
+      "name": "Austria",
+      "slug": "austria"
+    },
+    "id": 83397,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "سيباستيان أوفنر",
+        "bn": "সেবাস্টিয়ান অফনার",
+        "hi": "सेबास्टियन ऑफनर",
+        "ru": "Офнер, Себастиан"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "awayTeam": {
+    "name": "Jurij Rodionov",
+    "slug": "rodionov-jurij",
+    "shortName": "J. Rodionov",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2666,
+    "playerTeamInfo": {
+      "id": 263
+    },
+    "nameCode": "ROD",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "AT",
+      "alpha3": "AUT",
+      "name": "Austria",
+      "slug": "austria"
+    },
+    "id": 200159,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "يوري روديونوف",
+        "bn": "জুরিজ রোডিওনভ",
+        "hi": "जुरिज़ रोडियोनोव",
+        "ru": "Родионов, Юрий"
+      },
+      "shortNameTranslation": {
+        "ar": "ي. روديونوف"
+      }
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624629,
+  "slug": "jurij-rodionov-sebastian-ofner",
+  "startTimestamp": 1772817000,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt indoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

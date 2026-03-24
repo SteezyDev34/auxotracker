@@ -58,33 +58,33 @@ class TestCountryFlags extends Command
         $this->newLine();
 
         // Test de quelques pays spécifiques
-        $testCountries = Country::whereNotNull('code')->take(5)->get();
-        
+        $testCountries = Country::whereNotNull('code')->get();
+
         if ($testCountries->isEmpty()) {
             $this->warn('Aucun pays avec code trouvé pour les tests.');
             return Command::SUCCESS;
         }
 
         $this->info('🧪 Test de pays spécifiques:');
-        
+
         foreach ($testCountries as $country) {
             $flagExists = $this->flagService->flagExists($country);
             $flagUrl = $this->flagService->getFlagUrl($country);
-            
+
             $status = $flagExists ? '✅' : '❌';
             $this->line("   {$status} {$country->name} (Code: {$country->code})");
-            
+
             if ($flagExists && $flagUrl) {
                 $this->line("      URL: {$flagUrl}");
             }
         }
-        
+
         $this->newLine();
 
         // Vérification du répertoire de stockage
         $flagsDirectory = storage_path('app/public/country_flags');
         $flagsCount = 0;
-        
+
         if (is_dir($flagsDirectory)) {
             $flagsCount = count(glob($flagsDirectory . '/*.png'));
             $this->info("📁 Répertoire de stockage: {$flagsDirectory}");
@@ -95,7 +95,7 @@ class TestCountryFlags extends Command
 
         $this->newLine();
         $this->info('✅ Test terminé avec succès!');
-        
+
         return Command::SUCCESS;
     }
 }

@@ -6,6 +6,8 @@ use App\Models\UserBankroll;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserBankrollController extends Controller
 {
@@ -44,7 +46,7 @@ class UserBankrollController extends Controller
         }
 
         $user = Auth::user();
-        
+
         $bankroll = new UserBankroll($request->all());
         $bankroll->user_id = $user->id;
         $bankroll->save();
@@ -99,25 +101,65 @@ class UserBankrollController extends Controller
     }
 
     /**
-     * Supprime une bankroll.
+     * Supprime une bankroll et toutes ses données associées.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $user = Auth::user();
         $bankroll = UserBankroll::where('user_id', $user->id)
             ->where('id', $id)
             ->firstOrFail();
 
-        // Vérifier si la bankroll a des bookmakers associés
-        if ($bankroll->userBookmakers()->count() > 0) {
-            return response()->json(['error' => 'Impossible de supprimer cette bankroll car elle a des bookmakers associés'], 422);
+        // Validation du nom de la bankroll pour sécuriser la suppression
+        $validator = Validator::make($request->all(), [
+            'bankroll_name' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => 'Le nom de la bankroll est requis pour confirmer la suppression'], 422);
         }
 
-        $bankroll->delete();
+        // Vérifier que le nom saisi correspond au nom de la bankroll
+        if ($request->bankroll_name !== $bankroll->bankroll_name) {
+            return response()->json(['error' => 'Le nom saisi ne correspond pas au nom de la bankroll'], 422);
+        }
 
-        return response()->json(['message' => 'Bankroll supprimée avec succès']);
+        try {
+            DB::transaction(function () use ($bankroll) {
+                // 1. Récupérer tous les paris associés à cette bankroll
+                $bets = $bankroll->bets()->with('events')->get();
+
+                foreach ($bets as $bet) {
+                    // 2. Supprimer les relations bet_events (table pivot)
+                    $bet->events()->detach();
+
+                    // 3. Supprimer les événements orphelins (optionnel - seulement s'ils ne sont liés à aucun autre pari)
+                    foreach ($bet->events as $event) {
+                        // Vérifier si l'événement n'est lié à aucun autre pari
+                        if ($event->bets()->count() <= 1) { // <= 1 car on va supprimer ce pari
+                            $event->delete();
+                        }
+                    }
+
+                    // 4. Supprimer le pari lui-même
+                    $bet->delete();
+                }
+
+                // 5. Supprimer tous les bookmakers associés à cette bankroll
+                $bankroll->userBookmakers()->delete();
+
+                // 6. Supprimer la bankroll
+                $bankroll->delete();
+            });
+
+            return response()->json(['message' => 'Bankroll et toutes ses données associées supprimées avec succès']);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression de la bankroll: ' . $e->getMessage());
+            return response()->json(['error' => 'Erreur lors de la suppression de la bankroll'], 500);
+        }
     }
 }

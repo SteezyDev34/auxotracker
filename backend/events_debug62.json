@@ -1,0 +1,353 @@
+{
+  "firstToServe": 1,
+  "tournament": {
+    "name": "Indian Wells, USA, Doubles",
+    "slug": "indian-wells-usa-doubles",
+    "category": {
+      "name": "WTA",
+      "slug": "wta",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 6,
+      "flag": "wta",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة لاعبات التنس",
+          "bn": "ডব্লিউটিএ",
+          "hi": "चैलेंजर",
+          "ru": "WTA"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells, Doubles",
+      "slug": "indian-wells-doubles",
+      "category": {
+        "name": "WTA",
+        "slug": "wta",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 6,
+        "flag": "wta",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة لاعبات التنس",
+            "bn": "ডব্লিউটিএ",
+            "hi": "चैलेंजर",
+            "ru": "WTA"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 206,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2555,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "إنديان ويلز، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176089
+  },
+  "season": {
+    "name": "WTA Indian Wells, USA Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 85597
+  },
+  "roundInfo": {
+    "round": 6,
+    "name": "Round of 32",
+    "cupRoundType": 16
+  },
+  "customId": "EkcjsDbqj",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 2,
+  "homeTeam": {
+    "name": "Kessler M / Pegula J",
+    "slug": "kessler-m-pegula-j",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 4,
+    "nameCode": "K/P",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1165078,
+    "subTeams": [
+      {
+        "name": "McCartney Kessler",
+        "slug": "kessler-mccartney",
+        "shortName": "M. Kessler",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 3537,
+        "nameCode": "KES",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 233214,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ماكنتني كيسلر",
+            "bn": "ম্যাককার্টনি কেসলার",
+            "hi": "मैककार्टनी केसलर"
+          },
+          "shortNameTranslation": {
+            "ar": "م. كيسلر"
+          }
+        }
+      },
+      {
+        "name": "Jessica Pegula",
+        "slug": "pegula-jessica",
+        "shortName": "J. Pegula",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 21129,
+        "nameCode": "PEG",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 44834,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "جيسيكا بيغولا",
+            "ru": "Пегула, Джессика"
+          },
+          "shortNameTranslation": {
+            "ar": "ج. بيغولا",
+            "bn": "জে. পেগুলা",
+            "hi": "जे. पेगुला"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "awayTeam": {
+    "name": "Hozumi E / Wu F",
+    "slug": "hozumi-e-wu-f",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 21,
+    "nameCode": "H/W",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1130529,
+    "subTeams": [
+      {
+        "name": "Eri Hozumi",
+        "slug": "hozumi-eri",
+        "shortName": "E. Hozumi",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 156,
+        "nameCode": "HOZ",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "JP",
+          "alpha3": "JPN",
+          "name": "Japan",
+          "slug": "japan"
+        },
+        "id": 70784,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيري هوزومي",
+            "ru": "Эри Хозуми"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. هوزومي"
+          }
+        }
+      },
+      {
+        "name": "Fang-Hsien Wu",
+        "slug": "wu-fang-hsien",
+        "shortName": "F. Wu",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 76,
+        "nameCode": "FAN",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "TW",
+          "alpha3": "TWN",
+          "name": "Chinese Taipei",
+          "slug": "chinese-taipei"
+        },
+        "id": 182178,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فانغ-شيان وو",
+            "ru": "Ву, Фанг-Се"
+          },
+          "shortNameTranslation": {
+            "ar": "ف. وو"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "هوزومي إ / وو ف"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "homeScore": {
+    "current": 1,
+    "display": 1,
+    "period1": 5,
+    "period2": 6,
+    "period3": 7,
+    "point": "7",
+    "normaltime": 1
+  },
+  "awayScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 1,
+    "period3": 10,
+    "point": "9",
+    "normaltime": 2
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772756724
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period3"
+    ],
+    "changeTimestamp": 1772757647
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15655146,
+  "slug": "kessler-pegula-hozumi-wu",
+  "startTimestamp": 1772751600,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

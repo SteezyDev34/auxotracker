@@ -1,0 +1,327 @@
+{
+  "tournament": {
+    "name": "Kigali, Rwanda, Doubles",
+    "slug": "kigali-rwanda-doubles",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Kigali 1, Rwanda, Doubles",
+      "slug": "atp-challenger-kigali-1-rwanda-men-doubles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 10,
+      "groundType": "Red clay",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 22025,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "كيغالي 1، رواندا، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176042
+  },
+  "season": {
+    "name": "ATP Challenger Kigali 1, Rwanda Men Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87357
+  },
+  "roundInfo": {
+    "round": 28,
+    "name": "Semifinals",
+    "cupRoundType": 2
+  },
+  "customId": "zgjesaCGi",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Banthia S / Donski A",
+    "slug": "banthia-s-donski-a",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 15,
+    "nameCode": "B/D",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1078850,
+    "subTeams": [
+      {
+        "name": "Siddhant Banthia",
+        "slug": "banthia-siddhant",
+        "shortName": "S. Banthia",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 126,
+        "nameCode": "BAN",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "IN",
+          "alpha3": "IND",
+          "name": "India",
+          "slug": "india"
+        },
+        "id": 244421,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "سيدهارت بانثيا"
+          },
+          "shortNameTranslation": {
+            "ar": "س. بانثيا"
+          }
+        }
+      },
+      {
+        "name": "Alexander Donski",
+        "slug": "donski-alexander",
+        "shortName": "A. Donski",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 791,
+        "nameCode": "DON",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "BG",
+          "alpha3": "BGR",
+          "name": "Bulgaria",
+          "slug": "bulgaria"
+        },
+        "id": 163538,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ألكسندر دونسكي",
+            "bn": "আলেকজান্ডার ডনস্কি",
+            "hi": "अलेक्ज़ेंडर डॉन्सकी",
+            "ru": "Донски, Александр"
+          },
+          "shortNameTranslation": {
+            "ar": "أ. دونسكي"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "بانثيا س / دونسكي أ"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "awayTeam": {
+    "name": "Latinovic S / Pavlovic L",
+    "slug": "latinovic-s-pavlovic-l",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 5,
+    "nameCode": "L/P",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 522824,
+    "subTeams": [
+      {
+        "name": "Stefan Latinovic",
+        "slug": "latinovic-stefan",
+        "shortName": "S. Latinovic",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 173,
+        "nameCode": "LAT",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RS",
+          "alpha3": "SRB",
+          "name": "Serbia",
+          "slug": "serbia"
+        },
+        "id": 227427,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ستيفان لاتينوفيتش"
+          },
+          "shortNameTranslation": {
+            "ar": "س. لاتينوفيتش"
+          }
+        }
+      },
+      {
+        "name": "Luka Pavlovic",
+        "slug": "pavlovic-luka",
+        "shortName": "L. Pavlovic",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 1078,
+        "nameCode": "PAV",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "FR",
+          "alpha3": "FRA",
+          "name": "France",
+          "slug": "france"
+        },
+        "id": 224534,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "لوكا بافلوفيتش"
+          },
+          "shortNameTranslation": {
+            "ar": "ل. بافلوفيتش"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "لاتينوفيتش س / بافلوفيتش ل"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624595,
+  "slug": "banthia-donski-latinovic-pavlovic",
+  "startTimestamp": 1772794800,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

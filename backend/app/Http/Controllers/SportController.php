@@ -39,8 +39,9 @@ class SportController extends Controller
         try {
             $leagues = League::where('sport_id', $sportId)
                 ->with('country:id,name') // Charger la relation country
+                ->orderByDesc('priority')
                 ->orderBy('name')
-                ->get(['id', 'name', 'img', 'country_id']); // Inclure country_id
+                ->get(['id', 'name', 'img', 'country_id', 'priority']); // Inclure priority
 
             return response()->json([
                 'success' => true,
@@ -188,9 +189,9 @@ class SportController extends Controller
 
             // Appliquer le filtre de recherche si fourni
             if (!empty($search)) {
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('name', 'LIKE', '%' . $search . '%')
-                      ->orWhere('nickname', 'LIKE', '%' . $search . '%');
+                        ->orWhere('nickname', 'LIKE', '%' . $search . '%');
                 });
             }
 

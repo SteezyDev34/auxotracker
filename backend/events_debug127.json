@@ -1,0 +1,363 @@
+{
+  "firstToServe": 2,
+  "tournament": {
+    "name": "Antalya 2, Turkiye, Doubles",
+    "slug": "antalya-2-turkiye-doubles",
+    "category": {
+      "name": "WTA 125",
+      "slug": "wta-125",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 871,
+      "flag": "wta-125",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفات التنس 125",
+          "ru": "WTA 125"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Antalya 2, Turkiye, Doubles",
+      "slug": "wta-125k-antalya-2-turkiye-women-doubles",
+      "category": {
+        "name": "WTA 125",
+        "slug": "wta-125",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 871,
+        "flag": "wta-125",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفات التنس 125",
+            "ru": "WTA 125"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 20,
+      "groundType": "Red clay",
+      "tennisPoints": 125,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25616,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "أنطاليا 2، تركيا، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176051
+  },
+  "season": {
+    "name": "WTA 125K Antalya 2, Turkiye Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87908
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "PRebsjUMd",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Jakupovic D / Radisic N",
+    "slug": "jakupovic-d-radisic-n",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 29,
+    "nameCode": "J/R",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 469709,
+    "subTeams": [
+      {
+        "name": "Dalila Jakupovic",
+        "slug": "jakupovic-dalila",
+        "shortName": "D. Jakupovic",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 415,
+        "nameCode": "JAK",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "SI",
+          "alpha3": "SVN",
+          "name": "Slovenia",
+          "slug": "slovenia"
+        },
+        "id": 52533,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دليلة جاكوبوفيتش",
+            "ru": "Якупович, Далила"
+          },
+          "shortNameTranslation": {
+            "ar": "د. جاكوبوفيتش",
+            "bn": "ডি. জাকুপোভিচ",
+            "hi": "डी. जाकुपोविच"
+          }
+        }
+      },
+      {
+        "name": "Nika Radišić",
+        "slug": "radisic-nika",
+        "shortName": "N. Radišić",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 177,
+        "nameCode": "RAD",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "SI",
+          "alpha3": "SVN",
+          "name": "Slovenia",
+          "slug": "slovenia"
+        },
+        "id": 268808,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "نيكا راديشيش"
+          },
+          "shortNameTranslation": {
+            "ar": "ن. راديشيش"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ياكوبوفيتش د / راديسيتش ن"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "awayTeam": {
+    "name": "Bara I / Gorgodze E",
+    "slug": "bara-i-m-gorgodze-e",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 6,
+    "nameCode": "BAG",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 137140,
+    "subTeams": [
+      {
+        "name": "Irina Maria Bara",
+        "slug": "bara-irina",
+        "shortName": "I. Bara",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 1093,
+        "nameCode": "BARA",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RO",
+          "alpha3": "ROU",
+          "name": "Romania",
+          "slug": "romania"
+        },
+        "id": 52183,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيرينا ماريا بارا",
+            "bn": "ইরিনা বারা",
+            "hi": "इरीना बारा",
+            "ru": "Бара, Ирина"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. بارا"
+          }
+        }
+      },
+      {
+        "name": "Ekaterine Gorgodze",
+        "slug": "gorgodze-ekaterine",
+        "shortName": "E. Gorgodze",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 1148,
+        "nameCode": "GOR",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "GE",
+          "alpha3": "GEO",
+          "name": "Georgia",
+          "slug": "georgia"
+        },
+        "id": 48486,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إكاتيرين غورغودزي",
+            "bn": "একাটেরিন গরগোডজে",
+            "hi": "एकातरिने गॉर्गोड्जे",
+            "ru": "Горгодзе, Екатерина"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. غورغودزي"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "بارا ي / غورغودزي إ",
+        "ru": "Бара И / Горгодзе Е"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 6,
+    "point": "40",
+    "normaltime": 2
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 3,
+    "period2": 2,
+    "point": "30",
+    "normaltime": 0
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772712315
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2",
+      "status.code",
+      "status.description",
+      "status.type",
+      "homeScore.current",
+      "homeScore.display",
+      "homeScore.period2",
+      "homeScore.normaltime",
+      "awayScore.normaltime"
+    ],
+    "changeTimestamp": 1772714416
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624797,
+  "slug": "jakupovic-radisic-bara-gorgodze",
+  "startTimestamp": 1772709600,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

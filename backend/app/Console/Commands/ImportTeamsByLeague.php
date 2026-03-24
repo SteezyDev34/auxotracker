@@ -77,11 +77,11 @@ class ImportTeamsByLeague extends Command
                            })
                            ->get();
             $this->line("📊 Nombre de ligues à traiter: {$leagues->count()}");
-            
+
             foreach ($leagues as $league) {
                 $this->processLeague($league, $force, $delay, $noCache);
                 $this->stats['leagues_processed']++;
-                
+
                 if ($delay > 0) {
                     sleep($delay);
                 }
@@ -99,7 +99,7 @@ class ImportTeamsByLeague extends Command
     {
         $leagueName = preg_replace('/[^a-zA-Z0-9\-_]/', '-', strtolower($league->name));
         $this->cacheDirectory = storage_path('app/sofascore_cache/leagues_teams/' . $leagueName . '-' . $league->sofascore_id);
-        
+
         if (!file_exists($this->cacheDirectory)) {
             mkdir($this->cacheDirectory, 0755, true);
         }
@@ -116,48 +116,48 @@ class ImportTeamsByLeague extends Command
                 $this->line("⏭️ Ignorer la ligue de tennis: {$league->name}");
                 return;
             }
-            
+
             $this->line("🏆 Traitement de la ligue: {$league->name} (ID: {$league->sofascore_id})");
             $this->line("🏃 Sport: {$league->sport->name} (ID: {$league->sport->id})");
             if ($league->country) {
                 $this->line("🌍 Pays: {$league->country->name} ({$league->country->code})");
             }
             $this->line("📂 Répertoire de cache: leagues_teams/{$league->name}-{$league->sofascore_id}");
-            
+
             // Définir le répertoire de cache spécifique à cette ligue
             $this->setCacheDirectory($league);
-            
+
             // Étape 1: Récupérer les featured events pour obtenir l'ID de saison
             $seasonId = $this->getSeasonId($league->sofascore_id, $noCache);
-            
+
             if (!$seasonId) {
                 $this->error("❌ Impossible de récupérer l'ID de saison pour la ligue {$league->name}");
                 $this->stats['season_not_found']++;
                 return;
             }
-            
+
             $this->line("📅 ID de saison trouvé: {$seasonId}");
-            
+
             // Étape 2: Récupérer les standings avec les équipes
             $teams = $this->getTeamsFromStandings($league->sofascore_id, $seasonId, $noCache);
-            
+
             if (empty($teams)) {
                 $this->line("⚠️ Aucune équipe trouvée pour la ligue {$league->name}");
                 return;
             }
-            
+
             $this->line("👥 Nombre d'équipes trouvées: " . count($teams));
-            
+
             // Étape 3: Traiter chaque équipe
             foreach ($teams as $teamData) {
                 $this->processTeam($teamData, $league, $force);
                 $this->stats['teams_processed']++;
-                
+
                 if ($delay > 0) {
                     usleep($delay * 100000); // Délai plus court entre les équipes
                 }
             }
-            
+
         } catch (\Exception $e) {
             $this->stats['errors']++;
             Log::error('Erreur lors du traitement de la ligue', [
@@ -178,7 +178,7 @@ class ImportTeamsByLeague extends Command
             $url = "https://www.sofascore.com/api/v1/unique-tournament/{$leagueSofascoreId}/featured-events";
             $cacheKey = md5($url);
             $cacheFile = $this->cacheDirectory . '/' . $cacheKey . '.json';
-            
+
             // Vérifier le cache
             if (!$noCache && file_exists($cacheFile)) {
                 $cacheAge = round((time() - filemtime($cacheFile)) / 3600, 1);
@@ -188,19 +188,19 @@ class ImportTeamsByLeague extends Command
             } else {
                 $this->line("🌐 Requête API en direct pour featured events");
                 $this->line("🔗 URL: {$url}");
-                
+
                 $response = Http::withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                     'Accept' => 'application/json',
                     'Referer' => 'https://www.sofascore.com/'
                 ])->timeout(10)->get($url);
-                
+
                 if (!$response->successful()) {
                     if ($response->status() === 403) {
                         $this->handleForbiddenError($response, $url);
                         return null;
                     }
-                    
+
                     $this->stats['api_errors']++;
                     Log::warning('Erreur API lors de la récupération des featured events', [
                         'league_sofascore_id' => $leagueSofascoreId,
@@ -209,24 +209,24 @@ class ImportTeamsByLeague extends Command
                     ]);
                     return null;
                 }
-                
+
                 $data = $response->json();
-                
+
                 // Sauvegarder en cache
                 if (!$noCache) {
                     file_put_contents($cacheFile, json_encode($data, JSON_PRETTY_PRINT));
                     $this->line("💾 Réponse sauvegardée en cache: {$cacheFile}");
                 }
             }
-            
+
             // Extraire l'ID de saison du premier événement
             if (isset($data['featuredEvents']) && !empty($data['featuredEvents'])) {
                 $firstEvent = $data['featuredEvents'][0];
                 return $firstEvent['season']['id'] ?? null;
             }
-            
+
             return null;
-            
+
         } catch (\Exception $e) {
             $this->stats['api_errors']++;
             Log::error('Exception lors de la récupération de l\'ID de saison', [
@@ -246,7 +246,7 @@ class ImportTeamsByLeague extends Command
             $url = "https://www.sofascore.com/api/v1/unique-tournament/{$leagueSofascoreId}/season/{$seasonId}/standings/total";
             $cacheKey = md5($url);
             $cacheFile = $this->cacheDirectory . '/' . $cacheKey . '.json';
-            
+
             // Vérifier le cache
             if (!$noCache && file_exists($cacheFile)) {
                 $cacheAge = round((time() - filemtime($cacheFile)) / 3600, 1);
@@ -256,19 +256,19 @@ class ImportTeamsByLeague extends Command
             } else {
                 $this->line("🌐 Requête API en direct pour standings");
                 $this->line("🔗 URL: {$url}");
-                
+
                 $response = Http::withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                     'Accept' => 'application/json',
                     'Referer' => 'https://www.sofascore.com/'
                 ])->timeout(10)->get($url);
-                
+
                 if (!$response->successful()) {
                     if ($response->status() === 403) {
                         $this->handleForbiddenError($response, $url);
                         return [];
                     }
-                    
+
                     $this->stats['api_errors']++;
                     Log::warning('Erreur API lors de la récupération des standings', [
                         'league_sofascore_id' => $leagueSofascoreId,
@@ -278,16 +278,16 @@ class ImportTeamsByLeague extends Command
                     ]);
                     return [];
                 }
-                
+
                 $data = $response->json();
-                
+
                 // Sauvegarder en cache
                 if (!$noCache) {
                     file_put_contents($cacheFile, json_encode($data, JSON_PRETTY_PRINT));
                     $this->line("💾 Réponse sauvegardée en cache: {$cacheFile}");
                 }
             }
-            
+
             // Extraire les équipes des standings
             $teams = [];
             if (isset($data['standings']) && !empty($data['standings'])) {
@@ -301,9 +301,9 @@ class ImportTeamsByLeague extends Command
                     }
                 }
             }
-            
+
             return $teams;
-            
+
         } catch (\Exception $e) {
             $this->stats['api_errors']++;
             Log::error('Exception lors de la récupération des standings', [
@@ -325,7 +325,7 @@ class ImportTeamsByLeague extends Command
             $name = $teamData['name'] ?? null;
             $slug = $teamData['slug'] ?? null;
             $shortName = $teamData['shortName'] ?? null;
-            
+
             if (!$sofascoreId || !$name || !$slug) {
                 Log::warning("⚠️ Données d'équipe incomplètes", [
                     'team_data' => $teamData,
@@ -334,27 +334,27 @@ class ImportTeamsByLeague extends Command
                 $this->stats['teams_skipped']++;
                 return;
             }
-            
+
             // Vérifier si l'équipe existe déjà
             $existingTeam = Team::where('sofascore_id', $sofascoreId)->first();
-            
+
             if ($existingTeam && !$force) {
                 $this->line("⏭️ Équipe ignorée (existe déjà): {$name} (ID: {$sofascoreId})");
                 $this->stats['teams_skipped']++;
                 return;
             }
-            
+
             // Vérification des doublons par nom et slug dans la même ligue
             $duplicateByName = Team::where('name', $name)
                                   ->where('league_id', $league->id)
                                   ->where('sofascore_id', '!=', $sofascoreId)
                                   ->first();
-                                  
+
             $duplicateBySlug = Team::where('slug', $slug)
                                   ->where('league_id', $league->id)
                                   ->where('sofascore_id', '!=', $sofascoreId)
                                   ->first();
-            
+
             if ($duplicateByName || $duplicateBySlug) {
                 $this->stats['duplicates_detected']++;
                 Log::warning("🔄 Doublon potentiel détecté", [
@@ -365,7 +365,7 @@ class ImportTeamsByLeague extends Command
                     'duplicate_by_slug' => $duplicateBySlug ? $duplicateBySlug->id : null
                 ]);
             }
-            
+
             // Créer ou mettre à jour l'équipe
             $teamAttributes = [
                 'name' => $name,
@@ -374,7 +374,7 @@ class ImportTeamsByLeague extends Command
                 'sofascore_id' => $sofascoreId,
                 'league_id' => $league->id
             ];
-            
+
             if ($existingTeam) {
                 $existingTeam->update($teamAttributes);
                 $this->stats['teams_updated']++;
@@ -390,7 +390,7 @@ class ImportTeamsByLeague extends Command
                     $this->line("   📝 Nom court: {$shortName}");
                 }
             }
-            
+
         } catch (\Exception $e) {
             $this->stats['errors']++;
             Log::error('❌ Erreur lors du traitement de l\'équipe', [
@@ -408,7 +408,7 @@ class ImportTeamsByLeague extends Command
     {
         $responseBody = $response->json();
         $challengeType = $responseBody['error']['reason'] ?? 'unknown';
-        
+
         $this->error("🚨 ERREUR 403 - Accès interdit");
         $this->error("🔍 Type de challenge détecté: {$challengeType}");
         $this->error("💡 Suggestions:");
@@ -416,14 +416,14 @@ class ImportTeamsByLeague extends Command
         $this->error("   - Utiliser un VPN ou changer d'IP");
         $this->error("   - Réduire la fréquence des requêtes");
         $this->error("🛑 Arrêt du script en raison de l'erreur 403");
-        
+
         Log::error('🚨 Erreur 403 - Challenge détecté', [
             'status' => $response->status(),
             'url' => $url,
             'challenge_type' => $challengeType,
             'response_body' => $responseBody
         ]);
-        
+
         exit(1);
     }
 
@@ -443,15 +443,15 @@ class ImportTeamsByLeague extends Command
         $this->line("📅 Saisons non trouvées: {$this->stats['season_not_found']}");
         $this->line("🌐 Erreurs API: {$this->stats['api_errors']}");
         $this->line("❌ Autres erreurs: {$this->stats['errors']}");
-        
+
         $totalTeams = $this->stats['teams_created'] + $this->stats['teams_updated'];
         $this->line("📋 Total équipes ajoutées/modifiées: {$totalTeams}");
-        
+
         if ($this->stats['teams_processed'] > 0) {
             $successRate = round((($totalTeams) / $this->stats['teams_processed']) * 100, 2);
             $this->line("📈 Taux de succès: {$successRate}%");
         }
-        
+
         Log::info('Importation d\'équipes par ligue terminée', $this->stats);
     }
 }

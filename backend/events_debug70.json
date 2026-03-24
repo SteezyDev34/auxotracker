@@ -1,0 +1,334 @@
+{
+  "tournament": {
+    "name": "Indian Wells, USA, Doubles",
+    "slug": "indian-wells-usa-doubles",
+    "category": {
+      "name": "WTA",
+      "slug": "wta",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 6,
+      "flag": "wta",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة لاعبات التنس",
+          "bn": "ডব্লিউটিএ",
+          "hi": "चैलेंजर",
+          "ru": "WTA"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells, Doubles",
+      "slug": "indian-wells-doubles",
+      "category": {
+        "name": "WTA",
+        "slug": "wta",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 6,
+        "flag": "wta",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة لاعبات التنس",
+            "bn": "ডব্লিউটিএ",
+            "hi": "चैलेंजर",
+            "ru": "WTA"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 206,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2555,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "إنديان ويلز، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176089
+  },
+  "season": {
+    "name": "WTA Indian Wells, USA Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 85597
+  },
+  "roundInfo": {
+    "round": 6,
+    "name": "Round of 32",
+    "cupRoundType": 16
+  },
+  "customId": "ZrhesHJvj",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Siniakova K / Townsend T",
+    "slug": "siniakova-k-townsend-t",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 350,
+    "nameCode": "S/T",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 518399,
+    "subTeams": [
+      {
+        "name": "Katerina Siniakova",
+        "slug": "siniakova-katerina",
+        "shortName": "K. Siniakova",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 5000,
+        "nameCode": "SIN",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CZ",
+          "alpha3": "CZE",
+          "name": "Czechia",
+          "slug": "czechia"
+        },
+        "id": 72376,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كاترينا سينيكوفا",
+            "ru": "Синякова, Катерина"
+          },
+          "shortNameTranslation": {
+            "ar": "ك. سينيكوفا",
+            "bn": "কে. সিনিয়াকোভা",
+            "hi": "के. सिनियाकोवा"
+          }
+        }
+      },
+      {
+        "name": "Taylor Townsend",
+        "slug": "townsend-taylor",
+        "shortName": "T. Townsend",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 3184,
+        "nameCode": "TOW",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 51387,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تايلور تاونسند",
+            "bn": "টেলর টাউনসেন্ড",
+            "hi": "टेलर टाउनसेंड",
+            "ru": "Тоунсенд, Тэйлор"
+          },
+          "shortNameTranslation": {
+            "ar": "ت. تاونسند"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "سينيكوفا ك / تاونسند ت"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "awayTeam": {
+    "name": "Raducanu E / Ruse E-G",
+    "slug": "raducanu-e-ruse-e-g",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 0,
+    "nameCode": "R/R",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1176732,
+    "subTeams": [
+      {
+        "name": "Emma Raducanu",
+        "slug": "raducanu-emma",
+        "shortName": "E. Raducanu",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 23578,
+        "nameCode": "RAD",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "GB",
+          "alpha3": "GBR",
+          "name": "United Kingdom",
+          "slug": "united-kingdom"
+        },
+        "id": 258756,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيما رادوكانو",
+            "ru": "Радукану, Эмма"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. رادوكانو",
+            "bn": "ই. রাদুকানু",
+            "hi": "ई. राडुकानु"
+          }
+        }
+      },
+      {
+        "name": "Elena-Gabriela Ruse",
+        "slug": "ruse-elena-gabriela",
+        "shortName": "E. Ruse",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 3426,
+        "nameCode": "RUS",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RO",
+          "alpha3": "ROU",
+          "name": "Romania",
+          "slug": "romania"
+        },
+        "id": 103901,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إلينا-غابرييلا روسي",
+            "bn": "এলেনা গ্যাব্রিয়েলা রুস",
+            "hi": "एलेना गैब्रिएला रुस",
+            "ru": "Рузе, Елена Габриэла"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. روسي"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15655148,
+  "slug": "raducanu-ruse-e-g-siniakova-townsend",
+  "startTimestamp": 1772838600,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

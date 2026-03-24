@@ -17,6 +17,7 @@ class Bet extends Model
         'bet_code',
         'result',
         'sport_id',
+        'bankroll_id',
         'stake'
     ];
 
@@ -32,6 +33,11 @@ class Bet extends Model
         return $this->belongsTo(Sport::class);
     }
 
+    public function bankroll(): BelongsTo
+    {
+        return $this->belongsTo(UserBankroll::class, 'bankroll_id');
+    }
+
     public function events(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'bet_event');
@@ -41,7 +47,7 @@ class Bet extends Model
     public function scopeBySport($query, $sports)
     {
         if (!empty($sports)) {
-            $query->whereHas('sport', function($q) use ($sports) {
+            $query->whereHas('sport', function ($q) use ($sports) {
                 $q->whereIn('name', $sports);
             });
         }
@@ -78,7 +84,7 @@ class Bet extends Model
     public function scopeByPeriod($query, $period)
     {
         $now = now();
-        
+
         switch ($period) {
             case '7j':
                 $query->where('bet_date', '>=', $now->subDays(7));
@@ -99,17 +105,17 @@ class Bet extends Model
                 // Pas de filtre de date
                 break;
             default:
-               // Pas de filtre de date
-               break;
+                // Pas de filtre de date
+                break;
         }
-        
+
         return $query;
     }
 
     // Méthodes utilitaires
     public function getStatusColorAttribute()
     {
-        return match($this->result) {
+        return match ($this->result) {
             'win' => 'success',
             'lost' => 'danger',
             'void' => 'secondary',

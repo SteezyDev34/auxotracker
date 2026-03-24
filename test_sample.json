@@ -1,0 +1,24 @@
+[
+  {
+    "sport": "BASKET",
+    "date": "01/11/2025",
+    "hour": "03:00",
+    "tournoi": "NBA - USA",
+    "description": "Portland Blazers - Denver Nuggets (NBA - USA)",
+    "cote": "1,94",
+    "mise": "70€",
+    "gain": "0€",
+    "statut": "PERDU"
+  },
+  {
+    "sport": "FOOT",
+    "date": "29/10/2025",
+    "hour": "21:05",
+    "tournoi": "Ligue 1 - France",
+    "description": "Paris FC - Lyon (Ligue 1 - France)",
+    "cote": "1,98",
+    "mise": "100€",
+    "gain": "100€",
+    "statut": "REMBOURSÉ"
+  }
+]

@@ -26,6 +26,7 @@ PROJECT_DIR="/Users/steeven/PROJETS/WORKSPACE/NEW BET TRACKER/backend"
 SITE_CONTAINER="api.auxotracker"   # Conteneur Laravel
 DB_CONTAINER="mariadb"             # Conteneur MariaDB
 NGINX_CONTAINER="nginx-proxy"      # Conteneur Nginx
+APP_SERVICE="web"                  # Nom du service applicatif dans docker-compose (utilisé pour docker compose exec)
 LOG="$PROJECT_DIR/script/logs/tennis_cache_sync_local_$(date +%Y-%m-%d_%H-%M-%S).log"
 
 # --- Timestamp pour le log ---
@@ -43,17 +44,17 @@ echo "$(date) : Vérification de l'état de Docker..." 2>&1 | tee -a "$LOG"
 # Vérifier si Docker est déjà en cours d'exécution
 if ! docker info >/dev/null 2>&1; then
     echo "$(date) : Docker n'est pas actif, tentative de démarrage..." 2>&1 | tee -a "$LOG"
-    
+
     # Vérifier si Docker Desktop est installé
     if [ ! -d "/Applications/Docker.app" ]; then
         echo "$(date) : ❌ Docker Desktop n'est pas installé dans /Applications/" 2>&1 | tee -a "$LOG"
         exit 1
     fi
-    
+
     # Démarrer Docker Desktop
     open --background -a Docker
     echo "$(date) : Docker Desktop lancé, attente de la disponibilité..." 2>&1 | tee -a "$LOG"
-    
+
     # Timeout augmenté à 5 minutes pour Docker Desktop
     TIMEOUT=300
     WAIT_TIME=0
@@ -61,19 +62,19 @@ if ! docker info >/dev/null 2>&1; then
         sleep 15
         WAIT_TIME=$((WAIT_TIME+15))
         TIMEOUT=$((TIMEOUT-15))
-        
+
         # Afficher le progrès toutes les minutes
         if [ $((WAIT_TIME % 60)) -eq 0 ]; then
             echo "$(date) : Attente Docker... (${WAIT_TIME}s écoulées)" 2>&1 | tee -a "$LOG"
         fi
-        
+
         if [ $TIMEOUT -le 0 ]; then
             echo "$(date) : ❌ Docker ne répond pas après 5 minutes, abandon." 2>&1 | tee -a "$LOG"
             echo "$(date) : Vérifiez que Docker Desktop peut démarrer manuellement." 2>&1 | tee -a "$LOG"
             exit 1
         fi
     done
-    
+
     echo "$(date) : ✅ Docker est maintenant disponible (après ${WAIT_TIME}s)" 2>&1 | tee -a "$LOG"
 else
     echo "$(date) : ✅ Docker est déjà actif" 2>&1 | tee -a "$LOG"
@@ -90,7 +91,7 @@ docker start $NGINX_CONTAINER >/dev/null 2>&1 || {
   exit 1
 }
 # alias de lancement du container du projet
-docker compose up -d --build 
+docker compose up -d --build
 # --- Pause pour laisser les services se stabiliser ---
 
 echo "Pause de 10 secondes pour laisser les services se stabiliser..." 2>&1 | tee -a "$LOG"
@@ -123,7 +124,7 @@ echo "$(date) : 🎾 Génération du cache tennis..." 2>&1 | tee -a "$LOG"
 #  -v|vv|vvv, --verbose   Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 
 
-php artisan tennis:cache-players --download-images 2>&1 | tee -a "$LOG"
+docker compose exec -T "$APP_SERVICE" php artisan tennis:cache-players --download-images --force 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     echo "$(date) : ✅ Cache généré avec succès" 2>&1 | tee -a "$LOG"
 else
@@ -132,7 +133,7 @@ else
 fi
 
 # --- Importation du cache ---
-php artisan tennis:import-players-from-cache --force 2>&1 | tee -a "$LOG"
+docker compose exec -T "$APP_SERVICE" php artisan tennis:import-players-from-cache --force 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     echo "$(date) : ✅ Cache importé avec succès" 2>&1 | tee -a "$LOG"
 else
@@ -141,6 +142,20 @@ else
 fi
 
 # --- Synchronisation avec ljdsync ---
+# --- Créer un sentinel pour indiquer au serveur qu'il y a de nouveaux fichiers ---
+SENTINEL_DIR="$PROJECT_DIR/storage/app/sofascore_cache/tennis_players"
+SENTINEL_TMP="$SENTINEL_DIR/IMPORT_READY.tmp"
+SENTINEL="$SENTINEL_DIR/IMPORT_READY"
+
+if [[ -d "$SENTINEL_DIR" ]]; then
+    echo "$(date) : 📨 Création du sentinel pour indiquer la présence de nouveaux fichiers" 2>&1 | tee -a "$LOG"
+    # création atomique : écrire en .tmp puis renommer
+    printf "%s" "ready" > "$SENTINEL_TMP"
+    mv -f "$SENTINEL_TMP" "$SENTINEL"
+else
+    echo "$(date) : ⚠️ Répertoire sentinel introuvable: $SENTINEL_DIR" 2>&1 | tee -a "$LOG"
+fi
+
 echo "$(date) : 📤 Synchronisation avec ljdsync..." 2>&1 | tee -a "$LOG"
 ljdsync 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
@@ -151,7 +166,7 @@ else
 fi
 
 # --- Nettoyage cache temporaire ---
-# rm -rf storage/app/sofascore_cache/tennis_players/* 2>&1 | tee -a "$LOG" 2>/dev/null
+rm -rf storage/app/sofascore_cache/tennis_players/* 2>&1 | tee -a "$LOG" 2>/dev/null
 
 # --- Arrêter le conteneur Laravel ---
 docker stop "$SITE_CONTAINER" >/dev/null 2>&1

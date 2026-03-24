@@ -1,0 +1,340 @@
+{
+  "firstToServe": 1,
+  "tournament": {
+    "name": "Brasilia, Brazil, Doubles",
+    "slug": "brasilia-brazil-doubles",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Brasilia, Brazil, Doubles",
+      "slug": "brasilia-brazil-doubles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 19,
+      "groundType": "Red clay",
+      "tennisPoints": 75,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 17383,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "برازيليا، البرازيل، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176021
+  },
+  "season": {
+    "name": "ATP Challenger Brasilia, Brazil Men Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87353
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "aQtjsqvvj",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Cadenasso G / Sanchez Jover C",
+    "slug": "cadenasso-g-sanchez-jover-c",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 4,
+    "nameCode": "C/S",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1172050,
+    "subTeams": [
+      {
+        "name": "Gianluca Cadenasso",
+        "slug": "cadenasso-gianluca",
+        "shortName": "G. Cadenasso",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 805,
+        "nameCode": "CAD",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "IT",
+          "alpha3": "ITA",
+          "name": "Italy",
+          "slug": "italy"
+        },
+        "id": 425525,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "جيانلوكا كاديناسو"
+          },
+          "shortNameTranslation": {
+            "ar": "ج. كاديناسو"
+          }
+        }
+      },
+      {
+        "name": "Carlos Sanchez Jover",
+        "slug": "sanchez-jover-carlos",
+        "shortName": "C. Sanchez Jover",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 684,
+        "nameCode": "SAN",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 196922,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كارلوس سانشيز هوفر"
+          },
+          "shortNameTranslation": {
+            "ar": "ك. هوفر"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "awayTeam": {
+    "name": "Carou I / Zeballos F",
+    "slug": "carou-i-zeballos-f",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 0,
+    "nameCode": "C/Z",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1176016,
+    "subTeams": [
+      {
+        "name": "Ignacio Carou",
+        "slug": "carou-ignacio",
+        "shortName": "I. Carou",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 209,
+        "nameCode": "CAR",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "UY",
+          "alpha3": "URY",
+          "name": "Uruguay",
+          "slug": "uruguay"
+        },
+        "id": 195386,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إغناسيو كاراو",
+            "ru": "Кару, Игнасио"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. كاراو"
+          }
+        }
+      },
+      {
+        "name": "Federico Zeballos",
+        "slug": "zeballos-federico",
+        "shortName": "F. Zeballos",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 162,
+        "nameCode": "ZEB",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "BO",
+          "alpha3": "BOL",
+          "name": "Bolivia",
+          "slug": "bolivia"
+        },
+        "id": 37637,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فيديريكو زيبالوس",
+            "bn": "ফেদেরিকো জেবালোস",
+            "hi": "फेडरिको ज़ेबालोस",
+            "ru": "Себальос, Федерико"
+          },
+          "shortNameTranslation": {
+            "ar": "ف. زيبالوس"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 6,
+    "period2": 7,
+    "point": "40",
+    "normaltime": 2
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 3,
+    "period2": 5,
+    "point": "15",
+    "normaltime": 0
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772719347
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772721961
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624130,
+  "slug": "carou-zeballos-cadenasso-sanchez-jover",
+  "startTimestamp": 1772717400,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

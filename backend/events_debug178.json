@@ -1,0 +1,221 @@
+{
+  "firstToServe": 2,
+  "tournament": {
+    "name": "ITF M15 Torelló Men",
+    "slug": "itf-m15-torello-men",
+    "category": {
+      "name": "ITF Men",
+      "slug": "itf-men",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 785,
+      "flag": "itf-men",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "اتحاد التنس الدولي للرجال",
+          "ru": "Мужской мировой теннисный тур ITF"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "ITF M15 Torelló Men",
+      "slug": "itf-m15-torello-men",
+      "category": {
+        "name": "ITF Men",
+        "slug": "itf-men",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 785,
+        "flag": "itf-men",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اتحاد التنس الدولي للرجال",
+            "ru": "Мужской мировой теннисный тур ITF"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 7,
+      "groundType": "Hardcourt outdoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25321,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "ITF M15 توريللو للرجال"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 147284,
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "ITF M15 توريلو للرجال"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "season": {
+    "name": "2026",
+    "year": "2026",
+    "editor": false,
+    "id": 90361
+  },
+  "roundInfo": {
+    "round": 5,
+    "name": "Round of 16",
+    "cupRoundType": 8
+  },
+  "customId": "nAqcsFQZc",
+  "status": {
+    "code": 80,
+    "description": "Interrupted",
+    "type": "interrupted"
+  },
+  "homeTeam": {
+    "name": "Dominik Palan",
+    "slug": "palan-dominik",
+    "shortName": "D. Palan",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 415,
+    "playerTeamInfo": {
+      "id": 3957
+    },
+    "nameCode": "PAL",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "CZ",
+      "alpha3": "CZE",
+      "name": "Czechia",
+      "slug": "czechia"
+    },
+    "id": 291263,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "دومينيك بالان",
+        "bn": "ডমিনিক পলান",
+        "hi": "डोमिनिक पालान",
+        "ru": "Палан, Доминик"
+      },
+      "shortNameTranslation": {
+        "ar": "د. بالان"
+      }
+    }
+  },
+  "awayTeam": {
+    "name": "Volodymyr Iakubenko",
+    "slug": "iakubenko-volodymyr",
+    "shortName": "V. Iakubenko",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 87,
+    "playerTeamInfo": {
+      "id": 13027
+    },
+    "nameCode": "IAK",
+    "national": false,
+    "type": 1,
+    "country": {
+      "alpha2": "UA",
+      "alpha3": "UKR",
+      "name": "Ukraine",
+      "slug": "ukraine"
+    },
+    "id": 374580,
+    "subTeams": [],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "فولوديمير ياكوبنكو"
+      },
+      "shortNameTranslation": {
+        "ar": "ف. ياكوبنكو"
+      }
+    }
+  },
+  "homeScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 0,
+    "point": "0"
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 0,
+    "point": "0"
+  },
+  "time": {},
+  "changes": {
+    "changes": [
+      "status.code",
+      "status.description",
+      "status.type"
+    ],
+    "changeTimestamp": 1772753689
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15663229,
+  "slug": "volodymyr-iakubenko-dominik-palan",
+  "startTimestamp": 1772705905,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "singles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

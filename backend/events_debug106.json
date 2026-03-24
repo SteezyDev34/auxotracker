@@ -1,0 +1,319 @@
+{
+  "tournament": {
+    "name": "Hersonissos, Greece, Doubles",
+    "slug": "hersonissos-greece-doubles",
+    "category": {
+      "name": "Challenger",
+      "slug": "challenger",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 72,
+      "flag": "challenger",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "تحدي (تنس)",
+          "bn": "চ্যালেঞ্জার",
+          "hi": "डेनमार्क",
+          "ru": "Challenger"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Hersonissos, Greece, Doubles",
+      "slug": "atp-challenger-hersonissos-greece-men-doubles",
+      "category": {
+        "name": "Challenger",
+        "slug": "challenger",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 72,
+        "flag": "challenger",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحدي (تنس)",
+            "bn": "চ্যালেঞ্জার",
+            "hi": "डेनमार्क",
+            "ru": "Challenger"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 14,
+      "groundType": "Hardcourt outdoor",
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25271,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "هيرسونيسوس، اليونان، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176039
+  },
+  "season": {
+    "name": "ATP Challenger Hersonissos, Greece Men Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87368
+  },
+  "roundInfo": {
+    "round": 28,
+    "name": "Semifinals",
+    "cupRoundType": 2
+  },
+  "customId": "DHfdsfvvj",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Bass F / Genov A",
+    "slug": "bass-f-genov-a",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 1,
+    "nameCode": "B/G",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1176005,
+    "subTeams": [
+      {
+        "name": "Finn Bass",
+        "slug": "bass-finn",
+        "shortName": "F. Bass",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 195,
+        "nameCode": "BAS",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "GB",
+          "alpha3": "GBR",
+          "name": "United Kingdom",
+          "slug": "united-kingdom"
+        },
+        "id": 182086,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فين باس"
+          },
+          "shortNameTranslation": {
+            "ar": "ف. باس"
+          }
+        }
+      },
+      {
+        "name": "Anthony Genov",
+        "slug": "genov-anthony",
+        "shortName": "A. Genov",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 140,
+        "nameCode": "GEN",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "BG",
+          "alpha3": "BGR",
+          "name": "Bulgaria",
+          "slug": "bulgaria"
+        },
+        "id": 332112,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أنتوني جينوف"
+          },
+          "shortNameTranslation": {
+            "ar": "أ. جينوف"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "awayTeam": {
+    "name": "Hands T / Wendelken H",
+    "slug": "hands-t-wendelken-h",
+    "gender": "M",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 13,
+    "nameCode": "H/W",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 389128,
+    "subTeams": [
+      {
+        "name": "Tom Hands",
+        "slug": "hands-tom",
+        "shortName": "T. Hands",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 88,
+        "nameCode": "HAN",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "GB",
+          "alpha3": "GBR",
+          "name": "United Kingdom",
+          "slug": "united-kingdom"
+        },
+        "id": 288555,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "توم هاندز"
+          },
+          "shortNameTranslation": {
+            "ar": "ت. هاندز"
+          }
+        }
+      },
+      {
+        "name": "Harry Wendelken",
+        "slug": "wendelken-harry",
+        "shortName": "H. Wendelken",
+        "gender": "M",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 558,
+        "nameCode": "WEN",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "GB",
+          "alpha3": "GBR",
+          "name": "United Kingdom",
+          "slug": "united-kingdom"
+        },
+        "id": 267242,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "هاري ويندلكن",
+            "ru": "Венделькен, Гарри"
+          },
+          "shortNameTranslation": {
+            "ar": "ه. ويندلكن"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "هاندز ت / ويندلكن ه"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624573,
+  "slug": "bass-genov-hands-wendelken",
+  "startTimestamp": 1772794200,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "M"
+    ]
+  }
+}

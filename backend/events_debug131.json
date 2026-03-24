@@ -1,0 +1,321 @@
+{
+  "tournament": {
+    "name": "Antalya 2, Turkiye, Doubles",
+    "slug": "antalya-2-turkiye-doubles",
+    "category": {
+      "name": "WTA 125",
+      "slug": "wta-125",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 871,
+      "flag": "wta-125",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفات التنس 125",
+          "ru": "WTA 125"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Antalya 2, Turkiye, Doubles",
+      "slug": "wta-125k-antalya-2-turkiye-women-doubles",
+      "category": {
+        "name": "WTA 125",
+        "slug": "wta-125",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 871,
+        "flag": "wta-125",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفات التنس 125",
+            "ru": "WTA 125"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 20,
+      "groundType": "Red clay",
+      "tennisPoints": 125,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25616,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "أنطاليا 2، تركيا، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176051
+  },
+  "season": {
+    "name": "WTA 125K Antalya 2, Turkiye Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87908
+  },
+  "roundInfo": {
+    "round": 28,
+    "name": "Semifinals",
+    "cupRoundType": 2
+  },
+  "customId": "jAEispIuj",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Kozyreva M / Shymanovich I",
+    "slug": "kozyreva-m-shymanovich-i",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 61,
+    "nameCode": "K/S",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1073759,
+    "subTeams": [
+      {
+        "name": "Maria Kozyreva",
+        "slug": "kozyreva-maria",
+        "shortName": "M. Kozyreva",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 253,
+        "nameCode": "KOZ",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RU",
+          "alpha3": "RUS",
+          "name": "Russia",
+          "slug": "russia"
+        },
+        "id": 211012,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ماريا كوزيريفا"
+          },
+          "shortNameTranslation": {
+            "ar": "م. كوزيريفا"
+          }
+        }
+      },
+      {
+        "name": "Iryna Shymanovich",
+        "slug": "shymanovich-iryna",
+        "shortName": "I. Shymanovich",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 929,
+        "nameCode": "SHY",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "BY",
+          "alpha3": "BLR",
+          "name": "Belarus",
+          "slug": "belarus"
+        },
+        "id": 92879,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيرينا شيمانوفيتش",
+            "bn": "ইরিনা শায়মানোভিচ",
+            "hi": "इरीना शिमानोविच",
+            "ru": "Шиманович, Ирина"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. شيمانوفيتش"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "كوزيريفا م / شيمانوفيتش إ"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "awayTeam": {
+    "name": "Cascino E / Fossa Huergo N",
+    "slug": "cascino-e-fossa-huergo-n",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 4,
+    "nameCode": "C/F",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1174165,
+    "subTeams": [
+      {
+        "name": "Estelle Cascino",
+        "slug": "cascino-estelle",
+        "shortName": "E. Cascino",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 113,
+        "nameCode": "CAS",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "FR",
+          "alpha3": "FRA",
+          "name": "France",
+          "slug": "france"
+        },
+        "id": 67430,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إستيل كاسكينو",
+            "ru": "Касцино, Эстелле"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. كاسكينو"
+          }
+        }
+      },
+      {
+        "name": "Nicole Fossa Huergo",
+        "slug": "fossa-huergo-nicole",
+        "shortName": "N. Fossa Huergo",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 764,
+        "nameCode": "FOS",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "AR",
+          "alpha3": "ARG",
+          "name": "Argentina",
+          "slug": "argentina"
+        },
+        "id": 92877,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "نيكول فوسا هيرغو",
+            "ru": "Николь Фосса Хуерго"
+          },
+          "shortNameTranslation": {
+            "ar": "ن. هيرغو"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624796,
+  "slug": "cascino-fossa-huergo-kozyreva-shymanovich",
+  "startTimestamp": 1772788200,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

@@ -1,0 +1,335 @@
+{
+  "tournament": {
+    "name": "Indian Wells, USA, Doubles",
+    "slug": "indian-wells-usa-doubles",
+    "category": {
+      "name": "WTA",
+      "slug": "wta",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 6,
+      "flag": "wta",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة لاعبات التنس",
+          "bn": "ডব্লিউটিএ",
+          "hi": "चैलेंजर",
+          "ru": "WTA"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Indian Wells, Doubles",
+      "slug": "indian-wells-doubles",
+      "category": {
+        "name": "WTA",
+        "slug": "wta",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 6,
+        "flag": "wta",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة لاعبات التنس",
+            "bn": "ডব্লিউটিএ",
+            "hi": "चैलेंजर",
+            "ru": "WTA"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 206,
+      "groundType": "Hardcourt outdoor",
+      "tennisPoints": 1000,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 2555,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "إنديان ويلز، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176089
+  },
+  "season": {
+    "name": "WTA Indian Wells, USA Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 85597
+  },
+  "roundInfo": {
+    "round": 6,
+    "name": "Round of 32",
+    "cupRoundType": 16
+  },
+  "customId": "wrZcsIJvj",
+  "status": {
+    "code": 0,
+    "description": "Not started",
+    "type": "notstarted"
+  },
+  "homeTeam": {
+    "name": "Bencic B / Cirstea S",
+    "slug": "bencic-b-cirstea-s",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 2,
+    "nameCode": "B/C",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1176733,
+    "subTeams": [
+      {
+        "name": "Belinda Bencic",
+        "slug": "bencic-belinda",
+        "shortName": "B. Bencic",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 10550,
+        "nameCode": "BEN",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CH",
+          "alpha3": "CHE",
+          "name": "Switzerland",
+          "slug": "switzerland"
+        },
+        "id": 63957,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بليندا بينتش",
+            "ru": "Бенчич, Белинда"
+          },
+          "shortNameTranslation": {
+            "ar": "ب. بينتش",
+            "bn": "বি. বেনসিক",
+            "hi": "बी. बेनसिक"
+          }
+        }
+      },
+      {
+        "name": "Sorana Cirstea",
+        "slug": "cirstea-sorana",
+        "shortName": "S. Cirstea",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 6674,
+        "nameCode": "CIR",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RO",
+          "alpha3": "ROU",
+          "name": "Romania",
+          "slug": "romania"
+        },
+        "id": 19728,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "سورانا تشيرستيا",
+            "ru": "Кирстя, Сорана"
+          },
+          "shortNameTranslation": {
+            "ar": "س. تشيرستيا",
+            "bn": "এস. ক্রিস্টিয়া",
+            "hi": "एस. किर्स्टिया"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "awayTeam": {
+    "name": "Xu Y / Yang Z",
+    "slug": "xu-y-yang-z",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 102,
+    "nameCode": "XUZ",
+    "national": false,
+    "type": 2,
+    "country": {
+      "alpha2": "CN",
+      "alpha3": "CHN",
+      "name": "China",
+      "slug": "china"
+    },
+    "id": 373371,
+    "subTeams": [
+      {
+        "name": "Yifan Xu",
+        "slug": "yifan-xu",
+        "shortName": "Y. Xu",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 280,
+        "nameCode": "YIF",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CN",
+          "alpha3": "CHN",
+          "name": "China",
+          "slug": "china"
+        },
+        "id": 19974,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ييفان شيو",
+            "ru": "Ксю, Ю Фань"
+          },
+          "shortNameTranslation": {
+            "ar": "ي. شيو"
+          }
+        }
+      },
+      {
+        "name": "Zhaoxuan Yang",
+        "slug": "yang-zhaoxuan",
+        "shortName": "Z. Yang",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 229,
+        "nameCode": "YAN",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "CN",
+          "alpha3": "CHN",
+          "name": "China",
+          "slug": "china"
+        },
+        "id": 45915,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تشاوشوان يانغ",
+            "ru": "Янг, Жаоксуан"
+          },
+          "shortNameTranslation": {
+            "ar": "ت. يانغ"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    },
+    "fieldTranslations": {
+      "nameTranslation": {
+        "ar": "شو يى فان / يانغ، زاهوكسان",
+        "ru": "Ксю Ю / Янг Ж"
+      },
+      "shortNameTranslation": {}
+    }
+  },
+  "homeScore": {},
+  "awayScore": {},
+  "time": {},
+  "changes": {
+    "changeTimestamp": 0
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15655151,
+  "slug": "bencic-cirstea-xu-yang",
+  "startTimestamp": 1772842800,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Hardcourt outdoor",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "p1000"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}

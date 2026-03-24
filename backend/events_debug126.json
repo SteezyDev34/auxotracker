@@ -1,0 +1,339 @@
+{
+  "firstToServe": 1,
+  "tournament": {
+    "name": "Antalya 2, Turkiye, Doubles",
+    "slug": "antalya-2-turkiye-doubles",
+    "category": {
+      "name": "WTA 125",
+      "slug": "wta-125",
+      "sport": {
+        "name": "Tennis",
+        "slug": "tennis",
+        "id": 5
+      },
+      "country": {},
+      "id": 871,
+      "flag": "wta-125",
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "رابطة محترفات التنس 125",
+          "ru": "WTA 125"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "uniqueTournament": {
+      "name": "Antalya 2, Turkiye, Doubles",
+      "slug": "wta-125k-antalya-2-turkiye-women-doubles",
+      "category": {
+        "name": "WTA 125",
+        "slug": "wta-125",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "country": {},
+        "id": 871,
+        "flag": "wta-125",
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "رابطة محترفات التنس 125",
+            "ru": "WTA 125"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "userCount": 20,
+      "groundType": "Red clay",
+      "tennisPoints": 125,
+      "hasPerformanceGraphFeature": false,
+      "country": {},
+      "id": 25616,
+      "hasEventPlayerStatistics": false,
+      "displayInverseHomeAwayTeams": false,
+      "fieldTranslations": {
+        "nameTranslation": {
+          "ar": "أنطاليا 2، تركيا، زوجي"
+        },
+        "shortNameTranslation": {}
+      }
+    },
+    "priority": 0,
+    "id": 176051
+  },
+  "season": {
+    "name": "WTA 125K Antalya 2, Turkiye Women Doubles 2026",
+    "year": "2026",
+    "editor": false,
+    "id": 87908
+  },
+  "roundInfo": {
+    "round": 27,
+    "name": "Quarterfinals",
+    "cupRoundType": 4
+  },
+  "customId": "pIujsUyvj",
+  "status": {
+    "code": 100,
+    "description": "Ended",
+    "type": "finished"
+  },
+  "winnerCode": 1,
+  "homeTeam": {
+    "name": "Cascino E / Fossa Huergo N",
+    "slug": "cascino-e-fossa-huergo-n",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 4,
+    "nameCode": "C/F",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1174165,
+    "subTeams": [
+      {
+        "name": "Estelle Cascino",
+        "slug": "cascino-estelle",
+        "shortName": "E. Cascino",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 113,
+        "nameCode": "CAS",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "FR",
+          "alpha3": "FRA",
+          "name": "France",
+          "slug": "france"
+        },
+        "id": 67430,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إستيل كاسكينو",
+            "ru": "Касцино, Эстелле"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. كاسكينو"
+          }
+        }
+      },
+      {
+        "name": "Nicole Fossa Huergo",
+        "slug": "fossa-huergo-nicole",
+        "shortName": "N. Fossa Huergo",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 764,
+        "nameCode": "FOS",
+        "disabled": false,
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "AR",
+          "alpha3": "ARG",
+          "name": "Argentina",
+          "slug": "argentina"
+        },
+        "id": 92877,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "نيكول فوسا هيرغو",
+            "ru": "Николь Фосса Хуерго"
+          },
+          "shortNameTranslation": {
+            "ar": "ن. هيرغو"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "awayTeam": {
+    "name": "Khromacheva I / Zaytseva K",
+    "slug": "khromacheva-i-zaytseva-k",
+    "gender": "F",
+    "sport": {
+      "name": "Tennis",
+      "slug": "tennis",
+      "id": 5
+    },
+    "userCount": 6,
+    "nameCode": "K/Z",
+    "national": false,
+    "type": 2,
+    "country": {},
+    "id": 1176194,
+    "subTeams": [
+      {
+        "name": "Irina Khromacheva",
+        "slug": "khromacheva-irina",
+        "shortName": "I. Khromacheva",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 277,
+        "nameCode": "KHR",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RU",
+          "alpha3": "RUS",
+          "name": "Russia",
+          "slug": "russia"
+        },
+        "id": 47810,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيرينا خروماشيفا",
+            "bn": "ইরিনা ক্রোমাচেভা",
+            "hi": "इरीना ख्रोमचेवा",
+            "ru": "Хромачева, Ирина"
+          },
+          "shortNameTranslation": {
+            "ar": "إ. خروماشيفا"
+          }
+        }
+      },
+      {
+        "name": "Ksenia Zaytseva",
+        "slug": "zaytseva-ksenia",
+        "shortName": "K. Zaytseva",
+        "gender": "F",
+        "sport": {
+          "name": "Tennis",
+          "slug": "tennis",
+          "id": 5
+        },
+        "userCount": 181,
+        "nameCode": "ZAY",
+        "national": false,
+        "type": 1,
+        "country": {
+          "alpha2": "RU",
+          "alpha3": "RUS",
+          "name": "Russia",
+          "slug": "russia"
+        },
+        "id": 386217,
+        "subTeams": [],
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كسانيا زايتسيفا"
+          },
+          "shortNameTranslation": {
+            "ar": "ك. زايتسيفا"
+          }
+        }
+      }
+    ],
+    "teamColors": {
+      "primary": "#374df5",
+      "secondary": "#374df5",
+      "text": "#ffffff"
+    }
+  },
+  "homeScore": {
+    "current": 2,
+    "display": 2,
+    "period1": 7,
+    "period2": 6,
+    "period1TieBreak": 7,
+    "point": "40",
+    "normaltime": 2
+  },
+  "awayScore": {
+    "current": 0,
+    "display": 0,
+    "period1": 6,
+    "period2": 4,
+    "period1TieBreak": 2,
+    "point": "30",
+    "normaltime": 0
+  },
+  "time": {
+    "currentPeriodStartTimestamp": 1772710467
+  },
+  "changes": {
+    "changes": [
+      "time.currentPeriodStart",
+      "time.period2"
+    ],
+    "changeTimestamp": 1772713177
+  },
+  "hasGlobalHighlights": false,
+  "crowdsourcingDataDisplayEnabled": false,
+  "id": 15624800,
+  "slug": "khromacheva-zaytseva-cascino-fossa-huergo",
+  "startTimestamp": 1772706900,
+  "periods": {
+    "point": "Game",
+    "current": "Match",
+    "period1": "1st set",
+    "period2": "2nd set",
+    "period3": "3rd set",
+    "period4": "4th set",
+    "period5": "5th set"
+  },
+  "finalResultOnly": false,
+  "feedLocked": false,
+  "groundType": "Red clay",
+  "isEditor": false,
+  "eventFilters": {
+    "category": [
+      "doubles"
+    ],
+    "level": [
+      "pro"
+    ],
+    "tournament": [
+      "lower"
+    ],
+    "gender": [
+      "F"
+    ]
+  }
+}
