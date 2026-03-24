@@ -18,6 +18,8 @@ class League extends Model
         'img',
         'sofascore_id',
         'priority'
+        'sofascore_id',
+        'priority'
     ];
 
     // Relations
@@ -35,6 +37,8 @@ class League extends Model
     {
         return $this->belongsTo(Country::class);
     }
+}
+
 
     /**
      * Trouver l'ID d'une ligue en acceptant soit le sofascore_id soit un nom.

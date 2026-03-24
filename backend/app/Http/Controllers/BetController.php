@@ -18,6 +18,7 @@ class BetController extends Controller
 {
     /**
      * Récupérer tous les paris avec filtres (limités aux bankrolls de l'utilisateur)
+     * Récupérer tous les paris avec filtres (limités aux bankrolls de l'utilisateur)
      */
     public function index(Request $request)
     {
@@ -29,6 +30,8 @@ class BetController extends Controller
 
 
         // Charger les relations nécessaires pour afficher les informations complètes des événements
+        $query = Bet::with(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
+            ->whereIn('bankroll_id', $userBankrollIds);
         $query = Bet::with(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
             ->whereIn('bankroll_id', $userBankrollIds);
 
@@ -61,6 +64,7 @@ class BetController extends Controller
         }
 
         $bets = $query->orderBy('bet_date', 'desc')->get();
+        $bets = $query->orderBy('bet_date', 'desc')->get();
 
         return response()->json([
             'success' => true,
@@ -72,9 +76,17 @@ class BetController extends Controller
 
     /**
      * Récupérer les statistiques des paris (limitées aux bankrolls de l'utilisateur)
+     * Récupérer les statistiques des paris (limitées aux bankrolls de l'utilisateur)
      */
     public function stats(Request $request): JsonResponse
     {
+        // Récupérer l'utilisateur connecté
+        $user = auth()->user();
+
+        // Récupérer les IDs des bankrolls de l'utilisateur
+        $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
+
+        $query = Bet::whereIn('bankroll_id', $userBankrollIds);
         // Récupérer l'utilisateur connecté
         $user = auth()->user();
 
@@ -155,6 +167,13 @@ class BetController extends Controller
             $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
 
             $query = Bet::whereIn('bankroll_id', $userBankrollIds);
+            // Récupérer l'utilisateur connecté
+            $user = auth()->user();
+
+            // Récupérer les IDs des bankrolls de l'utilisateur
+            $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
+
+            $query = Bet::whereIn('bankroll_id', $userBankrollIds);
 
             // Appliquer les mêmes filtres que les autres méthodes
             if ($request->has('period')) {
@@ -183,9 +202,11 @@ class BetController extends Controller
             $biggestWinOdds = $bets->where('result', 'win')->max('global_odds');
             $smallestWinOdds = $bets->where('result', 'win')->min('global_odds');
 
+
             // Calcul du plus gros bénéfice et de la plus grosse perte
             $biggestProfit = 0;
             $biggestLoss = 0;
+
 
             foreach ($bets as $bet) {
                 $profitLoss = $this->calculateBetProfitLoss($bet);
@@ -217,6 +238,7 @@ class BetController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
+            Log::error('Erreur detailedStats: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             Log::error('Erreur detailedStats: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json([
@@ -328,8 +350,59 @@ class BetController extends Controller
                 Log::error('Capital initial introuvable ou invalide', ['user_id' => $user->id]);
                 return response()->json(['error' => 'Capital initial introuvable'], 500);
             }
+            // Récupérer l'utilisateur connecté
+            $user = auth()->user();
+
+            if ($user) {
+                Log::info('Calcul capitalEvolution pour user_id: ' . $user->id, ['filters' => $request->all()]);
+            } else {
+                Log::warning('Calcul capitalEvolution sans utilisateur authentifié', ['filters' => $request->all()]);
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Utilisateur non authentifié'
+                ], 401);
+            }
+
+            if ($request->has('bankrolls')) {
+                // Récupère les valeurs fournies (peut être un tableau, une chaîne CSV ou JSON)
+                $requested = $request->get('bankrolls');
+
+                // Normaliser en entiers
+                $requestedIds = array_map('intval', $requested);
+
+                // Ne garder que les bankrolls appartenant à l'utilisateur
+                $userBankrolls = UserBankroll::where('user_id', $user->id)
+                    ->whereIn('id', $requestedIds)
+                    ->get();
+
+                Log::info('Filtres de bankrolls reçus dans capitalEvolution', [
+                    'requested_ids' => $requestedIds,
+                    'matched_ids' => $userBankrolls->pluck('id')->toArray()
+                ]);
+            } else {
+                Log::info('Aucun filtre de bankrolls reçu dans capitalEvolution');
+                // Récupérer les bankrolls de l'utilisateur avec leur capital initial
+                $userBankrolls = UserBankroll::where('user_id', $user->id)->get();
+            }
+
+            $userBankrollIds = $userBankrolls->pluck('id');
+
+            // Capital initial = somme des capitals de toutes les bankrolls de l'utilisateur
+            $initialCapital = null;
+            try {
+                $initialCapital = (float) $userBankrolls->sum('bankroll_start_amount');
+            } catch (\Throwable $e) {
+                Log::error('Erreur lors du calcul du capital initial', ['exception' => $e, 'user_id' => $user->id]);
+                return response()->json(['error' => 'Erreur lors du calcul du capital initial'], 500);
+            }
+
+            if ($initialCapital === null) {
+                Log::error('Capital initial introuvable ou invalide', ['user_id' => $user->id]);
+                return response()->json(['error' => 'Capital initial introuvable'], 500);
+            }
 
             // Base query + filtres (aligné avec index/stats)
+            $query = Bet::whereIn('bankroll_id', $userBankrollIds);
             $query = Bet::whereIn('bankroll_id', $userBankrollIds);
 
             if ($request->has('period')) {
@@ -406,6 +479,7 @@ class BetController extends Controller
                 $currentCapital = $initialCapital + $cumulative;
 
                 $labels[] = Carbon::parse($ymd)->format('d/m/Y');
+                $labels[] = Carbon::parse($ymd)->format('d/m/Y');
                 $capitals[] = round($currentCapital, 2);
                 $details[] = [
                     'date' => $ymd,
@@ -429,6 +503,7 @@ class BetController extends Controller
                 'total_profit_loss_percentage' => round($percent, 2),
             ]);
         } catch (\Exception $e) {
+            Log::error('Erreur capitalEvolution: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             Log::error('Erreur capitalEvolution: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json([
@@ -464,13 +539,23 @@ class BetController extends Controller
         // Récupérer les IDs des bankrolls de l'utilisateur
         $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
 
+        // Récupérer l'utilisateur connecté
+        $user = auth()->user();
+
+        // Récupérer les IDs des bankrolls de l'utilisateur
+        $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
+
         $sports = Sport::select('name')
             ->distinct()
             ->whereHas('bets', function ($query) use ($userBankrollIds) {
                 $query->whereIn('bankroll_id', $userBankrollIds);
             })
+            ->whereHas('bets', function ($query) use ($userBankrollIds) {
+                $query->whereIn('bankroll_id', $userBankrollIds);
+            })
             ->pluck('name')
             ->filter()
+            ->map(function ($sport) {
             ->map(function ($sport) {
                 return ['label' => ucfirst($sport), 'value' => $sport];
             })
@@ -479,8 +564,10 @@ class BetController extends Controller
         $betTypes = Bet::select('bet_code')
             ->distinct()
             ->whereIn('bankroll_id', $userBankrollIds)
+            ->whereIn('bankroll_id', $userBankrollIds)
             ->pluck('bet_code')
             ->filter()
+            ->map(function ($type) {
             ->map(function ($type) {
                 return ['label' => ucfirst($type), 'value' => $type];
             })
@@ -489,8 +576,10 @@ class BetController extends Controller
         $bookmakers = Bet::select('bet_code')
             ->distinct()
             ->whereIn('bankroll_id', $userBankrollIds)
+            ->whereIn('bankroll_id', $userBankrollIds)
             ->pluck('bet_code')
             ->filter()
+            ->map(function ($bookmaker) {
             ->map(function ($bookmaker) {
                 return ['label' => ucfirst($bookmaker), 'value' => $bookmaker];
             })
@@ -499,8 +588,10 @@ class BetController extends Controller
         $tipsters = Bet::select('bet_code')
             ->distinct()
             ->whereIn('bankroll_id', $userBankrollIds)
+            ->whereIn('bankroll_id', $userBankrollIds)
             ->pluck('bet_code')
             ->filter()
+            ->map(function ($tipster) {
             ->map(function ($tipster) {
                 return ['label' => ucfirst($tipster), 'value' => $tipster];
             })
@@ -526,6 +617,10 @@ class BetController extends Controller
         $user = auth()->user();
         $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id')->toArray();
 
+        // Récupérer l'utilisateur connecté pour valider les bankrolls
+        $user = auth()->user();
+        $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id')->toArray();
+
         // Validation des données principales du pari
         $validator = Validator::make($request->all(), [
             'bet_date' => 'required|date',
@@ -534,6 +629,7 @@ class BetController extends Controller
             'result' => 'nullable|in:win,lost,void,pending',
             'stake' => 'required|numeric|min:0',
             'stake_type' => 'required|in:currency,percentage',
+            'bankroll_id' => 'nullable|in:' . implode(',', $userBankrollIds),
             'bankroll_id' => 'nullable|in:' . implode(',', $userBankrollIds),
             // Validation du tableau d'événements
             'events' => 'required|array|min:1',
@@ -573,12 +669,32 @@ class BetController extends Controller
             $bankrollId = $defaultBankroll->id;
         }
 
+
+        // Déterminer la bankroll à utiliser
+        $bankrollId = $validatedData['bankroll_id'] ?? null;
+
+        // Si pas de bankroll spécifiée, prendre la première de l'utilisateur
+        if (!$bankrollId) {
+            $defaultBankroll = UserBankroll::where('user_id', $user->id)->first();
+
+            if (!$defaultBankroll) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Aucune bankroll trouvée. Veuillez créer une bankroll avant d\'ajouter un pari.'
+                ], 400);
+            }
+
+            $bankrollId = $defaultBankroll->id;
+        }
+
         // Extraire les données du pari (sans les événements)
         $betData = [
             'bet_date' => $validatedData['bet_date'],
             'global_odds' => $validatedData['global_odds'],
             'bet_code' => $validatedData['bet_code'],
             'result' => $validatedData['result'] ?? 'pending',
+            'stake' => $validatedData['stake'],
+            'bankroll_id' => $bankrollId
             'stake' => $validatedData['stake'],
             'bankroll_id' => $bankrollId
         ];
@@ -599,6 +715,7 @@ class BetController extends Controller
                 'odd' => $eventData['odds'],
                 'event_date' => $validatedData['bet_date'] // Utiliser la date du pari
             ]);
+
 
             $eventIds[] = $event->id;
         }
@@ -814,17 +931,41 @@ class BetController extends Controller
             ], 404);
         }
 
+        // Vérifier que le pari appartient à une bankroll de l'utilisateur
+        $user = auth()->user();
+        $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
+
+        if (!$userBankrollIds->contains($bet->bankroll_id)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Pari non trouvé ou accès non autorisé.'
+            ], 404);
+        }
+
         return response()->json([
             'success' => true,
+            'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
             'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
         ]);
     }
 
     /**
      * Mettre à jour un pari (seulement si il appartient à l'utilisateur)
+     * Mettre à jour un pari (seulement si il appartient à l'utilisateur)
      */
     public function update(Request $request, Bet $bet): JsonResponse
     {
+        // Vérifier que le pari appartient à une bankroll de l'utilisateur
+        $user = auth()->user();
+        $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
+
+        if (!$userBankrollIds->contains($bet->bankroll_id)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Pari non trouvé ou accès non autorisé.'
+            ], 404);
+        }
+
         // Vérifier que le pari appartient à une bankroll de l'utilisateur
         $user = auth()->user();
         $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
@@ -841,6 +982,19 @@ class BetController extends Controller
             'global_odds' => 'sometimes|numeric|min:1',
             'bet_code' => 'sometimes|string|max:256',
             'result' => 'nullable|in:win,lost,void,pending',
+            'stake' => 'sometimes|numeric|min:0',
+            'stake_type' => 'sometimes|in:currency,percentage',
+            'bankroll_id' => 'sometimes|in:' . $userBankrollIds->implode(','),
+            // Validation du tableau d'événements pour la mise à jour
+            'events' => 'sometimes|array|min:1',
+            'events.*.sport_id' => 'nullable|exists:sports,id',
+            'events.*.country_id' => 'nullable|exists:countries,id',
+            'events.*.league_id' => 'nullable|exists:leagues,id',
+            'events.*.team1_id' => 'nullable|exists:teams,id',
+            'events.*.team2_id' => 'nullable|exists:teams,id',
+            'events.*.description' => 'sometimes|string|max:500',
+            'events.*.result' => 'nullable|in:win,lost,void,pending',
+            'events.*.odds' => 'nullable|numeric|min:1'
             'stake' => 'sometimes|numeric|min:0',
             'stake_type' => 'sometimes|in:currency,percentage',
             'bankroll_id' => 'sometimes|in:' . $userBankrollIds->implode(','),
@@ -912,14 +1066,27 @@ class BetController extends Controller
             'success' => true,
             'message' => 'Pari mis à jour avec succès',
             'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
+            'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
         ]);
     }
 
     /**
      * Supprimer un pari (seulement si il appartient à l'utilisateur)
+     * Supprimer un pari (seulement si il appartient à l'utilisateur)
      */
     public function destroy(Bet $bet): JsonResponse
     {
+        // Vérifier que le pari appartient à une bankroll de l'utilisateur
+        $user = auth()->user();
+        $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
+
+        if (!$userBankrollIds->contains($bet->bankroll_id)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Pari non trouvé ou accès non autorisé.'
+            ], 404);
+        }
+
         // Vérifier que le pari appartient à une bankroll de l'utilisateur
         $user = auth()->user();
         $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
@@ -949,6 +1116,7 @@ class BetController extends Controller
             'sports' => $request->get('sports'),
             'bet_types' => $request->get('bet_types'),
             'bookmakers' => $request->get('bookmakers'),
+            'bankrolls' => $request->get('bankrolls'),
             'bankrolls' => $request->get('bankrolls'),
             'tipsters' => $request->get('tipsters'),
             'start_date' => $request->get('start_date'),

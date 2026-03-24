@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BetController;
+use App\Http\Controllers\BetImportController;
 use App\Http\Controllers\BetImportController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\AuthController;
@@ -16,6 +18,8 @@ use App\Http\Controllers\UserBookmakerController;
 use App\Http\Controllers\TipsterController;
 use App\Http\Controllers\UserSportPreferenceController;
 use App\Http\Controllers\SofaScoreController;
+use App\Http\Controllers\InteretController;
+use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\InteretController;
 use App\Http\Controllers\InvestmentController;
 use Illuminate\Http\Request;
@@ -134,11 +138,25 @@ Route::middleware('auth:sanctum')->group(function () {
     // Routes pour les bankrolls de l'utilisateur
     Route::apiResource('bankrolls', UserBankrollController::class);
 
+
     // Routes pour les associations utilisateur-bookmaker
     Route::apiResource('user-bookmakers', UserBookmakerController::class);
 
+
     // Routes pour les tipsters de l'utilisateur
     Route::apiResource('tipsters', TipsterController::class);
+
+    // Routes pour les intérêts (investisseurs)
+    Route::get('/interets/auth-test', [InteretController::class, 'authTest']);
+    Route::get('/interets/stats', [InteretController::class, 'stats']);
+    Route::get('/interets/evolution', [InteretController::class, 'evolution']);
+    Route::get('/interets/filter-options', [InteretController::class, 'filterOptions']);
+    Route::apiResource('interets', InteretController::class);
+
+    // Routes pour les investissements
+    Route::get('/investments/stats', [InvestmentController::class, 'stats']);
+    Route::apiResource('investments', InvestmentController::class);
+
 
     // Routes pour les intérêts (investisseurs)
     Route::get('/interets/auth-test', [InteretController::class, 'authTest']);
@@ -157,6 +175,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/bookmakers/{id}', [BookmakerController::class, 'destroy']);
 });
 
+// Routes d'administration - Accès admin et superadmin uniquement
+Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->group(function () {
+    Route::get('/users', [AdminController::class, 'getUsers']);
+    Route::get('/stats', [AdminController::class, 'getSystemStats']);
+
+    // Routes superadmin uniquement
+    Route::middleware('role:superadmin')->group(function () {
+        Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole']);
+    });
+});
+
+// Routes d'administration (réservées aux admins et superadmins)
+Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->group(function () {
+    Route::get('/users', [App\Http\Controllers\AdminController::class, 'getUsers']);
+    Route::get('/stats', [App\Http\Controllers\AdminController::class, 'getSystemStats']);
+
+    // Routes réservées aux superadmins uniquement
+    Route::middleware(['role:superadmin'])->group(function () {
+        Route::put('/users/{id}/role', [App\Http\Controllers\AdminController::class, 'updateUserRole']);
+    });
+});
 // Routes d'administration - Accès admin et superadmin uniquement
 Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->group(function () {
     Route::get('/users', [AdminController::class, 'getUsers']);
