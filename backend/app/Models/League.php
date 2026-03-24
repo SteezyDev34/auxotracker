@@ -40,6 +40,7 @@ class League extends Model
 }
 
 
+
     /**
      * Trouver l'ID d'une ligue en acceptant soit le sofascore_id soit un nom.
      */

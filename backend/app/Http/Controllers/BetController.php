@@ -203,9 +203,11 @@ class BetController extends Controller
             $smallestWinOdds = $bets->where('result', 'win')->min('global_odds');
 
 
+
             // Calcul du plus gros bénéfice et de la plus grosse perte
             $biggestProfit = 0;
             $biggestLoss = 0;
+
 
 
             foreach ($bets as $bet) {
@@ -715,6 +717,7 @@ class BetController extends Controller
                 'odd' => $eventData['odds'],
                 'event_date' => $validatedData['bet_date'] // Utiliser la date du pari
             ]);
+
 
 
             $eventIds[] = $event->id;

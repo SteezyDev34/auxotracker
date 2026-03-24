@@ -139,8 +139,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('bankrolls', UserBankrollController::class);
 
 
+
     // Routes pour les associations utilisateur-bookmaker
     Route::apiResource('user-bookmakers', UserBookmakerController::class);
+
 
 
     // Routes pour les tipsters de l'utilisateur
