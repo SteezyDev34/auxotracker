@@ -17,7 +17,7 @@ class League extends Model
         'slug',
         'img',
         'sofascore_id',
-        'priority'
+        'priority',
         'sofascore_id',
         'priority'
     ];
@@ -37,9 +37,6 @@ class League extends Model
     {
         return $this->belongsTo(Country::class);
     }
-}
-
-
 
     /**
      * Trouver l'ID d'une ligue en acceptant soit le sofascore_id soit un nom.

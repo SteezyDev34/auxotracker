@@ -1,9 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BetController;
-use App\Http\Controllers\BetImportController;
 use App\Http\Controllers\BetImportController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\AuthController;
@@ -18,8 +16,6 @@ use App\Http\Controllers\UserBookmakerController;
 use App\Http\Controllers\TipsterController;
 use App\Http\Controllers\UserSportPreferenceController;
 use App\Http\Controllers\SofaScoreController;
-use App\Http\Controllers\InteretController;
-use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\InteretController;
 use App\Http\Controllers\InvestmentController;
 use Illuminate\Http\Request;

@@ -558,7 +558,6 @@ class BetController extends Controller
             ->pluck('name')
             ->filter()
             ->map(function ($sport) {
-            ->map(function ($sport) {
                 return ['label' => ucfirst($sport), 'value' => $sport];
             })
             ->values();
@@ -569,7 +568,6 @@ class BetController extends Controller
             ->whereIn('bankroll_id', $userBankrollIds)
             ->pluck('bet_code')
             ->filter()
-            ->map(function ($type) {
             ->map(function ($type) {
                 return ['label' => ucfirst($type), 'value' => $type];
             })
@@ -582,7 +580,6 @@ class BetController extends Controller
             ->pluck('bet_code')
             ->filter()
             ->map(function ($bookmaker) {
-            ->map(function ($bookmaker) {
                 return ['label' => ucfirst($bookmaker), 'value' => $bookmaker];
             })
             ->values();
@@ -593,7 +590,6 @@ class BetController extends Controller
             ->whereIn('bankroll_id', $userBankrollIds)
             ->pluck('bet_code')
             ->filter()
-            ->map(function ($tipster) {
             ->map(function ($tipster) {
                 return ['label' => ucfirst($tipster), 'value' => $tipster];
             })
@@ -696,7 +692,7 @@ class BetController extends Controller
             'bet_code' => $validatedData['bet_code'],
             'result' => $validatedData['result'] ?? 'pending',
             'stake' => $validatedData['stake'],
-            'bankroll_id' => $bankrollId
+            'bankroll_id' => $bankrollId,
             'stake' => $validatedData['stake'],
             'bankroll_id' => $bankrollId
         ];
@@ -948,7 +944,6 @@ class BetController extends Controller
         return response()->json([
             'success' => true,
             'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
-            'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
         ]);
     }
 
@@ -997,7 +992,7 @@ class BetController extends Controller
             'events.*.team2_id' => 'nullable|exists:teams,id',
             'events.*.description' => 'sometimes|string|max:500',
             'events.*.result' => 'nullable|in:win,lost,void,pending',
-            'events.*.odds' => 'nullable|numeric|min:1'
+            'events.*.odds' => 'nullable|numeric|min:1',
             'stake' => 'sometimes|numeric|min:0',
             'stake_type' => 'sometimes|in:currency,percentage',
             'bankroll_id' => 'sometimes|in:' . $userBankrollIds->implode(','),
@@ -1068,7 +1063,6 @@ class BetController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pari mis à jour avec succès',
-            'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
             'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
         ]);
     }
