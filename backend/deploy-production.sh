@@ -45,4 +45,4 @@ chmod -R 755 storage
 chmod -R 755 bootstrap/cache
 
 echo "✅ Déploiement terminé avec succès!"
-echo "🌐 API disponible à: https://datas.sc2vagr6376.universe.wf"
+echo "🌐 API disponible à: https://auxotracker.p-com.studio/"

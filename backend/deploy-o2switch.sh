@@ -31,12 +31,12 @@ rsync $OPTIONS \
 
 if [ $? -eq 0 ]; then
     echo "✅ Déploiement terminé avec succès!"
-    echo "🌐 API disponible sur: https://datas.sc2vagr6376.universe.wf/"
+    echo "🌐 API disponible sur: https://auxotracker.p-com.studio//"
     echo ""
     echo "📝 Changements déployés:"
     echo "   - Configuration CORS mise à jour"
     echo "   - Headers CORS ajoutés dans .htaccess"
-    echo "   - Support pour https://auxotracker.sc2vagr6376.universe.wf"
+    echo "   - Support pour https://auxotracker.p-com.studio/"
 else
     echo "❌ Erreur lors du déploiement"
     exit 1
