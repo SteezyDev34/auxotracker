@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\League;
 use App\Models\Team;
+use App\Services\TeamLogoService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +17,7 @@ class ImportTeamsByLeague extends Command
      *
      * @var string
      */
-    protected $signature = 'teams:import-by-league {league_id?} {--force : Forcer l\'importation même si l\'équipe existe déjà} {--delay=0 : Délai en secondes entre chaque requête API} {--no-cache : Désactiver le cache}';
+    protected $signature = 'teams:import-by-league {league_id?} {--force : Forcer l\'importation même si l\'équipe existe déjà} {--delay=0 : Délai en secondes entre chaque requête API} {--no-cache : Désactiver le cache} {--from-cache : Importer depuis les fichiers de cache} {--limit= : Limiter le nombre d\'équipes (en mode from-cache)} {--download-logos : Télécharger les logos après import}';
 
     /**
      * La description de la commande console.
@@ -31,6 +32,21 @@ class ImportTeamsByLeague extends Command
     private $cacheDirectory;
 
     /**
+     * Mode import depuis cache
+     */
+    private $importFromCache = false;
+
+    /**
+     * Limite pour import depuis cache
+     */
+    private $importLimit = null;
+
+    /**
+     * Télécharger les logos après import
+     */
+    private $downloadLogos = false;
+
+    /**
      * Statistiques d'importation
      */
     private $stats = [
@@ -40,6 +56,7 @@ class ImportTeamsByLeague extends Command
         'teams_updated' => 0,
         'teams_skipped' => 0,
         'duplicates_detected' => 0,
+        'logos_downloaded' => 0,
         'errors' => 0,
         'api_errors' => 0,
         'season_not_found' => 0
@@ -54,6 +71,9 @@ class ImportTeamsByLeague extends Command
         $force = $this->option('force');
         $delay = (int) $this->option('delay');
         $noCache = $this->option('no-cache');
+        $this->importFromCache = (bool) $this->option('from-cache');
+        $this->importLimit = $this->option('limit') ? (int) $this->option('limit') : null;
+        $this->downloadLogos = (bool) $this->option('download-logos');
 
         $this->line("🚀 Début de l'importation des équipes par ligue");
         $this->line("🔄 Mode force: " . ($force ? 'Activé' : 'Désactivé'));
@@ -68,18 +88,29 @@ class ImportTeamsByLeague extends Command
                 $this->error("❌ Ligue avec l'ID {$leagueId} non trouvée");
                 return 1;
             }
-            $this->processLeague($league, $force, $delay, $noCache);
+            // Préparer répertoire de cache pour cette ligue
+            $this->setCacheDirectory($league);
+            if ($this->importFromCache) {
+                $this->importFromCacheFiles($league, $force, $this->importLimit);
+            } else {
+                $this->processLeague($league, $force, $delay, $noCache);
+            }
         } else {
             // Traiter toutes les ligues (exclure le tennis - sport_id = 2)
             $leagues = League::whereNotNull('sofascore_id')
-                           ->whereHas('sport', function($query) {
-                               $query->where('id', '!=', 2);
-                           })
-                           ->get();
+                ->whereHas('sport', function ($query) {
+                    $query->where('id', '!=', 2);
+                })
+                ->get();
             $this->line("📊 Nombre de ligues à traiter: {$leagues->count()}");
 
             foreach ($leagues as $league) {
-                $this->processLeague($league, $force, $delay, $noCache);
+                $this->setCacheDirectory($league);
+                if ($this->importFromCache) {
+                    $this->importFromCacheFiles($league, $force, $this->importLimit);
+                } else {
+                    $this->processLeague($league, $force, $delay, $noCache);
+                }
                 $this->stats['leagues_processed']++;
 
                 if ($delay > 0) {
@@ -90,6 +121,47 @@ class ImportTeamsByLeague extends Command
 
         $this->displayStats();
         return 0;
+    }
+
+    /**
+     * Importer les équipes depuis les fichiers de cache pour une ligue
+     */
+    private function importFromCacheFiles(League $league, $force = false, $limit = null)
+    {
+        $dir = $this->cacheDirectory;
+        if (!is_dir($dir)) {
+            $this->warn('Répertoire de cache introuvable pour la ligue: ' . $dir);
+            return;
+        }
+
+        $files = glob($dir . '/*.json');
+        if (empty($files)) {
+            $this->warn('Aucun fichier de cache trouvé dans: ' . $dir);
+            return;
+        }
+
+        $teamsProcessed = 0;
+        foreach ($files as $file) {
+            if ($limit && $teamsProcessed >= $limit) break;
+            $data = json_decode(file_get_contents($file), true);
+            if (!$data) continue;
+
+            // Si le fichier contient des standings, extraire les équipes
+            if (isset($data['standings'])) {
+                foreach ($data['standings'] as $standing) {
+                    if (!isset($standing['rows'])) continue;
+                    foreach ($standing['rows'] as $row) {
+                        if (!isset($row['team'])) continue;
+                        $this->processTeam($row['team'], $league, $force);
+                        $this->stats['teams_processed']++;
+                        $teamsProcessed++;
+                        if ($limit && $teamsProcessed >= $limit) break 3;
+                    }
+                }
+            }
+        }
+
+        $this->info("Import depuis cache pour la ligue {$league->name} : {$teamsProcessed} équipes traitées");
     }
 
     /**
@@ -118,7 +190,11 @@ class ImportTeamsByLeague extends Command
             }
 
             $this->line("🏆 Traitement de la ligue: {$league->name} (ID: {$league->sofascore_id})");
-            $this->line("🏃 Sport: {$league->sport->name} (ID: {$league->sport->id})");
+            if ($league->sport) {
+                $this->line("🏃 Sport: {$league->sport->name} (ID: {$league->sport->id})");
+            } else {
+                $this->line("🏃 Sport: (inconnu)");
+            }
             if ($league->country) {
                 $this->line("🌍 Pays: {$league->country->name} ({$league->country->code})");
             }
@@ -157,7 +233,6 @@ class ImportTeamsByLeague extends Command
                     usleep($delay * 100000); // Délai plus court entre les équipes
                 }
             }
-
         } catch (\Exception $e) {
             $this->stats['errors']++;
             Log::error('Erreur lors du traitement de la ligue', [
@@ -226,7 +301,6 @@ class ImportTeamsByLeague extends Command
             }
 
             return null;
-
         } catch (\Exception $e) {
             $this->stats['api_errors']++;
             Log::error('Exception lors de la récupération de l\'ID de saison', [
@@ -303,7 +377,6 @@ class ImportTeamsByLeague extends Command
             }
 
             return $teams;
-
         } catch (\Exception $e) {
             $this->stats['api_errors']++;
             Log::error('Exception lors de la récupération des standings', [
@@ -346,14 +419,14 @@ class ImportTeamsByLeague extends Command
 
             // Vérification des doublons par nom et slug dans la même ligue
             $duplicateByName = Team::where('name', $name)
-                                  ->where('league_id', $league->id)
-                                  ->where('sofascore_id', '!=', $sofascoreId)
-                                  ->first();
+                ->where('league_id', $league->id)
+                ->where('sofascore_id', '!=', $sofascoreId)
+                ->first();
 
             $duplicateBySlug = Team::where('slug', $slug)
-                                  ->where('league_id', $league->id)
-                                  ->where('sofascore_id', '!=', $sofascoreId)
-                                  ->first();
+                ->where('league_id', $league->id)
+                ->where('sofascore_id', '!=', $sofascoreId)
+                ->first();
 
             if ($duplicateByName || $duplicateBySlug) {
                 $this->stats['duplicates_detected']++;
@@ -377,13 +450,14 @@ class ImportTeamsByLeague extends Command
 
             if ($existingTeam) {
                 $existingTeam->update($teamAttributes);
+                $team = $existingTeam;
                 $this->stats['teams_updated']++;
                 $this->line("🔄 Équipe mise à jour: {$name} (ID: {$sofascoreId}, Slug: {$slug})");
                 if ($shortName && $shortName !== $name) {
                     $this->line("   📝 Nom court: {$shortName}");
                 }
             } else {
-                Team::create($teamAttributes);
+                $team = Team::create($teamAttributes);
                 $this->stats['teams_created']++;
                 $this->line("✅ Équipe créée: {$name} (ID: {$sofascoreId}, Slug: {$slug})");
                 if ($shortName && $shortName !== $name) {
@@ -391,6 +465,37 @@ class ImportTeamsByLeague extends Command
                 }
             }
 
+            // Mettre à jour la table pivot league_team pour associer cette équipe à la ligue
+            try {
+                if ($team && isset($league->id)) {
+                    $team->leagues()->syncWithoutDetaching([$league->id]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Erreur mise à jour pivot league_team (by league)', ['team_id' => $team->id ?? null, 'league_id' => $league->id ?? null, 'error' => $e->getMessage()]);
+            }
+            // Si on est en mode from-cache sans demande de téléchargement, juste vérifier la présence du fichier local
+            if ($this->importFromCache && !$this->downloadLogos) {
+                try {
+                    $logoService = app(\App\Services\TeamLogoService::class);
+                    $logoService->setImgFromStorage($team);
+                } catch (\Exception $e) {
+                    Log::warning('Erreur vérification logo depuis cache (by league)', ['team_id' => $team->id ?? null, 'error' => $e->getMessage()]);
+                }
+            }
+
+            // Télécharger le logo si demandé
+            if (!empty($this->downloadLogos)) {
+                try {
+                    $logoService = app(TeamLogoService::class);
+                    $res = $logoService->ensureTeamLogo($team, (bool)$force);
+                    if ($res) {
+                        $this->stats['logos_downloaded'] = ($this->stats['logos_downloaded'] ?? 0) + 1;
+                        $this->line("📸 Logo téléchargé pour {$team->name} (team_id: {$team->id})");
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Erreur téléchargement logo', ['team' => $team->id ?? null, 'error' => $e->getMessage()]);
+                }
+            }
         } catch (\Exception $e) {
             $this->stats['errors']++;
             Log::error('❌ Erreur lors du traitement de l\'équipe', [
@@ -443,6 +548,9 @@ class ImportTeamsByLeague extends Command
         $this->line("📅 Saisons non trouvées: {$this->stats['season_not_found']}");
         $this->line("🌐 Erreurs API: {$this->stats['api_errors']}");
         $this->line("❌ Autres erreurs: {$this->stats['errors']}");
+        if (!empty($this->stats['logos_downloaded'])) {
+            $this->line("📸 Logos téléchargés: {$this->stats['logos_downloaded']}");
+        }
 
         $totalTeams = $this->stats['teams_created'] + $this->stats['teams_updated'];
         $this->line("📋 Total équipes ajoutées/modifiées: {$totalTeams}");

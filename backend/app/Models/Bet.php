@@ -18,6 +18,7 @@ class Bet extends Model
         'result',
         'sport_id',
         'bankroll_id',
+        'tipster_id',
         'stake'
     ];
 
@@ -31,6 +32,14 @@ class Bet extends Model
     public function sport(): BelongsTo
     {
         return $this->belongsTo(Sport::class);
+    }
+
+    /**
+     * Relation vers le tipster (optionnel)
+     */
+    public function tipster(): BelongsTo
+    {
+        return $this->belongsTo(Tipster::class, 'tipster_id');
     }
 
     public function bankroll(): BelongsTo

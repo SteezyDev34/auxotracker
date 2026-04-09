@@ -211,4 +211,44 @@ class TeamLogoService
 
         return $stats;
     }
+
+    /**
+     * Vérifie si un logo existe déjà sur le disque public et met à jour le champ `img`.
+     * Ne tente aucun téléchargement.
+     *
+     * @param Team $team
+     * @return string|null Chemin du logo si présent, sinon null
+     */
+    public function setImgFromStorage(Team $team): ?string
+    {
+        $logoPath = "team_logos/{$team->id}.png";
+
+        try {
+            if (Storage::disk('public')->exists($logoPath)) {
+                Log::info('Logo trouvé sur le disque pour l\'équipe', ['team_id' => $team->id, 'path' => $logoPath]);
+
+                if ($team->img !== $logoPath) {
+                    $team->update(['img' => $logoPath]);
+                    Log::info('Champ img mis à jour depuis le stockage', ['team_id' => $team->id, 'img' => $logoPath]);
+                } else {
+                    Log::debug('Champ img déjà correct', ['team_id' => $team->id, 'img' => $team->img]);
+                }
+
+                return $logoPath;
+            }
+
+            // Aucun fichier trouvé : s'assurer que le champ img est null
+            Log::info('Aucun logo trouvé sur le disque pour l\'équipe', ['team_id' => $team->id, 'expected_path' => $logoPath]);
+
+            if ($team->img !== null) {
+                $team->update(['img' => null]);
+                Log::info('Champ img réinitialisé à null', ['team_id' => $team->id]);
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la vérification du logo sur disque', ['team_id' => $team->id, 'error' => $e->getMessage()]);
+            return null;
+        }
+    }
 }

@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Tipster;
 
 class BetController extends Controller
 {
@@ -28,11 +29,8 @@ class BetController extends Controller
         // Récupérer les IDs des bankrolls de l'utilisateur
         $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id');
 
-
         // Charger les relations nécessaires pour afficher les informations complètes des événements
-        $query = Bet::with(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
-            ->whereIn('bankroll_id', $userBankrollIds);
-        $query = Bet::with(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
+        $query = Bet::with(['sport', 'bankroll', 'events.sport', 'events.team1', 'events.team2', 'events.league.country'])
             ->whereIn('bankroll_id', $userBankrollIds);
 
         // Debug: Log des filtres reçus
@@ -708,6 +706,7 @@ class BetController extends Controller
                 'team1_id' => $eventData['team1_id'],
                 'team2_id' => $eventData['team2_id'],
                 'league_id' => $eventData['league_id'],
+                'sport_id' => $eventData['sport_id'] ?? null,
                 'type' => $eventData['description'], // Utiliser la description comme type
                 'market' => $eventData['description'], // Utiliser la description comme marché
                 'odd' => $eventData['odds'],
@@ -734,7 +733,7 @@ class BetController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pari créé avec succès',
-            'data' => $bet->load(['sport', 'events.team1', 'events.team2', 'events.league.country'])
+            'data' => $bet->load(['sport', 'events.sport', 'events.team1', 'events.team2', 'events.league.country'])
         ], 201);
     }
 
@@ -768,16 +767,20 @@ class BetController extends Controller
                 $team2Val = $ev['team2_id'] ?? $ev['team2'] ?? $ev['team2_name'] ?? $ev['equipe_2'] ?? null;
                 $leagueVal = $ev['league_id'] ?? $ev['league'] ?? null;
 
-                $input['events'][$i]['team1_id'] = $team1Val ? Team::findIdBySofascoreOrName($team1Val) : null;
-                $input['events'][$i]['team2_id'] = $team2Val ? Team::findIdBySofascoreOrName($team2Val) : null;
+                // transmettre le sport_id au résolveur si disponible
+                $eventSport = $ev['sport_id'] ?? $ev['sport'] ?? $input['sport_id'] ?? null;
+
+                $input['events'][$i]['team1_id'] = $team1Val ? Team::findIdBySofascoreOrName($team1Val, $eventSport) : null;
+                $input['events'][$i]['team2_id'] = $team2Val ? Team::findIdBySofascoreOrName($team2Val, $eventSport) : null;
                 $input['events'][$i]['league_id'] = $leagueVal ? League::findIdBySofascoreOrName($leagueVal) : null;
             }
 
             // 2) Sinon, si 'event_list' est fourni, le parser
         } elseif (!empty($input['event_list'])) {
             foreach ($input['event_list'] as $event) {
-                $team1Id = isset($event['equipe_1']) ? Team::findIdBySofascoreOrName($event['equipe_1']) : null;
-                $team2Id = isset($event['equipe_2']) ? Team::findIdBySofascoreOrName($event['equipe_2']) : null;
+                $eventSport = $event['sport_id'] ?? $input['sport_id'] ?? null;
+                $team1Id = isset($event['equipe_1']) ? Team::findIdBySofascoreOrName($event['equipe_1'], $eventSport) : null;
+                $team2Id = isset($event['equipe_2']) ? Team::findIdBySofascoreOrName($event['equipe_2'], $eventSport) : null;
 
                 $leagueVal = $event['league_id'] ?? $event['league'] ?? null;
                 $leagueId = $leagueVal ? League::findIdBySofascoreOrName($leagueVal) : null;
@@ -794,8 +797,10 @@ class BetController extends Controller
 
             // 3) Sinon, fallback: construire un seul event à partir des champs top-level
         } else {
-            $team1Id = isset($input['equipe_1']) ? Team::findIdBySofascoreOrName($input['equipe_1']) : null;
-            $team2Id = isset($input['equipe_2']) ? Team::findIdBySofascoreOrName($input['equipe_2']) : null;
+
+            $topSport = $input['sport_id'] ?? null;
+            $team1Id = isset($input['equipe_1']) ? Team::findIdBySofascoreOrName($input['equipe_1'], $topSport) : null;
+            $team2Id = isset($input['equipe_2']) ? Team::findIdBySofascoreOrName($input['equipe_2'], $topSport) : null;
 
             $leagueVal = $input['league_id'] ?? $input['league'] ?? null;
             $leagueId = $leagueVal ? League::findIdBySofascoreOrName($leagueVal) : null;
@@ -812,6 +817,22 @@ class BetController extends Controller
 
         $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id')->toArray();
 
+        // Normaliser l'entrée 'tipster' en 'tipster_id' attendu par la validation
+        if (!isset($input['tipster_id'])) {
+            $input['tipster_id'] = null;
+            if (isset($input['tipster'])) {
+                // Si l'appelant fournit un ID numérique
+                if (is_numeric($input['tipster'])) {
+                    $input['tipster_id'] = (int) $input['tipster'];
+                } else {
+                        // Tenter de résoudre par nom ou slug (insensible à la casse)
+                        $term = mb_strtolower(trim($input['tipster']));
+                        $found = Tipster::whereRaw('LOWER(name) = ?', [$term])
+                            ->first();
+                        $input['tipster_id'] = $found ? $found->id : null;
+                }
+            }
+        }
         // Validation similaire à store(), limitée aux bankrolls de l'utilisateur Auxobot
         $validator = Validator::make($input, [
             'bet_date' => 'required|date',
@@ -821,6 +842,7 @@ class BetController extends Controller
             'stake' => 'required|numeric|min:0',
             'stake_type' => 'required|in:currency,percentage',
             'bankroll_id' => 'nullable|in:' . implode(',', $userBankrollIds),
+            'tipster_id' => 'nullable|exists:tipsters,id',
             'events' => 'required|array|min:1',
             'events.*.sport_id' => 'nullable|exists:sports,id',
             'events.*.country_id' => 'nullable|exists:countries,id',
@@ -867,6 +889,7 @@ class BetController extends Controller
                 'team1_id' => $eventData['team1_id'] ?? null,
                 'team2_id' => $eventData['team2_id'] ?? null,
                 'league_id' => $eventData['league_id'] ?? null,
+                'sport_id' => $eventData['sport_id'] ?? null,
                 'type' => $eventData['description'],
                 'market' => $eventData['description'],
                 'odd' => $eventData['odds'] ?? null,
@@ -887,7 +910,7 @@ class BetController extends Controller
         }
         $bet->save();
 
-        return response()->json(['success' => true, 'message' => 'Pari créé par Auxobot', 'data' => $bet->load(['sport', 'events.team1', 'events.team2', 'events.league.country'])], 201);
+        return response()->json(['success' => true, 'message' => 'Pari créé par Auxobot', 'data' => $bet->load(['sport', 'events.sport', 'events.team1', 'events.team2', 'events.league.country'])], 201);
     }
 
     /**
@@ -943,7 +966,7 @@ class BetController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
+            'data' => $bet->load(['sport', 'bankroll', 'events.sport', 'events.team1', 'events.team2', 'events.league.country'])
         ]);
     }
 
@@ -1038,6 +1061,7 @@ class BetController extends Controller
                 $event = \App\Models\Event::create([
                     'team1_id' => $eventData['team1_id'] ?? null,
                     'team2_id' => $eventData['team2_id'] ?? null,
+                    'sport_id' => $eventData['sport_id'] ?? null,
                     'league_id' => $eventData['league_id'] ?? null,
                     'type' => $eventData['description'] ?? '', // Utiliser la description comme type
                     'market' => $eventData['description'] ?? '', // Utiliser la description comme marché
@@ -1063,7 +1087,7 @@ class BetController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pari mis à jour avec succès',
-            'data' => $bet->load(['sport', 'bankroll', 'events.team1', 'events.team2', 'events.league.country'])
+            'data' => $bet->load(['sport', 'bankroll', 'events.sport', 'events.team1', 'events.team2', 'events.league.country'])
         ]);
     }
 

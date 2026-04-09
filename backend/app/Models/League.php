@@ -16,6 +16,7 @@ class League extends Model
         'sport_id',
         'slug',
         'img',
+        'nickname',
         'sofascore_id',
         'priority',
         'sofascore_id',
@@ -36,6 +37,14 @@ class League extends Model
     public function country()
     {
         return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * Many-to-many inverse: teams belonging to this league.
+     */
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'league_team', 'league_id', 'team_id')->withTimestamps();
     }
 
     /**

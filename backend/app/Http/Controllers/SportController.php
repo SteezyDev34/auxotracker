@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sport;
 use App\Models\League;
 use App\Models\Team;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -85,12 +86,20 @@ class SportController extends Controller
     public function getTeamsBySport(Request $request, $sportId): JsonResponse
     {
         try {
-            $teams = Team::whereHas('league', function ($query) use ($sportId) {
-                $query->where('sport_id', $sportId);
+            // Build subquery to compute max priority per team for the given sport
+            $sub = DB::table('league_team')
+                ->join('leagues', 'leagues.id', '=', 'league_team.league_id')
+                ->where('leagues.sport_id', $sportId)
+                ->select('league_team.team_id', DB::raw('MAX(leagues.priority) as max_priority'))
+                ->groupBy('league_team.team_id');
+
+            $teams = Team::leftJoinSub($sub, 'lp', function ($join) {
+                $join->on('teams.id', '=', 'lp.team_id');
             })
-                ->with(['league:id,name'])
-                ->orderBy('name')
-                ->get(['id', 'name', 'nickname', 'img', 'league_id']);
+                ->with(['leagues:id,name'])
+                ->orderByDesc('lp.max_priority')
+                ->orderBy('teams.name')
+                ->get(['teams.id', 'teams.name', 'teams.nickname', 'teams.img']);
 
             return response()->json([
                 'success' => true,
@@ -172,20 +181,34 @@ class SportController extends Controller
         try {
             $search = $request->get('search', '');
             $page = (int) $request->get('page', 1);
-            $limit = min((int) $request->get('limit', 30), 50); // Limiter à 50 max, défaut 30
+            $limit = min((int) $request->get('limit', 200), 200); // Limiter à 50 max, défaut 30
             $leagueId = $request->get('league_id'); // Filtre optionnel par ligue
             $countryId = $request->get('country_id'); // Filtre optionnel par pays
 
-            $query = Team::whereHas('league', function ($q) use ($sportId, $countryId) {
-                $q->where('sport_id', $sportId);
+            // Build base query using pivot to compute max priority per team within the sport
+            $baseSub = DB::table('league_team')
+                ->join('leagues', 'leagues.id', '=', 'league_team.league_id')
+                ->where('leagues.sport_id', $sportId)
+                ->select('league_team.team_id', DB::raw('MAX(leagues.priority) as max_priority'))
+                ->groupBy('league_team.team_id');
 
-                // Appliquer le filtre par pays si fourni
-                if (!empty($countryId)) {
-                    $q->where('country_id', $countryId);
-                }
+            $query = Team::leftJoinSub($baseSub, 'lp', function ($join) {
+                $join->on('teams.id', '=', 'lp.team_id');
             })
-                ->with(['league:id,name'])
-                ->orderBy('name');
+                ->with(['leagues:id,name'])
+                ->orderByDesc('lp.max_priority')
+                ->orderBy('teams.name');
+
+            // Apply country filter by ensuring team has at least one league in that country
+            if (!empty($countryId)) {
+                $query->whereExists(function ($q) use ($countryId) {
+                    $q->select(DB::raw(1))
+                        ->from('league_team')
+                        ->join('leagues', 'leagues.id', '=', 'league_team.league_id')
+                        ->whereRaw('league_team.team_id = teams.id')
+                        ->where('leagues.country_id', $countryId);
+                });
+            }
 
             // Appliquer le filtre de recherche si fourni
             if (!empty($search)) {

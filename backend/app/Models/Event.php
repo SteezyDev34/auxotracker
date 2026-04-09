@@ -15,6 +15,7 @@ class Event extends Model
         'team1_id',
         'team2_id',
         'league_id',
+        'sport_id',
         'type',
         'market',
         'odd',
@@ -40,6 +41,11 @@ class Event extends Model
     public function league(): BelongsTo
     {
         return $this->belongsTo(League::class);
+    }
+
+    public function sport(): BelongsTo
+    {
+        return $this->belongsTo(Sport::class);
     }
 
     public function bets(): BelongsToMany

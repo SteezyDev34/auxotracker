@@ -42,7 +42,7 @@ class DownloadTeamLogos extends Command
 
         // Récupérer les équipes avec un sofascore_id
         $query = Team::whereNotNull('sofascore_id');
-
+        $this->info('🔍 Recherche des équipes avec un sofascore_id défini...');
         // Filtrer par champ img vide si l'option --empty-img est activée
         if ($this->option('empty-img')) {
             $query->where(function ($q) {
@@ -52,20 +52,23 @@ class DownloadTeamLogos extends Command
             });
             $this->info('🔍 Filtrage activé: traitement uniquement des équipes avec champ img vide.');
         }
-
+        $this->info("🔍 Total d'équipes trouvées avec sofascore_id: {$query->count()}");
         // Filtrer par ID de ligue si l'option --league est activée
         if ($this->option('league')) {
             $leagueId = $this->option('league');
             $query->where('league_id', $leagueId);
             $this->info("🏆 Filtrage activé: traitement uniquement des équipes de la ligue ID: {$leagueId}");
         }
+        
 
         $teams = $query->orderBy('id', 'desc')->get();
+        $this->info("🔍 Total d'équipes à traiter après filtrage: {$teams->count()}");
 
         if ($teams->isEmpty()) {
             $this->warn('Aucune équipe avec un sofascore_id trouvée.');
             return 0;
         }
+        $this->info("✅ {$teams->count()} équipes trouvées avec un sofascore_id défini et correspondant aux critères de filtrage.");
 
         $this->info("Traitement de {$teams->count()} équipes...");
 
