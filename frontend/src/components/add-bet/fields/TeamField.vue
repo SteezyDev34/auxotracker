@@ -179,6 +179,7 @@ export default {
      * @param {string} query - Terme de recherche
      * @param {number} page - Numéro de page
      * @param {boolean} append - Ajouter aux résultats existants ou remplacer
+     * @returns {Promise<void>}
      */
     const searchTeams = async (query = "", page = 1, append = false) => {
       if (!props.sportId) {
@@ -224,6 +225,9 @@ export default {
           );
         }
 
+        // Conserver les équipes déjà sélectionnées
+        const selectedTeams = selectedTeam.value || [];
+        
         if (append && page > 1) {
           teamSearchResults.value = [
             ...teamSearchResults.value,
@@ -231,6 +235,16 @@ export default {
           ];
         } else {
           teamSearchResults.value = filteredData;
+        }
+
+        // Réajouter les équipes sélectionnées si elles ne sont pas dans les résultats
+        if (selectedTeams.length > 0 && !append) {
+          selectedTeams.forEach((team) => {
+            if (team && team.id && !teamSearchResults.value.find((t) => t.id === team.id)) {
+              teamSearchResults.value.unshift({ ...team });
+              console.log(`✅ Équipe sélectionnée réajoutée aux résultats:`, team.name);
+            }
+          });
         }
 
         // Mettre à jour les informations de pagination
@@ -267,44 +281,75 @@ export default {
           `🎯 TeamField (${props.teamType}) watcher - modelValue reçu:`,
           newValue,
           "Type:",
-          typeof newValue
+          typeof newValue,
+          "SportId:",
+          props.sportId
         );
         selectedTeam.value = newValue || [];
-        // S'assurer que les équipes sélectionnées sont dans teamSearchResults
+        // S'assurer que les équipes sélectionnées sont TOUJOURS dans teamSearchResults
+        // Ceci est crucial pour les paris sans sport renseigné
         if (newValue && newValue.length > 0) {
           console.log(
-            `📋 Ajout de ${newValue.length} équipe(s) à teamSearchResults`
+            `📋 Ajout de ${newValue.length} équipe(s) à teamSearchResults (même sans sport)`
           );
           newValue.forEach((team) => {
-            console.log(`  - Team:`, team, "ID:", team?.id);
-            if (!teamSearchResults.value.find((t) => t.id === team.id)) {
-              teamSearchResults.value.push(team);
-              console.log(`    ✅ Ajoutée à teamSearchResults`);
+            console.log(`  - Team:`, team, "ID:", team?.id, "Name:", team?.name);
+            if (team && team.id) {
+              const existingTeam = teamSearchResults.value.find((t) => t.id === team.id);
+              if (!existingTeam) {
+                // Cloner l'équipe pour éviter les problèmes de référence
+                const teamToAdd = { ...team };
+                teamSearchResults.value.unshift(teamToAdd); // Ajouter au début
+                console.log(`    ✅ Ajoutée à teamSearchResults au début de la liste`);
+              } else {
+                console.log(`    ℹ️ Déjà présente dans teamSearchResults`);
+              }
             } else {
-              console.log(`    ℹ️ Déjà présente dans teamSearchResults`);
+              console.log(`    ⚠️ Équipe invalide (pas d'ID)`);
             }
           });
+          console.log(`✅ teamSearchResults final:`, teamSearchResults.value.length, "équipe(s)");
+        } else {
+          console.log(`ℹ️ Aucune équipe à ajouter`);
         }
       },
-      { immediate: true }
+      { immediate: true, deep: true }
     );
 
     // Watcher pour le sport - recharger les équipes quand le sport change
     watch(
       () => props.sportId,
-      (newSportId) => {
+      (newSportId, oldSportId) => {
         if (newSportId) {
           console.log(
-            `Sport changé pour ${props.teamType}, rechargement des équipes`
+            `Sport changé pour ${props.teamType}, rechargement des équipes`,
+            { oldSportId, newSportId }
           );
-          searchTeams("", 1, false);
+          // Conserver les équipes déjà sélectionnées
+          const selectedTeams = selectedTeam.value || [];
+          searchTeams("", 1, false).then(() => {
+            // Après le chargement, s'assurer que les équipes sélectionnées sont présentes
+            if (selectedTeams.length > 0) {
+              selectedTeams.forEach((team) => {
+                if (team && team.id && !teamSearchResults.value.find((t) => t.id === team.id)) {
+                  teamSearchResults.value.unshift({ ...team });
+                  console.log(`✅ Équipe sélectionnée réajoutée après changement de sport:`, team.name);
+                }
+              });
+            }
+          });
         } else {
-          // Réinitialiser si aucun sport
-          teamSearchResults.value = [];
-          if (selectedTeam.value.length > 0) {
-            selectedTeam.value = [];
-            emit("update:modelValue", []);
-            emit("team-clear");
+          // Pas de sport : conserver les équipes déjà sélectionnées pour permettre l'édition
+          console.log(
+            `⚠️ Aucun sport pour ${props.teamType}, conservation des équipes sélectionnées`
+          );
+          // Garder uniquement les équipes sélectionnées dans les résultats de recherche
+          if (selectedTeam.value && selectedTeam.value.length > 0) {
+            teamSearchResults.value = [...selectedTeam.value];
+            console.log(`✅ ${selectedTeam.value.length} équipe(s) conservée(s) malgré l'absence de sport`);
+          } else {
+            // Seulement si aucune équipe n'est sélectionnée, on vide
+            teamSearchResults.value = [];
           }
         }
       },
@@ -365,9 +410,23 @@ export default {
      * Gérer l'ouverture du dropdown
      */
     const onDropdownShow = () => {
-      console.log(`Dropdown ouvert pour ${props.teamType}`);
+      console.log(`Dropdown ouvert pour ${props.teamType}`, {
+        sportId: props.sportId,
+        resultsLength: teamSearchResults.value.length,
+        selectedTeamsLength: selectedTeam.value?.length || 0
+      });
+      
+      // Si un sport est sélectionné et qu'il n'y a pas de résultats, charger les équipes
       if (teamSearchResults.value.length === 0 && props.sportId) {
         searchTeams("", 1, false);
+      }
+      
+      // Si pas de sport mais qu'il y a des équipes sélectionnées, s'assurer qu'elles sont dans les résultats
+      if (!props.sportId && selectedTeam.value && selectedTeam.value.length > 0) {
+        console.log(`⚠️ Pas de sport, mais ${selectedTeam.value.length} équipe(s) sélectionnée(s), ajout aux résultats`);
+        if (teamSearchResults.value.length === 0) {
+          teamSearchResults.value = [...selectedTeam.value];
+        }
       }
     };
 
@@ -407,14 +466,26 @@ export default {
      * Gérer le clic sur le bouton dropdown
      */
     const onDropdownClick = async () => {
-      console.log(`Clic dropdown pour ${props.teamType}`);
+      console.log(`Clic dropdown pour ${props.teamType}`, {
+        sportId: props.sportId,
+        resultsLength: teamSearchResults.value.length,
+        selectedLength: selectedTeam.value?.length || 0
+      });
 
-      // Charger les équipes si nécessaire
-      if (teamSearchResults.value.length === 0 && props.sportId) {
+      // Si un sport est disponible, charger les équipes depuis l'API
+      if (props.sportId && teamSearchResults.value.length === 0) {
         await searchTeams("", 1, false);
       }
+      
+      // Si pas de sport mais qu'il y a des équipes sélectionnées, s'assurer qu'elles sont visibles
+      if (!props.sportId && selectedTeam.value && selectedTeam.value.length > 0) {
+        console.log(`⚠️ Pas de sport, affichage des ${selectedTeam.value.length} équipe(s) sélectionnée(s)`);
+        if (teamSearchResults.value.length === 0) {
+          teamSearchResults.value = [...selectedTeam.value];
+        }
+      }
 
-      // Déclencher la recherche avec une chaîne vide pour afficher toutes les équipes
+      // Déclencher la recherche avec une chaîne vide pour afficher toutes les équipes disponibles
       onSearchTeams({ query: "" });
     };
 
@@ -422,11 +493,23 @@ export default {
      * Gérer le focus sur le champ de saisie
      */
     const onInputFocus = async () => {
-      console.log(`Focus sur le champ de saisie équipe pour ${props.teamType}`);
+      console.log(`Focus sur le champ de saisie équipe pour ${props.teamType}`, {
+        sportId: props.sportId,
+        resultsLength: teamSearchResults.value.length,
+        selectedLength: selectedTeam.value?.length || 0
+      });
 
-      // Charger les équipes si nécessaire
-      if (teamSearchResults.value.length === 0 && props.sportId) {
+      // Si un sport est disponible, charger les équipes depuis l'API
+      if (props.sportId && teamSearchResults.value.length === 0) {
         await searchTeams("", 1, false);
+      }
+      
+      // Si pas de sport mais qu'il y a des équipes sélectionnées, s'assurer qu'elles sont visibles
+      if (!props.sportId && selectedTeam.value && selectedTeam.value.length > 0) {
+        console.log(`⚠️ Pas de sport au focus, affichage des ${selectedTeam.value.length} équipe(s) sélectionnée(s)`);
+        if (teamSearchResults.value.length === 0) {
+          teamSearchResults.value = [...selectedTeam.value];
+        }
       }
 
       // Déclencher la recherche avec une chaîne vide pour afficher toutes les équipes

@@ -27,7 +27,6 @@
       display="chip"
       class="w-full"
       :class="{ 'p-invalid': hasError }"
-      :disabled="!sportId"
       aria-label="Rechercher et sélectionner une ligue"
       role="combobox"
       aria-expanded="false"
@@ -160,12 +159,18 @@ export default {
      * @param {Object} event - Événement de recherche contenant la query
      */
     const searchLeagues = async (event) => {
+      const query = event.query || "";
+
+      // Si pas de sport, on ne peut pas faire de recherche active, 
+      // mais on peut garder les ligues déjà sélectionnées
       if (!props.sportId) {
-        console.log("❌ searchLeagues: Aucun sport sélectionné");
+        console.log("ℹ️ searchLeagues: Aucun sport sélectionné, conservation des ligues existantes");
+        // Garder uniquement les ligues déjà sélectionnées dans les résultats
+        if (selectedLeague.value && selectedLeague.value.length > 0) {
+          leagueSearchResults.value = [...selectedLeague.value];
+        }
         return;
       }
-
-      const query = event.query || "";
 
       try {
         loading.value = true;
@@ -179,6 +184,16 @@ export default {
         );
 
         leagueSearchResults.value = response.data;
+        
+        // Ajouter les ligues sélectionnées si elles ne sont pas dans les résultats
+        if (selectedLeague.value && selectedLeague.value.length > 0) {
+          selectedLeague.value.forEach((league) => {
+            if (league && league.id && !leagueSearchResults.value.find((l) => l.id === league.id)) {
+              leagueSearchResults.value.unshift({ ...league });
+              console.log("✅ Ligue sélectionnée réajoutée aux résultats:", league.name);
+            }
+          });
+        }
 
         console.log("✅ Ligues trouvées:", {
           sportId: props.sportId,

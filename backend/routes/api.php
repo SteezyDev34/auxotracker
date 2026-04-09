@@ -18,6 +18,7 @@ use App\Http\Controllers\UserSportPreferenceController;
 use App\Http\Controllers\SofaScoreController;
 use App\Http\Controllers\InteretController;
 use App\Http\Controllers\InvestmentController;
+use App\Http\Controllers\AdminLeagueController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -177,6 +178,11 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->group(function () {
     Route::get('/users', [AdminController::class, 'getUsers']);
     Route::get('/stats', [AdminController::class, 'getSystemStats']);
+
+    // Gestion des ligues (admin)
+    Route::get('/leagues', [AdminLeagueController::class, 'index']);
+    Route::put('/leagues/priorities', [AdminLeagueController::class, 'updatePriorities']);
+    Route::put('/leagues/{id}', [AdminLeagueController::class, 'update']);
 
     // Routes superadmin uniquement
     Route::middleware('role:superadmin')->group(function () {

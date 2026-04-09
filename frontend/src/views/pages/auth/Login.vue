@@ -25,9 +25,11 @@ const login = async () => {
   errorMessage.value = "";
 
   try {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl) throw new Error("VITE_API_URL must be set in environment (no fallback allowed).");
     // Requête de connexion avec authentification par token uniquement
     const response = await axios.post(
-      "https://api.auxotracker.lan/api/login",
+      `${apiUrl}/login`,
       {
         email: email.value,
         password: password.value,

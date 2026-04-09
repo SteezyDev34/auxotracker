@@ -17,11 +17,13 @@ return [
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
-        'http://auxotracker.lan', 
-        'https://auxotracker.lan', 
-        'http://localhost:5173', 
+        'http://auxotracker.lan',
+        'https://auxotracker.lan',
+        'http://localhost:5173',
         'http://localhost:5174',
-        'https://auxotracker.sc2vagr6376.universe.wf'
+        'https://auxotracker.sc2vagr6376.universe.wf',
+        'https://api.auxotracker.p-com.studio',
+        'https://auxotracker.p-com.studio',
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],

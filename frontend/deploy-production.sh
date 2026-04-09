@@ -2,7 +2,7 @@
 
 # Script de déploiement automatisé - AuxoTracker Frontend O2Switch
 # Application: Vue.js SPA
-# Frontend: https://auxotracker.sc2vagr6376.universe.wf/
+# Frontend: https://auxotracker.p-com.studio//
 # API: http://datas.sc2vagr6376.universe.wf/
 # Hébergeur: O2Switch
 # Méthode: Build local + rsync
@@ -68,13 +68,6 @@ check_prerequisites() {
     log "✅ npm version: $(npm --version)"
 }
 
-# Installation des dépendances
-install_dependencies() {
-    log "📦 Installation des dépendances..."
-    npm ci --only=production
-    log "✅ Dépendances installées"
-}
-
 # Build de production
 build_production() {
     log "📦 Build de production en cours..."
@@ -88,15 +81,20 @@ build_production() {
     node_version=$(node --version)
     log "📋 Version Node.js: $node_version"
     
-    # Nettoyer le dossier dist précédent
+    # Nettoyer le dossier dist précédent et les caches
     if [ -d "$LOCAL_DIST_DIR" ]; then
         rm -rf "$LOCAL_DIST_DIR"
         log "🧹 Ancien dossier dist supprimé"
     fi
     
+    # Nettoyer node_modules et package-lock pour éviter les problèmes
+    log "🧹 Nettoyage des dépendances et cache..."
+    rm -rf node_modules package-lock.json
+    npm cache clean --force
+    
     # Installation des dépendances
     log "📥 Installation des dépendances..."
-    npm ci
+    npm install
 
     # Configuration de l'environnement de production
     log "⚙️ Configuration de l'environnement de production..."
@@ -190,7 +188,7 @@ health_check() {
     
     # Test de l'application frontend O2Switch
     log "🌐 Test du frontend..."
-    if curl -f -s -I "https://auxotracker.sc2vagr6376.universe.wf" > /dev/null; then
+    if curl -f -s -I "https://auxotracker.p-com.studio/" > /dev/null; then
         log "✅ Application frontend accessible"
     else
         log "❌ Erreur: Application frontend non accessible"
@@ -209,7 +207,7 @@ health_check() {
     
     # Test de la page d'accueil avec contenu
     log "📄 Test du contenu de la page..."
-    if curl -s "https://auxotracker.sc2vagr6376.universe.wf" | grep -q "AuxoTracker" 2>/dev/null; then
+    if curl -s "https://auxotracker.p-com.studio/" | grep -q "AuxoTracker" 2>/dev/null; then
         log "✅ Contenu de la page vérifié"
     else
         log "⚠️  Contenu de la page non trouvé (peut être normal)"
@@ -258,7 +256,7 @@ main() {
     cleanup
     
     log "🎉 Déploiement terminé avec succès!"
-    log "📱 Application accessible sur: https://auxotracker.sc2vagr6376.universe.wf"
+    log "📱 Application accessible sur: https://auxotracker.p-com.studio/"
     log "🔗 API disponible sur: http://datas.sc2vagr6376.universe.wf"
     log "📊 Log de déploiement: $LOG_FILE"
 }

@@ -20,7 +20,6 @@
       class="w-full max-w-full select-custom"
       :class="{ 'p-invalid': error }"
       :loading="isLoading"
-      :disabled="!sportId"
       :minLength="0"
       dropdown
       dropdownMode="blank"
@@ -155,7 +154,12 @@ export default {
         if (newSportId) {
           this.loadCountriesBySport(newSportId);
         } else {
-          this.resetCountryData();
+          // Ne pas réinitialiser complètement, garder les pays sélectionnés
+          console.log("ℹ️ Aucun sport sélectionné, conservation des pays existants");
+          // On garde les pays déjà sélectionnés dans les résultats
+          if (this.selectedCountry && this.selectedCountry.length > 0) {
+            this.countrySearchResults = [...this.selectedCountry];
+          }
         }
       },
       immediate: true,
@@ -203,9 +207,13 @@ export default {
     onSearchCountries(event) {
       const query = event.query || "";
 
-      // Si aucun sport n'est sélectionné, ne pas afficher de pays
+      // Si aucun sport n'est sélectionné, conserver les pays déjà sélectionnés
       if (!this.sportId) {
-        this.countrySearchResults = [];
+        if (this.selectedCountry && this.selectedCountry.length > 0) {
+          this.countrySearchResults = [...this.selectedCountry];
+        } else {
+          this.countrySearchResults = [];
+        }
         return;
       }
 
@@ -222,6 +230,16 @@ export default {
         // Filtrer les pays selon la requête
         this.countrySearchResults = this.countriesData.filter((country) => {
           return country.name.toLowerCase().includes(query.toLowerCase());
+        });
+      }
+      
+      // Ajouter les pays sélectionnés s'ils ne sont pas dans les résultats
+      if (this.selectedCountry && this.selectedCountry.length > 0) {
+        this.selectedCountry.forEach((country) => {
+          if (country && country.id && !this.countrySearchResults.find((c) => c.id === country.id)) {
+            this.countrySearchResults.unshift({ ...country });
+            console.log("✅ Pays sélectionné réajouté aux résultats:", country.name);
+          }
         });
       }
 

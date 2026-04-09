@@ -179,9 +179,11 @@ import InputNumber from "primevue/inputnumber";
 import BankrollCard from "@/components/BankrollCard.vue";
 import { BankrollService } from "@/service/BankrollService.js";
 
-// Configuration de l'API
-const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+// Configuration de l'API (obligatoire, pas de fallback)
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+if (!apiBaseUrl) {
+  throw new Error("VITE_API_BASE_URL must be set in environment (no fallback allowed).");
+}
 const toast = useToast();
 
 // États réactifs

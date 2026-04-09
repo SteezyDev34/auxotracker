@@ -1,5 +1,7 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://api.auxotracker.lan/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+if (!API_BASE_URL) {
+  throw new Error("VITE_API_URL must be set in environment (no fallback allowed).");
+}
 
 export const TransactionService = {
   // Récupérer les statistiques des transactions

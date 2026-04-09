@@ -13,6 +13,12 @@ import Sortable from "sortablejs";
 
 const toast = useToast();
 
+// API base (obligatoire)
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+if (!apiBaseUrl) {
+  throw new Error("VITE_API_BASE_URL must be set in environment (no fallback allowed).");
+}
+
 // États réactifs
 const loading = ref(false);
 const saving = ref(false);
@@ -259,7 +265,7 @@ onMounted(() => {
               />
               <img
                 v-if="sport.img"
-                :src="`https://api.auxotracker.lan/storage/sport_icons/${sport.img}`"
+                :src="`${apiBaseUrl}/storage/sport_icons/${sport.img}`"
                 :alt="sport.name"
                 class="w-5 h-5 object-contain rounded-lg filter dark:brightness-0 dark:invert"
               />
@@ -333,7 +339,7 @@ onMounted(() => {
                 <i class="pi pi-bars text-surface-400 cursor-grab"></i>
                 <img
                   v-if="sport.img"
-                  :src="`https://api.auxotracker.lan/storage/sport_icons/${sport.img}`"
+                  :src="`${apiBaseUrl}/storage/sport_icons/${sport.img}`"
                   :alt="sport.name"
                   class="w-5 h-5 object-contain rounded-lg filter dark:brightness-0 dark:invert"
                 />

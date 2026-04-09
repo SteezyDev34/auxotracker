@@ -140,17 +140,29 @@ export default {
     modelValue: {
       handler(newVal) {
         console.log(
-          `🎯 SportField watcher - modelValue reçu:`,
-          newVal,
+          `🎯 [SportField eventIndex=${this.eventIndex}] modelValue watcher déclenché:`,
+          JSON.stringify(newVal),
           "Type:",
-          typeof newVal
+          typeof newVal,
+          "Array.isArray:",
+          Array.isArray(newVal),
+          "Length:",
+          newVal?.length
         );
-        this.selectedSport = newVal;
+        
+        // Protection contre null/undefined - AutoComplete multiple attend un tableau
+        this.selectedSport = Array.isArray(newVal) ? [...newVal] : [];
+        
+        console.log(
+          `📝 [SportField eventIndex=${this.eventIndex}] selectedSport assigné:`,
+          JSON.stringify(this.selectedSport)
+        );
+        
         // S'assurer que les sports sélectionnés sont dans sportSearchResults
         if (newVal && newVal.length > 0) {
-          console.log(`📋 Ajout de ${newVal.length} sport(s) à sportSearchResults`);
+          console.log(`📋 [SportField eventIndex=${this.eventIndex}] Ajout de ${newVal.length} sport(s) à sportSearchResults`);
           newVal.forEach((sport) => {
-            console.log(`  - Sport:`, sport, "ID:", sport?.id);
+            console.log(`  - Sport:`, sport?.name, "ID:", sport?.id);
             if (!this.sportSearchResults.find((s) => s.id === sport.id)) {
               this.sportSearchResults.push(sport);
               console.log(`    ✅ Ajouté à sportSearchResults`);
@@ -158,9 +170,12 @@ export default {
               console.log(`    ℹ️ Déjà présent dans sportSearchResults`);
             }
           });
+        } else {
+          console.log(`⚠️ [SportField eventIndex=${this.eventIndex}] newVal est vide ou null`);
         }
+        
         console.log(
-          `📊 sportSearchResults après update:`,
+          `📊 [SportField eventIndex=${this.eventIndex}] sportSearchResults après update:`,
           this.sportSearchResults.length,
           "items"
         );

@@ -50,10 +50,8 @@
         />
 
         <!-- Champs conditionnels selon le sport (direct ou inféré de la ligue) -->
-        <div
-          v-if="getEffectiveSportId(eventData)"
-          class="space-y-4 mb-4"
-        >
+        <!-- Afficher toujours les champs pour permettre de voir/modifier les valeurs existantes -->
+        <div class="space-y-4 mb-4">
           <!-- Pays -->
           <CountryField
             v-model="eventData.selectedCountry"
@@ -288,20 +286,32 @@
         />
       </div>
     </div>
-    <div class="flex justify-end gap-2 mt-4">
+    <div class="flex justify-between gap-2 mt-4">
       <Button
-        label="Annuler"
-        icon="pi pi-times"
-        @click="closeDialog"
-        class="p-button-text"
+        v-if="props.editingBet"
+        label="Supprimer"
+        icon="pi pi-trash"
+        @click="confirmDeleteBet"
+        severity="danger"
+        outlined
+        :loading="deleting"
       />
-      <Button
-        :label="props.editingBet ? 'Modifier le pari' : 'Ajouter le pari'"
-        icon="pi pi-check"
-        @click="submitForm"
-        :loading="loading"
-        :disabled="!isFormValid"
-      />
+      <div class="flex-1"></div>
+      <div class="flex gap-2">
+        <Button
+          label="Annuler"
+          icon="pi pi-times"
+          @click="closeDialog"
+          class="p-button-text"
+        />
+        <Button
+          :label="props.editingBet ? 'Modifier le pari' : 'Ajouter le pari'"
+          icon="pi pi-check"
+          @click="submitForm"
+          :loading="loading"
+          :disabled="!isFormValid"
+        />
+      </div>
     </div>
   </div>
 
@@ -351,7 +361,7 @@ const props = defineProps({
 });
 
 // Emits
-const emit = defineEmits(["bet-created", "closeDialog"]);
+const emit = defineEmits(["bet-created", "bet-deleted", "closeDialog"]);
 // Composables
 const toast = useToast();
 const { isDarkTheme: layoutDarkTheme } = useLayout(); // Indique si le thème sombre est actif
@@ -362,6 +372,7 @@ const { resultOptions, resultValues, getResultLabel, getResultClass } =
 const isDarkTheme = computed(() => layoutDarkTheme.value);
 // Variables réactives
 const loading = ref(false);
+const deleting = ref(false);
 const availableSports = ref([]); // Liste des sports disponibles
 const sportsLoading = ref(false); // État de chargement des sports
 const countries = ref([]);
@@ -605,14 +616,13 @@ function onSportClear(eventIndex) {
   eventData.sport_id = null;
   eventData.selectedSport = [];
 
-  // Réinitialiser les champs liés au sport
+  // Réinitialiser les champs liés au sport (sauf les équipes)
   eventData.country_id = null;
   eventData.selectedCountry = [];
   eventData.league = null;
-  eventData.team1 = null;
-  eventData.selectedTeam1 = [];
-  eventData.team2 = null;
-  eventData.selectedTeam2 = [];
+  eventData.selectedLeague = [];
+  
+  // Ne pas vider les équipes - elles restent même si le sport est vidé
 
   // Réinitialiser les résultats de recherche
   eventData.countryFilteredResults = [];
@@ -647,19 +657,15 @@ async function onSportSelect(event, eventIndex) {
     console.log("✅ Sport désélectionné pour événement", eventIndex);
   }
 
-  // Réinitialiser les champs liés au sport pour cette card
+  // Réinitialiser les champs liés au sport pour cette card (sauf les équipes)
   eventData.country_id = null;
   eventData.league = null;
   eventData.selectedLeague = []; // Synchroniser avec le tableau pour le v-model
-  eventData.team1 = null;
-  eventData.team2 = null;
 
   // Réinitialiser la recherche de pays pour cette card
   eventData.selectedCountry = [];
 
-  // Réinitialiser la sélection d'équipes pour cette card
-  eventData.selectedTeam1 = [];
-  eventData.selectedTeam2 = [];
+  // Ne pas réinitialiser les équipes - elles restent même si le sport change
 }
 
 /**
@@ -690,15 +696,11 @@ async function onCountryChange(eventIndex) {
   eventData.league = null;
   eventData.selectedLeague = []; // Synchroniser avec le tableau pour le v-model
   eventData.team1 = null;
-  eventData.team2 = null;
+  eventData.team2 = null;pour cette card
+  eventData.league = null;
+  eventData.selectedLeague = []; // Synchroniser avec le tableau pour le v-model
 
-  // Réinitialiser la sélection d'équipes pour cette card
-  eventData.selectedTeam1 = [];
-  eventData.selectedTeam2 = [];
-
-  // Les composants LeagueField et TeamField se mettront à jour automatiquement
-  // grâce aux watchers sur sportId et countryId
-}
+  // Ne pas réinitialiser les équipes - elles restent même si le pays change
 
 /**
  * Gérer la sélection d'une ligue
@@ -712,17 +714,22 @@ async function onLeagueSelect(event, eventIndex) {
   if (event.value) {
     eventData.league = event.value.id;
     eventData.selectedLeague = [event.value]; // Synchroniser avec le tableau pour le v-model
+
+    // Mettre à jour automatiquement le sport si la ligue a un sport_id
+    if (event.value.sport_id) {
+      const sport = availableSports.value.find(s => s.id === event.value.sport_id);
+      if (sport) {
+        eventData.sport_id = sport.id;
+        eventData.selectedSport = [sport];
+        console.log("✅ Sport mis à jour automatiquement depuis la ligue:", sport.name);
+      }
+    }
   } else {
     eventData.league = null;
     eventData.selectedLeague = [];
   }
 
-  // Réinitialiser les équipes sélectionnées
-  eventData.team1 = null;
-  eventData.team2 = null;
-  eventData.selectedTeam1 = [];
-  eventData.selectedTeam2 = [];
-
+  // Ne pas réinitialiser les équipes - elles restent même si la ligue change
   // Les composants TeamField se mettront à jour automatiquement
   // grâce aux watchers sur leagueId
 }
@@ -738,13 +745,8 @@ async function onLeagueClear(eventIndex) {
   eventData.league = null;
   eventData.selectedLeague = []; // Synchroniser avec le tableau pour le v-model
 
-  // Réinitialiser les équipes sélectionnées
-  eventData.team1 = null;
-  eventData.team2 = null;
-  eventData.selectedTeam1 = [];
-  eventData.selectedTeam2 = [];
-
-  // Les composants TeamField se mettront à jour automatiquement
+  // Ne pas réinitialiser les équipes - elles restent même si la ligue est vidée
+  // Les composants TeamField continueront d'afficher les équipes sélectionnées
 
   console.log("🗑️ Ligue effacée pour événement", eventIndex);
 }
@@ -973,6 +975,64 @@ async function submitForm() {
  */
 function closeDialog() {
   emit("closeDialog");
+}
+
+/**
+ * Confirmer la suppression du pari
+ */
+function confirmDeleteBet() {
+  if (!props.editingBet) {
+    return;
+  }
+
+  // Demander confirmation à l'utilisateur
+  if (confirm("Êtes-vous sûr de vouloir supprimer ce pari ? Cette action est irréversible.")) {
+    deleteBet();
+  }
+}
+
+/**
+ * Supprimer le pari
+ */
+async function deleteBet() {
+  if (!props.editingBet || !props.editingBet.id) {
+    toast.add({
+      severity: "error",
+      summary: "Erreur",
+      detail: "Impossible de supprimer le pari : ID manquant",
+      life: 3000,
+    });
+    return;
+  }
+
+  deleting.value = true;
+
+  try {
+    await BetService.deleteBet(props.editingBet.id);
+
+    toast.add({
+      severity: "success",
+      summary: "Succès",
+      detail: "Le pari a été supprimé avec succès",
+      life: 3000,
+    });
+
+    // Émettre l'événement pour informer le parent
+    emit("bet-deleted", props.editingBet.id);
+    
+    // Fermer le dialog
+    closeDialog();
+  } catch (error) {
+    console.error("Erreur lors de la suppression du pari:", error);
+    toast.add({
+      severity: "error",
+      summary: "Erreur",
+      detail: "Impossible de supprimer le pari: " + error.message,
+      life: 5000,
+    });
+  } finally {
+    deleting.value = false;
+  }
 }
 
 /**
@@ -1240,6 +1300,20 @@ async function initializeFormWithBet(bet) {
   console.log("🔄 Initialisation du formulaire avec les données du pari:", bet);
 
   try {
+    // S'assurer que les sports sont chargés AVANT de remplir le formulaire
+    if (!availableSports.value || availableSports.value.length === 0) {
+      console.log("⏳ Les sports ne sont pas encore chargés, chargement en cours...");
+      await loadSports();
+      console.log("✅ Sports chargés:", availableSports.value.length, "sports");
+    }
+
+    // S'assurer que les pays sont chargés
+    if (!allCountries.value || allCountries.value.length === 0) {
+      console.log("⏳ Les pays ne sont pas encore chargés, chargement en cours...");
+      await loadCountries();
+      console.log("✅ Pays chargés:", allCountries.value.length, "pays");
+    }
+
     // Réinitialiser d'abord le formulaire
     resetForm();
 
@@ -1253,6 +1327,15 @@ async function initializeFormWithBet(bet) {
 
     const fullBet = fullBetResponse.data;
     console.log("📦 Pari complet récupéré:", fullBet);
+    console.log("🎯 Sport dans fullBet:", {
+      sport_id: fullBet.sport_id,
+      sport: fullBet.sport,
+      events: fullBet.events?.map(e => ({
+        event_id: e.id,
+        sport_id: e.sport_id,
+        sport: e.sport
+      }))
+    });
 
     // Remplir les données de base
     formData.value.bet_date = fullBet.bet_date
@@ -1289,7 +1372,9 @@ async function initializeFormWithBet(bet) {
           }
         );
 
-        const eventCard = {
+        // Créer un eventCard de base et le pusher IMMÉDIATEMENT dans eventCards.value
+        // pour que Vue puisse tracer sa réactivité
+        const baseEventCard = {
           id: Date.now() + i,
           sport_id: event.sport_id || event.sport?.id,
           country_id:
@@ -1315,6 +1400,11 @@ async function initializeFormWithBet(bet) {
           sportLoading: false,
         };
 
+        // Pusher immédiatement pour activer la réactivité Vue
+        eventCards.value.push(baseEventCard);
+        const cardIndex = eventCards.value.length - 1;
+        const eventCard = eventCards.value[cardIndex];
+
         console.log(
           `📝 Description finale assignée pour événement ${i + 1}:`,
           eventCard.description
@@ -1323,24 +1413,40 @@ async function initializeFormWithBet(bet) {
         // Charger les données des sélections pour chaque champ
         const sportId = event.sport_id || event.sport?.id;
         if (sportId) {
+          eventCard.sport_id = sportId; // S'assurer que sport_id est défini
           const sport = availableSports.value.find((s) => s.id === sportId);
           if (sport) {
             eventCard.selectedSport = [sport];
             console.log(
-              `✅ Sport trouvé pour événement ${i + 1}:`,
+              `✅ ✅ ✅ Sport trouvé et assigné pour événement ${i + 1}:`,
               sport.name,
-              "Object:",
-              sport
+              "ID:",
+              sport.id,
+              "\n   eventCard.selectedSport:",
+              JSON.stringify(eventCard.selectedSport),
+              "\n   eventCard index dans eventCards.value:",
+              cardIndex
+            );
+            // Forcer Vue à détecter le changement en utilisant nextTick
+            await nextTick();
+            console.log(
+              `🔄 Après nextTick - eventCards.value[${cardIndex}].selectedSport:`,
+              JSON.stringify(eventCards.value[cardIndex].selectedSport)
             );
           } else {
             console.log(
               `⚠️ Sport non trouvé pour ID ${sportId} dans événement ${i + 1}. availableSports:`,
               availableSports.value.length,
-              "items"
+              "items",
+              "Liste des IDs disponibles:",
+              availableSports.value.map(s => s.id)
             );
           }
         } else {
-          console.log(`⚠️ Pas de sportId pour événement ${i + 1}`);
+          console.log(`⚠️ Pas de sportId pour événement ${i + 1}`, {
+            event_sport_id: event.sport_id,
+            event_sport: event.sport
+          });
         }
 
         // Charger les données du pays si disponible
@@ -1454,8 +1560,8 @@ async function initializeFormWithBet(bet) {
           );
         }
 
-        // Ajouter la card
-        eventCards.value.push(eventCard);
+        // L'eventCard est déjà dans eventCards.value, pas besoin de le pusher à nouveau
+        console.log(`✅ EventCard ${i + 1} initialisé avec succès`);
       }
     } else {
       // Pari simple - remplir directement les données dans la première card
@@ -1464,16 +1570,36 @@ async function initializeFormWithBet(bet) {
 
       if (fullBet.sport_id || fullBet.sport?.id) {
         const sportId = fullBet.sport_id || fullBet.sport?.id;
-        eventCard.sport_id = sportId;
+        eventCard.sport_id = sportId; // S'assurer que sport_id est défini
         const sport = availableSports.value.find((s) => s.id === sportId);
         if (sport) {
           eventCard.selectedSport = [sport];
-          console.log("✅ Sport chargé pour pari simple:", sport.name);
+          console.log(
+            "✅ ✅ ✅ Sport chargé pour pari simple:",
+            sport.name,
+            "ID:",
+            sport.id,
+            "\n   eventCard.selectedSport:",
+            JSON.stringify(eventCard.selectedSport)
+          );
+          // Forcer Vue à détecter le changement
+          await nextTick();
+          console.log(
+            "🔄 Après nextTick - eventCards.value[0].selectedSport:",
+            JSON.stringify(eventCards.value[0].selectedSport)
+          );
         } else {
           console.log(
-            `⚠️ Sport non trouvé pour ID ${sportId} dans pari simple`
+            `⚠️ Sport non trouvé pour ID ${sportId} dans pari simple`,
+            "Liste des IDs disponibles:",
+            availableSports.value.map(s => s.id)
           );
         }
+      } else {
+        console.log("⚠️ Pas de sport pour ce pari simple", {
+          sport_id: fullBet.sport_id,
+          sport: fullBet.sport
+        });
       }
 
       if (fullBet.country_id || fullBet.country?.id) {

@@ -136,6 +136,12 @@ const router = createRouter({
           meta: { requiresAuth: true, requiresRole: ["admin", "superadmin"] },
         },
         {
+          path: "/gestion/ligues",
+          name: "gestionLigues",
+          component: () => import("@/views/admin/leagues.vue"),
+          meta: { requiresAuth: true, requiresRole: ["admin", "superadmin"] },
+        },
+        {
           path: "/pages/empty",
           name: "empty",
           component: () => import("@/views/pages/Empty.vue"),

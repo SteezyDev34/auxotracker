@@ -2,8 +2,12 @@
  * Service API centralisé pour gérer toutes les requêtes HTTP
  */
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+if (!API_BASE_URL) {
+  throw new Error(
+    "VITE_API_BASE_URL must be set in environment (no fallback allowed)."
+  );
+}
 const API_URL = `${API_BASE_URL}/api`;
 
 class ApiService {

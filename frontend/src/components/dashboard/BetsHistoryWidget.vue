@@ -24,8 +24,11 @@ const expandedMonths = ref(new Set());
 const expandedBets = ref(new Set());
 const showAddBetDialog = ref(false);
 const editingBet = ref(null);
-const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+// API base (obligatoire)
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+if (!apiBaseUrl) {
+  throw new Error("VITE_API_BASE_URL must be set in environment (no fallback allowed).");
+}
 
 // Composable pour les résultats de paris
 const { resultValues, getResultClass, getResultLabel } = useBetResults();
@@ -357,9 +360,7 @@ function getMatchName(bet) {
     // Si un seul événement
     const event = bet.events[0];
     if (event.team1 && event.team2) {
-      // Utiliser l'URL de l'API pour accéder aux logos d'équipes
-      const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+      // Utiliser la variable globale `apiBaseUrl` déclarée en haut du fichier
       const team1Logo = event.team1.img
         ? `<img src="${apiBaseUrl}/storage/${event.team1.img}" alt="${event.team1.name}" class="w-6 h-6 rounded-full object-cover" />`
         : "";
@@ -403,8 +404,7 @@ function getLeagueInfo(bet) {
   if (bet.events && bet.events.length > 0) {
     const event = bet.events[0];
     if (event.league) {
-      const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+      // utiliser la variable globale `apiBaseUrl`
 
       // Logo de la ligue
       const leagueLogo = event.league.id
@@ -433,8 +433,7 @@ function getCountryInfo(bet) {
   if (bet.events && bet.events.length > 0) {
     // Si plusieurs événements (pari combiné)
     if (bet.events.length > 1) {
-      const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+      // utiliser la variable globale `apiBaseUrl`
 
       // Récupérer le sport du premier événement pour l'icône
       const firstEvent = bet.events[0];
@@ -498,8 +497,7 @@ function getCountryInfo(bet) {
     // Si un seul événement
     const event = bet.events[0];
     if (event.league) {
-      const apiBaseUrl =
-        import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+      // utiliser la variable globale `apiBaseUrl`
 
       // Récupérer l'icône du sport
       let sportIcon = "";
@@ -622,6 +620,13 @@ function openEditBetDialog(bet) {
 function onBetCreated(newBet) {
   // Recharger la liste des paris après ajout/modification
   loadBets();
+  // Réinitialiser le pari en cours d'édition
+  editingBet.value = null;
+}
+
+function onBetDeleted(betId) {
+  // Supprimer le pari de la liste locale
+  bets.value = bets.value.filter(bet => bet.id !== betId);
   // Réinitialiser le pari en cours d'édition
   editingBet.value = null;
 }
@@ -1096,6 +1101,7 @@ onMounted(() => {
       v-model:visible="showAddBetDialog"
       :editing-bet="editingBet"
       @bet-created="onBetCreated"
+      @bet-deleted="onBetDeleted"
     />
   </div>
 </template>

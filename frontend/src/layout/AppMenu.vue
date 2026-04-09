@@ -310,6 +310,13 @@ const model = computed(() => {
         ],
       }
     );
+        // Gestion (admin)
+        baseMenu.push({
+          label: 'Gestion',
+          items: [
+            { label: 'Ligues', icon: 'pi pi-fw pi-globe', to: '/gestion/ligues' },
+          ],
+        });
   }
 
   return [

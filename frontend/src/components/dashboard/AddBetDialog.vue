@@ -11,6 +11,7 @@
       ref="addBetFormRef"
       :editing-bet="editingBet"
       @bet-created="onBetCreated"
+      @bet-deleted="onBetDeleted"
       @closeDialog="closeDialog"
     />
   </Dialog>
@@ -28,7 +29,7 @@ const props = defineProps({
     default: null,
   },
 });
-const emit = defineEmits(["update:visible", "bet-created"]);
+const emit = defineEmits(["update:visible", "bet-created", "bet-deleted"]);
 
 const dialogVisible = ref(props.visible);
 const addBetFormRef = ref(null);
@@ -69,6 +70,11 @@ function closeDialog() {
 
 function onBetCreated(bet) {
   emit("bet-created", bet);
+  closeDialog();
+}
+
+function onBetDeleted(betId) {
+  emit("bet-deleted", betId);
   closeDialog();
 }
 </script>

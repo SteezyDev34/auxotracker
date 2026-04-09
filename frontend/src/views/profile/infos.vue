@@ -21,8 +21,12 @@ import BookmakersList from "@/components/BookmakersList.vue";
 import BankrollCard from "@/components/BankrollCard.vue";
 import { useAuth } from "@/composables/useAuth.js";
 
-const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || "https://api.auxotracker.lan";
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+if (!apiBaseUrl) {
+  throw new Error(
+    "VITE_API_BASE_URL must be set in environment (no fallback allowed)."
+  );
+}
 const toast = useToast();
 const { canAccessFullProfile } = useAuth();
 const subscriptionOptions = ref(settingsData.subscriptionOptions);
@@ -79,17 +83,17 @@ const avatarUrl = ref("");
 // Fonction pour mettre à jour l'URL de l'avatar
 const updateAvatarUrl = () => {
   // Si l'utilisateur a un avatar personnalisé, l'utiliser
-  if (userProfile.value.avatar) {
+    if (userProfile.value.avatar) {
     // Vérifier si l'avatar est déjà une URL complète
     if (userProfile.value.avatar.startsWith("http")) {
       avatarUrl.value = userProfile.value.avatar;
     } else {
       // Construire l'URL complète avec l'URL de l'API
-      avatarUrl.value = `https://api.auxotracker.lan/storage/avatar/${userProfile.value.avatar}`;
+      avatarUrl.value = `${apiBaseUrl}/storage/avatar/${userProfile.value.avatar}`;
     }
   } else {
     // Avatar par défaut
-    avatarUrl.value = `https://api.auxotracker.lan/storage/avatar/user.jpg`;
+    avatarUrl.value = `${apiBaseUrl}/storage/avatar/user.jpg`;
   }
 };
 
@@ -102,7 +106,7 @@ const getAvatarUrl = () => {
       updateAvatarUrl();
     }
     return (
-      avatarUrl.value || `https://api.auxotracker.lan/storage/avatar/user.jpg`
+      avatarUrl.value || `${apiBaseUrl}/storage/avatar/user.jpg`
     );
   }
   // Retourner null si les informations utilisateur ne sont pas encore chargées
@@ -420,7 +424,7 @@ async function onAvatarSelected(event) {
 }
 
 function onAvatarError(e) {
-  e.target.src = `https://api.auxotracker.lan/storage/avatar/user.jpg`;
+  e.target.src = `${apiBaseUrl}/storage/avatar/user.jpg`;
 }
 
 // Fonctions pour la gestion des bankrolls

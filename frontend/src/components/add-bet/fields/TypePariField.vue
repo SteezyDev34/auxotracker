@@ -11,7 +11,6 @@
       placeholder="Sélectionner un type de pari"
       class="w-full select-custom"
       :class="{ 'p-invalid': error }"
-      :disabled="!sportId"
       dropdown
       dropdownMode="blank"
       aria-label="Sélectionner un type de pari"
