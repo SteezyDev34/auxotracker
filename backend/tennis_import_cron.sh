@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$SCRIPT_DIR"
 LOG_DIR="$PROJECT_DIR/logs"
 LOG_FILE="$LOG_DIR/tennis_import_cron_$(date +%Y%m%d_%H%M%S).log"
-EMPTY_LOG_FILE="$LOG_DIR/tennis_import_cron_empty_$(date +%Y%m%d).log"
+
 # Vérifier que nous sommes dans le bon répertoire
 if [[ ! -f "artisan" ]]; then
     echo "ERREUR: Le fichier artisan n'a pas été trouvé. Assurez-vous d'être dans le répertoire du projet Laravel."
@@ -22,11 +22,6 @@ mkdir -p "$LOG_DIR"
 # Fonction de logging
 log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
-}
-
-# Fonction de logging pour les messages d'information vides
-log_empty_message() {
-     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$EMPTY_LOG_FILE"
 }
 
 # Fonction de gestion des erreurs
@@ -48,33 +43,6 @@ log_message "Répertoire de travail actuel: $(pwd)"
 if [[ ! -f "artisan" ]]; then
     handle_error "Le fichier artisan n'existe pas dans le répertoire courant"
 fi
-
-# --- Sentinel check: only proceed if sentinel file exists ---
-SENTINEL="$PROJECT_DIR/storage/app/sofascore_cache/tennis_players/IMPORT_READY"
-PROCESSING_SENTINEL="${SENTINEL}.processing"
-LOCK_FILE="$PROJECT_DIR/tennis_import_cron.lock"
-
-if [[ ! -f "$SENTINEL" ]]; then
-    log_empty_message "Aucun nouveau fichier détecté (sentinel absent). Sortie légère."
-    rm -f "$LOG_FILE" # Supprimer le log vide
-    # Nettoyer les anciens empty logs (garder seulement les 30 derniers jours)
-    find "$LOG_DIR" -name "tennis_import_cron_empty_*.log" -type f -mtime +30 -delete 2>/dev/null || true
-    exit 0
-fi
-
-# Prevent concurrent runs using flock
-exec 200>"$LOCK_FILE"
-if ! flock -n 200; then
-    log_message "Un autre processus est déjà en cours. Sortie."
-    exit 0
-fi
-
-# Acquire the sentinel atomically by renaming it to .processing
-if ! mv "$SENTINEL" "$PROCESSING_SENTINEL" 2>/dev/null; then
-    log_message "Impossible d'acquérir le sentinel; sortie."
-    exit 0
-fi
-
 
 # Trouver le chemin complet vers PHP
 # Prioriser /usr/local/bin/php pour le serveur
@@ -102,24 +70,112 @@ log_message "Démarrage de l'importation des joueurs depuis le cache..."
 # Commande d'importation avec options optimisées pour le cron
 # --force: Forcer la mise à jour des joueurs existants
 # Pas de limite pour traiter tous les fichiers de cache disponibles
-log_message "Exécution de: $PHP_PATH artisan tennis:import-players-from-cache --force"
+log_message "Exécution de: $PHP_PATH artisan tennis:import-from-cache --download-images"
 # Exécuter la commande, afficher à l'écran et écrire dans le log en même temps.
 # On utilise tee -a pour append, puis on récupère le code de retour réel de PHP via PIPESTATUS[0].
-"$PHP_PATH" artisan tennis:import-players-from-cache --download-images --force 2>&1 | tee -a "$LOG_FILE"
-IMPORT_EXIT_CODE=${PIPESTATUS[0]}
+"$PHP_PATH" artisan tennis:import-from-cache --force --download-images  2>&1 | tee -a "$LOG_FILE"
+IMPORT_EXIT_CODE=${PIPESTATUS[0]} 
 if [ $IMPORT_EXIT_CODE -eq 0 ]; then
     log_message "✅ Importation terminée avec succès"
-    # Suppression du sentinel processing après succès
-    if [[ -f "$PROCESSING_SENTINEL" ]]; then
-        rm -f "$PROCESSING_SENTINEL" || log_message "⚠️ Échec suppression du sentinel processing"
-    fi
 else
     log_message "❌ Importation échouée avec le code de retour: $IMPORT_EXIT_CODE"
-    # Restaurer le sentinel pour réessayer plus tard
-    if [[ -f "$PROCESSING_SENTINEL" ]]; then
-        mv -f "$PROCESSING_SENTINEL" "$SENTINEL" || log_message "⚠️ Échec restauration du sentinel"
-    fi
-    exit $IMPORT_EXIT_CODE
+    # Ne pas exit, continuer avec les autres sports
+fi
+
+# --- Import Football Phase 2 (ligues + équipes depuis le cache) ---
+log_message "⚽ Import Football depuis le cache (Phase 2)..."
+log_message "Exécution de: $PHP_PATH artisan football:import-from-cache --import-teams --download-logos"
+"$PHP_PATH" artisan football:import-from-cache --import-teams --download-logos 2>&1 | tee -a "$LOG_FILE"
+FOOTBALL_EXIT_CODE=${PIPESTATUS[0]}
+if [ $FOOTBALL_EXIT_CODE -eq 0 ]; then
+    log_message "✅ Import Football terminé avec succès"
+else
+    log_message "❌ Import Football échoué avec le code de retour: $FOOTBALL_EXIT_CODE"
+    # Ne pas exit, continuer avec basketball et le reste
+fi
+
+# --- Import Basketball Phase 2 (ligues + équipes depuis le cache) ---
+log_message "🏀 Import Basketball depuis le cache (Phase 2)..."
+log_message "Exécution de: $PHP_PATH artisan basketball:import-from-cache --import-teams --download-logos"
+"$PHP_PATH" artisan basketball:import-from-cache --import-teams --download-logos 2>&1 | tee -a "$LOG_FILE"
+BASKETBALL_EXIT_CODE=${PIPESTATUS[0]}
+if [ $BASKETBALL_EXIT_CODE -eq 0 ]; then
+    log_message "✅ Import Basketball terminé avec succès"
+else
+    log_message "❌ Import Basketball échoué avec le code de retour: $BASKETBALL_EXIT_CODE"
+    # Ne pas exit, continuer avec le reste
+fi
+
+# --- Import Baseball Phase 2 (ligues + équipes depuis le cache) ---
+log_message "⚾ Import Baseball depuis le cache (Phase 2)..."
+log_message "Exécution de: $PHP_PATH artisan baseball:import-from-cache --import-teams --download-logos"
+"$PHP_PATH" artisan baseball:import-from-cache --import-teams --download-logos 2>&1 | tee -a "$LOG_FILE"
+BASEBALL_EXIT_CODE=${PIPESTATUS[0]}
+if [ $BASEBALL_EXIT_CODE -eq 0 ]; then
+    log_message "✅ Import Baseball terminé avec succès"
+else
+    log_message "❌ Import Baseball échoué avec le code de retour: $BASEBALL_EXIT_CODE"
+    # Ne pas exit, continuer avec le reste
+fi
+
+# --- Import Futsal Phase 2 (ligues + équipes depuis le cache) ---
+log_message "🥅 Import Futsal depuis le cache (Phase 2)..."
+log_message "Exécution de: $PHP_PATH artisan futsal:import-from-cache --import-teams --download-logos"
+"$PHP_PATH" artisan futsal:import-from-cache --import-teams --download-logos 2>&1 | tee -a "$LOG_FILE"
+FUTSAL_EXIT_CODE=${PIPESTATUS[0]}
+if [ $FUTSAL_EXIT_CODE -eq 0 ]; then
+    log_message "✅ Import Futsal terminé avec succès"
+else
+    log_message "❌ Import Futsal échoué avec le code de retour: $FUTSAL_EXIT_CODE"
+    # Ne pas exit, continuer avec le reste
+fi
+
+# --- Import Handball Phase 2 (ligues + équipes depuis le cache) ---
+log_message "🤾 Import Handball depuis le cache (Phase 2)..."
+log_message "Exécution de: $PHP_PATH artisan handball:import-from-cache --import-teams --download-logos"
+"$PHP_PATH" artisan handball:import-from-cache --import-teams --download-logos 2>&1 | tee -a "$LOG_FILE"
+HANDBALL_EXIT_CODE=${PIPESTATUS[0]}
+if [ $HANDBALL_EXIT_CODE -eq 0 ]; then
+    log_message "✅ Import Handball terminé avec succès"
+else
+    log_message "❌ Import Handball échoué avec le code de retour: $HANDBALL_EXIT_CODE"
+    # Ne pas exit, continuer avec le reste
+fi
+
+# --- Import Ice Hockey Phase 2 (ligues + équipes depuis le cache) ---
+log_message "🏒 Import Ice Hockey depuis le cache (Phase 2)..."
+log_message "Exécution de: $PHP_PATH artisan ice-hockey:import-from-cache --import-teams --download-logos"
+"$PHP_PATH" artisan ice-hockey:import-from-cache --import-teams --download-logos 2>&1 | tee -a "$LOG_FILE"
+ICE_HOCKEY_EXIT_CODE=${PIPESTATUS[0]}
+if [ $ICE_HOCKEY_EXIT_CODE -eq 0 ]; then
+    log_message "✅ Import Ice Hockey terminé avec succès"
+else
+    log_message "❌ Import Ice Hockey échoué avec le code de retour: $ICE_HOCKEY_EXIT_CODE"
+    # Ne pas exit, continuer avec le reste
+fi
+
+# --- Import Rugby Phase 2 (ligues + équipes depuis le cache) ---
+log_message "🏉 Import Rugby depuis le cache (Phase 2)..."
+log_message "Exécution de: $PHP_PATH artisan rugby:import-from-cache --import-teams --download-logos"
+"$PHP_PATH" artisan rugby:import-from-cache --import-teams --download-logos 2>&1 | tee -a "$LOG_FILE"
+RUGBY_EXIT_CODE=${PIPESTATUS[0]}
+if [ $RUGBY_EXIT_CODE -eq 0 ]; then
+    log_message "✅ Import Rugby terminé avec succès"
+else
+    log_message "❌ Import Rugby échoué avec le code de retour: $RUGBY_EXIT_CODE"
+    # Ne pas exit, continuer avec le reste
+fi
+
+# --- Import Volleyball Phase 2 (ligues + équipes depuis le cache) ---
+log_message "🏐 Import Volleyball depuis le cache (Phase 2)..."
+log_message "Exécution de: $PHP_PATH artisan volleyball:import-from-cache --import-teams --download-logos"
+"$PHP_PATH" artisan volleyball:import-from-cache --import-teams --download-logos 2>&1 | tee -a "$LOG_FILE"
+VOLLEYBALL_EXIT_CODE=${PIPESTATUS[0]}
+if [ $VOLLEYBALL_EXIT_CODE -eq 0 ]; then
+    log_message "✅ Import Volleyball terminé avec succès"
+else
+    log_message "❌ Import Volleyball échoué avec le code de retour: $VOLLEYBALL_EXIT_CODE"
+    # Ne pas exit, continuer avec le reste
 fi
 
 # Afficher les statistiques du fichier de log
@@ -129,8 +185,6 @@ log_message "Taille du fichier de log: $LOG_SIZE"
 # Nettoyer les anciens logs (garder seulement les 30 derniers jours)
 log_message "Nettoyage des anciens logs..."
 find "$LOG_DIR" -name "tennis_import_cron_*.log" -type f -mtime +30 -delete 2>/dev/null
-# Nettoyer les anciens empty logs (garder seulement les 30 derniers jours)
-find "$LOG_DIR" -name "tennis_import_cron_empty_*.log" -type f -mtime +30 -delete 2>/dev/null
 
 log_message "=== FIN DE L'IMPORTATION AUTOMATIQUE ==="
 log_message ""

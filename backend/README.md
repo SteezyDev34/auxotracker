@@ -64,3 +64,29 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Cron: génération du cache tennis
+
+Le script `backend/script/tennis_cache_sync_local.sh` est utilisé pour générer et importer le cache tennis. Comportement important :
+
+- Le script **ne lance pas** l'import si un marqueur d'import pour la date courante existe : `storage/app/sofascore_cache/tennis_players/IMPORT_DONE_YYYY-MM-DD`.
+- Pour forcer l'exécution malgré ce marqueur, exportez la variable d'environnement `TENNIS_FORCE=1` avant d'exécuter le script (ex. dans la crontab ou l'environnement de service).
+- Le flag `--force` n'est plus ajouté par défaut au lancement de `tennis:cache-players` depuis le script. Si nécessaire, activez `TENNIS_FORCE=1` pour le passer.
+- Après un import réussi (`tennis:import-from-cache`), le script crée automatiquement le marqueur `IMPORT_DONE_YYYY-MM-DD`.
+
+- La commande `tennis:cache-players` écrit aussi un marqueur par tournoi mis en cache : `tennis_LEAGUE_DONE_YYYY-MM-DD_{sofascoreId}`. Cela permet d'ignorer des tournois déjà traités à un niveau plus fin que le marqueur global `IMPORT_DONE`.
+- En cas d'échec du téléchargement d'une image joueur, la phase 1 écrit un tombstone dans `storage/app/sofascore_cache/tennis_players/metadata/player_image_{sofascoreId}.meta` (valable 24h). Tant qu'il existe, la commande ne retentera pas le téléchargement.
+- Pour nettoyer les marqueurs et tombstones liés au tennis, utilisez le script `backend/script/clear_import_markers.sh --sport tennis --all`.
+
+Commandes utiles :
+
+```bash
+# Forcer un run depuis la session shell
+export TENNIS_FORCE=1
+./backend/script/tennis_cache_sync_local.sh
+
+# Supprimer le marqueur pour relancer manuellement
+rm backend/storage/app/sofascore_cache/tennis_players/IMPORT_DONE_$(date +%Y-%m-%d)
+```
+
+Si vous préférez un autre comportement (rotation des marqueurs, clean automatique, ou création d'une commande dédiée d'export), je peux l'ajouter. 

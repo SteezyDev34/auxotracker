@@ -98,3 +98,6 @@ composer.lock
 # Fichiers de configuration Vercel/Netlify
 vercel.json
 netlify.toml
+
+# Ignore negative cache files (only useful locally)
+negative_*.json
