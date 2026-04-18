@@ -29,7 +29,7 @@ class TeamLogoService
 
         // Télécharger le logo depuis Sofascore si sofascore_id existe
         if ($team->sofascore_id) {
-            return $this->downloadTeamLogo($team);
+            return $this->downloadTeamLogo($team, $force);
         }
 
         return null;
@@ -41,7 +41,7 @@ class TeamLogoService
      * @param Team $team
      * @return string|null Le chemin du logo ou null si échec
      */
-    private function downloadTeamLogo(Team $team): ?string
+    private function downloadTeamLogo(Team $team, bool $force = false): ?string
     {
         // Essayer plusieurs stratégies de téléchargement
         $strategies = [
@@ -49,6 +49,20 @@ class TeamLogoService
             $this->getAlternativeHeaders(),
             $this->getMinimalHeaders()
         ];
+
+        // Negative cache for team logo: avoid retrying for a period if previously 404/403
+        $negDir = storage_path('app/sofascore_cache/logo_negative');
+        $teamKey = $team->sofascore_id ?: $team->id;
+        $negFile = $negDir . "/team_{$teamKey}.json";
+        if (file_exists($negFile)) {
+            $meta = json_decode(file_get_contents($negFile), true);
+            $age = time() - ($meta['_cached_at'] ?? 0);
+            if (($meta['_negative_cache'] ?? false) && $age < 86400 && !$force) {
+                Log::info('Skip téléchargement logo équipe — negative cache présent', ['team' => $team->id, 'sofascore_id' => $team->sofascore_id, 'age' => $age]);
+                return null;
+            }
+            @unlink($negFile);
+        }
 
         foreach ($strategies as $index => $headers) {
             try {
@@ -92,6 +106,22 @@ class TeamLogoService
                         'status' => $response->status(),
                         'headers_used' => array_keys($headers)
                     ]);
+
+                    // créer un marqueur de cache négatif pour éviter de retenter trop vite
+                    try {
+                        if (!is_dir($negDir)) {
+                            @mkdir($negDir, 0755, true);
+                        }
+                        $meta = [
+                            '_negative_cache' => true,
+                            '_cached_at' => time(),
+                            'sofascore_id' => $team->sofascore_id,
+                            'status' => $response->status()
+                        ];
+                        @file_put_contents($negFile, json_encode($meta));
+                    } catch (\Throwable $e) {
+                        Log::warning('Impossible d\'écrire le negative cache logo équipe', ['file' => $negFile, 'error' => $e->getMessage()]);
+                    }
 
                     // Attendre avant la prochaine tentative pour éviter les blocages
                     if ($index < count($strategies) - 1) {

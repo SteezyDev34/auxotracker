@@ -191,6 +191,8 @@ export const SportService = {
    * @param {number} page - Numéro de page (défaut: 1)
    * @param {number} limit - Nombre d'éléments par page (défaut: 200)
    * @param {number} leagueId - ID de la ligue pour filtrer (optionnel)
+   * @param {number} countryId - ID du pays pour filtrer (optionnel)
+   * @param {boolean} priorityOnly - Ne charger que les équipes prioritaires (défaut: false)
    */
   async searchTeamsBySport(
     sportId,
@@ -198,7 +200,8 @@ export const SportService = {
     page = 1,
     limit = 200,
     leagueId = null,
-    countryId = null
+    countryId = null,
+    priorityOnly = false
   ) {
     try {
       const params = new URLSearchParams({
@@ -218,6 +221,10 @@ export const SportService = {
         params.append("country_id", countryId.toString());
       }
 
+      if (priorityOnly) {
+        params.append("priority_only", "true");
+      }
+
       const response = await fetch(
         `${API_BASE_URL}/sports/${sportId}/teams/search?${params}`,
         {
@@ -235,7 +242,6 @@ export const SportService = {
       }
 
       const result = await response.json();
-      console.log("🔍 SportService - Réponse API équipes brute:", result);
 
       return {
         data: result.data || [],

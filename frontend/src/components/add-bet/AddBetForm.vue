@@ -696,11 +696,12 @@ async function onCountryChange(eventIndex) {
   eventData.league = null;
   eventData.selectedLeague = []; // Synchroniser avec le tableau pour le v-model
   eventData.team1 = null;
-  eventData.team2 = null;pour cette card
+  eventData.team2 = null;
   eventData.league = null;
   eventData.selectedLeague = []; // Synchroniser avec le tableau pour le v-model
 
   // Ne pas réinitialiser les équipes - elles restent même si le pays change
+}
 
 /**
  * Gérer la sélection d'une ligue

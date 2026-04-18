@@ -142,6 +142,13 @@ const router = createRouter({
           meta: { requiresAuth: true, requiresRole: ["admin", "superadmin"] },
         },
         {
+          path: "/gestion/equipes-non-trouvees",
+          name: "gestionEquipesNonTrouvees",
+          component: () => import("@/views/admin/team-searches-not-found.vue"),
+          // TODO: Remettre requiresAuth et requiresRole une fois les tests terminés
+          // meta: { requiresAuth: true, requiresRole: ["superadmin"] },
+        },
+        {
           path: "/pages/empty",
           name: "empty",
           component: () => import("@/views/pages/Empty.vue"),

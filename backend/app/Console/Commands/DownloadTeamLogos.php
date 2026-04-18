@@ -56,7 +56,9 @@ class DownloadTeamLogos extends Command
         // Filtrer par ID de ligue si l'option --league est activée
         if ($this->option('league')) {
             $leagueId = $this->option('league');
-            $query->where('league_id', $leagueId);
+            $query->whereHas('leagues', function ($q) use ($leagueId) {
+                $q->where('leagues.id', $leagueId);
+            });
             $this->info("🏆 Filtrage activé: traitement uniquement des équipes de la ligue ID: {$leagueId}");
         }
         

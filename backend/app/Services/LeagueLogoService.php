@@ -50,7 +50,7 @@ class LeagueLogoService
 
         // Télécharger les logos depuis Sofascore si sofascore_id existe
         if ($league->sofascore_id) {
-            return $this->downloadLeagueLogos($league);
+            return $this->downloadLeagueLogos($league, $force);
         }
 
         return null;
@@ -62,8 +62,10 @@ class LeagueLogoService
      * @param League $league
      * @return array|null Les chemins des logos ou null si échec
      */
-    private function downloadLeagueLogos(League $league): ?array
+    private function downloadLeagueLogos(League $league, bool $force = false): ?array
     {
+        // $force is accepted as explicit argument
+
         $downloadedLogos = [];
 
         // Essayer plusieurs stratégies de téléchargement
@@ -76,7 +78,7 @@ class LeagueLogoService
         // Tentative de téléchargement du logo light
         $lightDownloaded = false;
         foreach ($strategies as $index => $headers) {
-            $lightResult = $this->downloadSingleLogo($league, 'light', $headers, $index);
+            $lightResult = $this->downloadSingleLogo($league, 'light', $headers, $index, $force);
             if ($lightResult) {
                 $downloadedLogos['light'] = $lightResult;
                 $lightDownloaded = true;
@@ -87,7 +89,7 @@ class LeagueLogoService
         // Tentative de téléchargement du logo dark
         $darkDownloaded = false;
         foreach ($strategies as $index => $headers) {
-            $darkResult = $this->downloadSingleLogo($league, 'dark', $headers, $index);
+            $darkResult = $this->downloadSingleLogo($league, 'dark', $headers, $index, $force);
             if ($darkResult) {
                 $downloadedLogos['dark'] = $darkResult;
                 $darkDownloaded = true;
@@ -139,6 +141,24 @@ class LeagueLogoService
     private function downloadSingleLogo(League $league, string $type, array $headers, int $strategyIndex): ?string
     {
         try {
+            // Negative cache: if we recorded recently that this logo is missing, skip attempts
+            $negDir = storage_path('app/sofascore_cache/logo_negative');
+            $negFile = $negDir . "/league_{$league->sofascore_id}_{$type}.json";
+            if (file_exists($negFile)) {
+                $meta = json_decode(file_get_contents($negFile), true);
+                $age = time() - ($meta['_cached_at'] ?? 0);
+                if (($meta['_negative_cache'] ?? false) && $age < 86400) {
+                    Log::info("Skip téléchargement logo {$type} pour la ligue {$league->name} — negative cache présent", ['sofascore_id' => $league->sofascore_id, 'age' => $age]);
+                    return null;
+                }
+                // expired
+                @unlink($negFile);
+            }
+
+            // retrieve force flag if provided (back compat: last arg may be force)
+            $args = func_get_args();
+            $force = isset($args[4]) ? (bool)$args[4] : false;
+
             $logoUrl = "https://img.sofascore.com/api/v1/unique-tournament/{$league->sofascore_id}/image/{$type}";
 
             Log::info("Tentative de téléchargement du logo {$type} pour la ligue {$league->name}", [
@@ -178,6 +198,23 @@ class LeagueLogoService
                     'status' => $response->status(),
                     'headers_used' => array_keys($headers)
                 ]);
+
+                // créer un marqueur de cache négatif pour éviter de retenter trop vite
+                try {
+                    if (!is_dir($negDir)) {
+                        @mkdir($negDir, 0755, true);
+                    }
+                    $meta = [
+                        '_negative_cache' => true,
+                        '_cached_at' => time(),
+                        'sofascore_id' => $league->sofascore_id,
+                        'type' => $type,
+                        'status' => $response->status()
+                    ];
+                    @file_put_contents($negFile, json_encode($meta));
+                } catch (\Throwable $e) {
+                    Log::warning('Impossible d\'écrire le negative cache logo', ['file' => $negFile, 'error' => $e->getMessage()]);
+                }
 
                 // Attendre avant la prochaine tentative pour éviter les blocages
                 if ($strategyIndex < 2) { // Il y a 3 stratégies (index 0, 1, 2)

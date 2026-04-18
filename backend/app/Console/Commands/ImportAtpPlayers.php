@@ -30,10 +30,10 @@ class ImportAtpPlayers extends Command
     public function handle()
     {
         $this->info('Début de l\'importation des joueurs ATP...');
-        
+
         try {
             $this->info('🌐 Connexion à l\'API Sofascore...');
-            
+
             // Récupérer les données du classement ATP
             $response = Http::timeout(30)
                 ->withHeaders([
@@ -44,7 +44,7 @@ class ImportAtpPlayers extends Command
                 ->get('https://www.sofascore.com/api/v1/rankings/type/5');
 
             $this->info('📡 Réponse API reçue avec le statut: ' . $response->status());
-            
+
             if (!$response->successful()) {
                 $this->error('Erreur lors de la récupération des données ATP: ' . $response->status());
                 Log::error('Échec de la récupération des données ATP', [
@@ -56,7 +56,7 @@ class ImportAtpPlayers extends Command
 
             $data = $response->json();
             $this->info('📊 Données JSON décodées avec succès');
-            
+
             if (!isset($data['rankings']) || !is_array($data['rankings'])) {
                 $this->error('Format de données invalide reçu de l\'API');
                 Log::error('Format de données ATP invalide', ['data_keys' => array_keys($data)]);
@@ -82,8 +82,8 @@ class ImportAtpPlayers extends Command
                     $this->line("\n🎾 Traitement du joueur #" . ($index + 1));
                     $result = $this->processPlayer($playerData);
                     $stats[$result]++;
-                    
-                    switch($result) {
+
+                    switch ($result) {
                         case 'created':
                             $this->line("   ✅ Nouveau joueur créé");
                             break;
@@ -104,9 +104,9 @@ class ImportAtpPlayers extends Command
                         'trace' => $e->getTraceAsString()
                     ]);
                 }
-                
+
                 $progressBar->advance();
-                
+
                 // Pause pour éviter de surcharger l'API
                 usleep(200000); // 0.2 seconde
             }
@@ -123,10 +123,10 @@ class ImportAtpPlayers extends Command
             $this->info("⏭️  Joueurs ignorés: {$stats['skipped']}");
             $this->info("❌ Erreurs: {$stats['errors']}");
             $this->info("📋 Total traité: " . count($players));
-            
+
             $successRate = count($players) > 0 ? round((($stats['created'] + $stats['updated']) / count($players)) * 100, 2) : 0;
             $this->info("📈 Taux de succès: {$successRate}%");
-            
+
             // Log final
             Log::info('Importation ATP terminée', [
                 'total_players' => count($players),
@@ -139,7 +139,6 @@ class ImportAtpPlayers extends Command
             ]);
 
             return Command::SUCCESS;
-            
         } catch (\Exception $e) {
             $this->error('Erreur générale: ' . $e->getMessage());
             Log::error('Erreur lors de l\'importation ATP', ['error' => $e->getMessage()]);
@@ -166,19 +165,20 @@ class ImportAtpPlayers extends Command
         $name = $teamData['name'] ?? 'Joueur inconnu';
         $nickname = $teamData['shortName'] ?? null;
         $leagueId = 19777; // Ligue ATP (ID fixe)
-        
+
         $this->line("   📝 Joueur: {$name} (ID: {$sofascoreId})");
-        
-        // Vérifier si le joueur existe déjà par nom et league_id
+
+        // Vérifier si le joueur existe déjà par sofascore_id ou par nom dans la ligue ATP
         $this->line("   🔍 Vérification de l'existence du joueur...");
-        $existingTeam = Team::where(function($query) use ($sofascoreId, $name, $leagueId) {
-            $query->where('sofascore_id', $sofascoreId)
-                  ->orWhere(function($subQuery) use ($name, $leagueId) {
-                      $subQuery->where('name', $name)
-                               ->where('league_id', $leagueId);
-                  });
-        })->first();
-        
+        $existingTeam = Team::where('sofascore_id', $sofascoreId)->first();
+
+        if (!$existingTeam) {
+            $existingTeam = Team::where('name', $name)
+                ->whereHas('leagues', function ($q) use ($leagueId) {
+                    $q->where('leagues.id', $leagueId);
+                })->first();
+        }
+
         if ($existingTeam && !$this->option('force')) {
             $this->line("   ⏭️  Joueur déjà existant (ID: {$existingTeam->id})");
             Log::info('Joueur ATP déjà existant', [
@@ -198,11 +198,21 @@ class ImportAtpPlayers extends Command
             ],
             [
                 'name' => $name,
-                'nickname' => $nickname,
                 'slug' => \Illuminate\Support\Str::slug($name),
                 'league_id' => $leagueId
             ]
         );
+
+        if (!empty($nickname)) {
+            $team->addNickname($nickname);
+        }
+
+        // S'assurer que la table pivot reflète l'appartenance à la ligue ATP
+        try {
+            $team->leagues()->syncWithoutDetaching([$leagueId]);
+        } catch (\Exception $e) {
+            Log::warning('Erreur mise à jour pivot league_team (ATP import)', ['team_id' => $team->id ?? null, 'league_id' => $leagueId, 'error' => $e->getMessage()]);
+        }
 
         Log::info('Joueur ATP traité avec succès', [
             'team_id' => $team->id,
@@ -230,7 +240,7 @@ class ImportAtpPlayers extends Command
         try {
             $imageUrl = "https://api.sofascore.com/api/v1/team/{$team->sofascore_id}/image";
             $this->line("     🌐 Téléchargement depuis: {$imageUrl}");
-            
+
             $response = Http::timeout(30)
                 ->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -243,25 +253,25 @@ class ImportAtpPlayers extends Command
 
             if ($response->successful()) {
                 $imagePath = "team_logos/{$team->id}.png";
-                
+
                 // Créer le dossier s'il n'existe pas
                 Storage::disk('public')->makeDirectory('team_logos');
-                
+
                 // Sauvegarder l'image
                 Storage::disk('public')->put($imagePath, $response->body());
-                
+
                 // Mettre à jour le chemin de l'image dans la base de données
                 $team->update(['img' => $imagePath]);
-                
+
                 $this->line("     ✅ Image sauvegardée: {$imagePath}");
-                
+
                 Log::info("Image téléchargée pour le joueur {$team->name}", [
                     'team_id' => $team->id,
                     'sofascore_id' => $team->sofascore_id,
                     'path' => $imagePath,
                     'image_url' => $imageUrl
                 ]);
-                
+
                 return true;
             } else {
                 $this->line("     ❌ Échec du téléchargement (Status: {$response->status()})");
@@ -272,7 +282,6 @@ class ImportAtpPlayers extends Command
                     'image_url' => $imageUrl
                 ]);
             }
-            
         } catch (\Exception $e) {
             $this->line("     ❌ Erreur lors du téléchargement: {$e->getMessage()}");
             Log::warning("Échec du téléchargement de l'image pour le joueur {$team->name}", [
@@ -282,7 +291,7 @@ class ImportAtpPlayers extends Command
                 'trace' => $e->getTraceAsString()
             ]);
         }
-        
+
         return false;
     }
 }

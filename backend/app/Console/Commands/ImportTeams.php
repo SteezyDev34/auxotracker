@@ -192,16 +192,18 @@ class ImportTeams extends Command
                 return;
             }
 
-            // Vérification supplémentaire des doublons par nom et slug dans la même ligue
+            // Vérification supplémentaire des doublons par nom et slug dans la même ligue (via pivot league_team)
             $duplicateByName = Team::where('name', $name)
-                ->where('league_id', $league->id)
                 ->where('sofascore_id', '!=', $teamId)
-                ->first();
+                ->whereHas('leagues', function ($q) use ($league) {
+                    $q->where('leagues.id', $league->id);
+                })->first();
 
             $duplicateBySlug = Team::where('slug', $slug)
-                ->where('league_id', $league->id)
                 ->where('sofascore_id', '!=', $teamId)
-                ->first();
+                ->whereHas('leagues', function ($q) use ($league) {
+                    $q->where('leagues.id', $league->id);
+                })->first();
 
             if ($duplicateByName || $duplicateBySlug) {
                 $this->stats['duplicates_detected']++;
@@ -221,11 +223,11 @@ class ImportTeams extends Command
                 ]);
             }
 
-            // Créer ou mettre à jour l'équipe
+            // Créer ou mettre à jour l'équipe (utiliser addNickname pour éviter les doublons)
+            $short = trim((string) $shortName);
             $teamAttributes = [
                 'name' => $name,
                 'slug' => $slug,
-                'nickname' => $shortName,
                 'sofascore_id' => $teamId,
                 'league_id' => $league->id
             ];
@@ -233,9 +235,15 @@ class ImportTeams extends Command
             if ($existingTeam) {
                 $existingTeam->update($teamAttributes);
                 $team = $existingTeam;
+                if ($short !== '') {
+                    $team->addNickname($short);
+                }
                 $this->stats['teams_updated']++;
             } else {
                 $team = Team::create($teamAttributes);
+                if ($short !== '') {
+                    $team->addNickname($short);
+                }
                 $this->stats['teams_created']++;
             }
 
@@ -491,10 +499,10 @@ class ImportTeams extends Command
                 return;
             }
 
+            $short = trim((string) $shortName);
             $teamAttributes = [
                 'name' => $name,
                 'slug' => $slug,
-                'nickname' => $shortName,
                 'sofascore_id' => $teamId,
                 'league_id' => $league->id
             ];
@@ -502,9 +510,15 @@ class ImportTeams extends Command
             if ($existingTeam) {
                 $existingTeam->update($teamAttributes);
                 $team = $existingTeam;
+                if ($short !== '') {
+                    $team->addNickname($short);
+                }
                 $this->stats['teams_updated']++;
             } else {
                 $team = Team::create($teamAttributes);
+                if ($short !== '') {
+                    $team->addNickname($short);
+                }
                 $this->stats['teams_created']++;
             }
             // Mettre à jour la table pivot league_team

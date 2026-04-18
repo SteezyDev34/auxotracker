@@ -13,6 +13,10 @@ const LeagueService = {
     return ApiService.put(`/admin/leagues/${leagueId}`, data);
   },
 
+  delete(leagueId) {
+    return ApiService.delete(`/admin/leagues/${leagueId}`);
+  },
+
   getSports() {
     return ApiService.get('/sports');
   },

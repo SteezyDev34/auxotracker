@@ -125,7 +125,10 @@ class NbaFrenchNicknamesSeeder extends Seeder
             '76ers de Philadelphie' => '76ers'
         ];
 
-        $teams = Team::where('league_id', 18749)->get();
+        // Récupérer les équipes via la table pivot pour tenir compte des équipes appartenant à plusieurs ligues
+        $teams = Team::whereHas('leagues', function ($q) {
+            $q->where('leagues.id', 18749);
+        })->get();
 
         foreach ($teams as $team) {
             $source = mb_strtolower(trim($team->name ?? ''));

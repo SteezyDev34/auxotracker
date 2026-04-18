@@ -98,11 +98,11 @@ build_production() {
 
     # Configuration de l'environnement de production
     log "⚙️ Configuration de l'environnement de production..."
-    if [ -f ".env.production" ]; then
-        cp .env.production .env
-        log "✅ Fichier .env.production copié vers .env"
+    if [ -f ".env.production.txt" ]; then
+        cp .env.production.txt .env
+        log "✅ Fichier .env.production.txt copié vers .env"
     else
-        log "⚠️ Fichier .env.production non trouvé, utilisation de .env existant"
+        log "⚠️ Fichier .env.production.txt non trouvé, utilisation de .env existant"
     fi
 
     # Build de production
@@ -259,6 +259,14 @@ main() {
     log "📱 Application accessible sur: https://auxotracker.p-com.studio/"
     log "🔗 API disponible sur: http://datas.sc2vagr6376.universe.wf"
     log "📊 Log de déploiement: $LOG_FILE"
+
+     log "⚙️ Configuration de l'environnement de development..."
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        log "✅ Fichier .env.example copié vers .env"
+    else
+        log "⚠️ Fichier .env.example non trouvé, utilisation de .env existant"
+    fi
 }
 
 # Exécuter le script principal

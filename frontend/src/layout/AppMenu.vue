@@ -9,6 +9,7 @@ const router = useRouter();
 const {
   user,
   isAdmin,
+  isSuperAdmin,
   canAccessBasicFeatures,
   canCreateBets,
   canAccessTools,
@@ -311,11 +312,23 @@ const model = computed(() => {
       }
     );
         // Gestion (admin)
+        const gestionItems = [
+          { label: 'Ligues', icon: 'pi pi-fw pi-globe', to: '/gestion/ligues' },
+        ];
+
+        // TODO: Remettre la condition isSuperAdmin.value une fois les tests terminés
+        // Actuellement accessible à tous les admins pour tests
+        // if (isSuperAdmin.value) {
+          gestionItems.push({
+            label: 'Équipes non trouvées',
+            icon: 'pi pi-fw pi-question-circle',
+            to: '/gestion/equipes-non-trouvees',
+          });
+        // }
+
         baseMenu.push({
           label: 'Gestion',
-          items: [
-            { label: 'Ligues', icon: 'pi pi-fw pi-globe', to: '/gestion/ligues' },
-          ],
+          items: gestionItems,
         });
   }
 

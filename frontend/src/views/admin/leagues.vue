@@ -23,6 +23,12 @@ const loading = ref(false);
 const saving = ref(false);
 const leagues = ref([]);
 
+// Pagination
+const currentPage = ref(1);
+const lastPage = ref(1);
+const totalLeagues = ref(0);
+const perPage = 200;
+
 // Filters
 const sports = ref([]);
 const countries = ref([]);
@@ -36,11 +42,24 @@ let sortableInstance = null;
 const editDialog = ref(false);
 const editedLeague = ref(null);
 
+// Deletion modal state
+const deleteDialog = ref(false);
+const deletingLeague = ref(null);
+const deleteConfirmText = ref('');
+const deleteLoading = ref(false);
+
 const loadLeagues = async (params = {}) => {
   loading.value = true;
   try {
+    params.page = currentPage.value;
+    params.per_page = perPage;
     const res = await LeagueService.getAll(params);
-    leagues.value = res.data.map((l) => ({ ...l }));
+    leagues.value = (res.data || []).map((l) => ({ ...l }));
+    if (res.pagination) {
+      currentPage.value = res.pagination.current_page;
+      lastPage.value = res.pagination.last_page;
+      totalLeagues.value = res.pagination.total;
+    }
     updateFavoriteLeagues();
   } catch (e) {
     console.error(e);
@@ -49,6 +68,20 @@ const loadLeagues = async (params = {}) => {
     loading.value = false;
     initializeSortable();
   }
+};
+
+const buildFilterParams = () => {
+  const params = {};
+  if (selectedSport.value) params.sport_id = selectedSport.value;
+  if (selectedCountry.value) params.country_id = selectedCountry.value;
+  if (searchQuery.value) params.search = searchQuery.value;
+  return params;
+};
+
+const goToPage = (page) => {
+  if (page < 1 || page > lastPage.value) return;
+  currentPage.value = page;
+  loadLeagues(buildFilterParams());
 };
 
 const favoriteLeagues = ref([]);
@@ -127,6 +160,41 @@ const openEdit = (league) => {
   editDialog.value = true;
 };
 
+const openDeleteDialog = (league) => {
+  deletingLeague.value = league;
+  deleteConfirmText.value = '';
+  deleteDialog.value = true;
+};
+
+const closeDeleteDialog = () => {
+  deleteDialog.value = false;
+  deletingLeague.value = null;
+  deleteConfirmText.value = '';
+  deleteLoading.value = false;
+};
+
+const confirmDelete = async () => {
+  if (!deletingLeague.value) return;
+  if (deleteConfirmText.value.trim().toUpperCase() !== 'SUPPRIMER LIGUE') return;
+  try {
+    deleteLoading.value = true;
+    await LeagueService.delete(deletingLeague.value.id);
+    toast.add({ severity: 'success', summary: 'Supprimé', detail: 'Ligue supprimée' });
+    closeDeleteDialog();
+    // Reload current page; if page becomes empty, try previous page
+    await loadLeagues(buildFilterParams());
+    if (leagues.value.length === 0 && currentPage.value > 1) {
+      currentPage.value = Math.max(1, currentPage.value - 1);
+      await loadLeagues(buildFilterParams());
+    }
+  } catch (e) {
+    console.error(e);
+    toast.add({ severity: 'error', summary: 'Erreur', detail: e.message || 'Erreur lors de la suppression' });
+  } finally {
+    deleteLoading.value = false;
+  }
+};
+
 const saveEdit = async () => {
   if (!editedLeague.value) return;
   try {
@@ -161,11 +229,8 @@ const loadFilters = async () => {
 };
 
 const applyFilters = async () => {
-  const params = {};
-  if (selectedSport.value) params.sport_id = selectedSport.value;
-  if (selectedCountry.value) params.country_id = selectedCountry.value;
-  if (searchQuery.value) params.search = searchQuery.value;
-  await loadLeagues(params);
+  currentPage.value = 1;
+  await loadLeagues(buildFilterParams());
 };
 
 // When sport changes, fetch countries for that sport (if available)
@@ -244,6 +309,22 @@ const onSportChange = async () => {
                 <h4 class="font-semibold">{{ league.name }}</h4>
                 <p v-if="league.country?.name" class="text-sm text-surface-600">{{ league.country.name }}</p>
               </div>
+              <Button icon="pi pi-trash" class="p-button-sm" severity="danger" text @click.stop="openDeleteDialog(league)" />
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="lastPage > 1" class="flex items-center justify-between mt-4 pt-4 border-t">
+            <span class="text-sm text-surface-500">{{ totalLeagues }} ligues — page {{ currentPage }}/{{ lastPage }}</span>
+            <div class="flex items-center gap-1">
+              <Button icon="pi pi-angle-double-left" class="p-button-sm p-button-text" :disabled="currentPage <= 1" @click="goToPage(1)" />
+              <Button icon="pi pi-angle-left" class="p-button-sm p-button-text" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)" />
+              <template v-for="p in lastPage" :key="p">
+                <Button v-if="p === 1 || p === lastPage || (p >= currentPage - 2 && p <= currentPage + 2)" :label="String(p)" class="p-button-sm" :class="p === currentPage ? '' : 'p-button-text'" @click="goToPage(p)" />
+                <span v-else-if="p === currentPage - 3 || p === currentPage + 3" class="px-1 text-surface-400">…</span>
+              </template>
+              <Button icon="pi pi-angle-right" class="p-button-sm p-button-text" :disabled="currentPage >= lastPage" @click="goToPage(currentPage + 1)" />
+              <Button icon="pi pi-angle-double-right" class="p-button-sm p-button-text" :disabled="currentPage >= lastPage" @click="goToPage(lastPage)" />
             </div>
           </div>
         </template>
@@ -273,13 +354,14 @@ const onSportChange = async () => {
               <div v-for="(league, index) in favoriteLeagues" :key="league.id" class="flex items-center gap-3 p-3 bg-primary-50 border border-primary-200 rounded-lg cursor-move">
                 <div class="flex items-center justify-center w-6 h-6 bg-primary-500 rounded-full text-sm font-bold">{{ index + 1 }}</div>
                 <i class="pi pi-bars text-surface-400 cursor-grab"></i>
-                <img v-if="league.img" :src="`${apiBaseUrl}/storage/league_logos/${league.img}`" :alt="league.name" class="w-5 h-5 object-contain rounded-lg" />
+                <img v-if="league.img" :src="`${apiBaseUrl}/storage/${league.img}`" :alt="league.name" class="w-5 h-5 object-contain rounded-lg" />
                 <div class="flex-1">
                   <h4 class="font-semibold text-surface-500">{{ league.name }}</h4>
                   <p v-if="league.country?.name" class="text-sm text-surface-600">{{ league.country.name }}</p>
                 </div>
                 <Button icon="pi pi-pencil" class="p-button-sm" @click="openEdit(league)" />
                 <Button icon="pi pi-times" class="p-button-sm" severity="danger" text @click="toggleFavorite(league)" />
+                <Button icon="pi pi-trash" class="p-button-sm" severity="danger" text @click.stop="openDeleteDialog(league)" />
               </div>
             </div>
           </div>
@@ -296,6 +378,20 @@ const onSportChange = async () => {
         <div class="flex justify-end gap-2">
           <Button label="Annuler" class="p-button-text" @click="editDialog = false" />
           <Button label="Sauvegarder" icon="pi pi-save" @click="saveEdit" :loading="saving" />
+        </div>
+      </template>
+    </Dialog>
+
+    <Dialog header="Supprimer la ligue" v-model:visible="deleteDialog" :modal="true" :draggable="false">
+      <div class="p-2">
+        <p class="mb-2">Confirmez la suppression de la ligue <strong>{{ deletingLeague ? deletingLeague.name : '' }}</strong>.</p>
+        <p class="mb-2 text-sm text-surface-500">Tapez <strong>SUPPRIMER LIGUE</strong> dans le champ ci-dessous pour confirmer.</p>
+        <InputText v-model="deleteConfirmText" placeholder="SUPPRIMER LIGUE" />
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Button label="Annuler" class="p-button-text" @click="closeDeleteDialog" :disabled="deleteLoading" />
+          <Button label="Supprimer" class="p-button-danger" severity="danger" @click="confirmDelete" :loading="deleteLoading" :disabled="deleteConfirmText.trim().toUpperCase() !== 'SUPPRIMER LIGUE' || deleteLoading" />
         </div>
       </template>
     </Dialog>

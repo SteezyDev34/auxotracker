@@ -19,6 +19,7 @@ use App\Http\Controllers\SofaScoreController;
 use App\Http\Controllers\InteretController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\AdminLeagueController;
+use App\Http\Controllers\TeamSearchNotFoundController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -183,10 +184,13 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->g
     Route::get('/leagues', [AdminLeagueController::class, 'index']);
     Route::put('/leagues/priorities', [AdminLeagueController::class, 'updatePriorities']);
     Route::put('/leagues/{id}', [AdminLeagueController::class, 'update']);
+    Route::delete('/leagues/{id}', [AdminLeagueController::class, 'destroy']);
 
     // Routes superadmin uniquement
     Route::middleware('role:superadmin')->group(function () {
         Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole']);
+        
+  
     });
 });
 
@@ -221,3 +225,8 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->g
         Route::put('/users/{id}/role', [App\Http\Controllers\AdminController::class, 'updateUserRole']);
     });
 });
+      // Gestion des équipes non trouvées
+        Route::get('/team-searches/not-found', [TeamSearchNotFoundController::class, 'index']);
+        Route::post('/team-searches/not-found', [TeamSearchNotFoundController::class, 'store']);
+        Route::put('/team-searches/not-found/{id}/resolve', [TeamSearchNotFoundController::class, 'resolve']);
+        Route::delete('/team-searches/not-found/{id}', [TeamSearchNotFoundController::class, 'destroy']);

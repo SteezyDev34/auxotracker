@@ -81,9 +81,11 @@ class ImportPlayersByTeam extends Command
             $this->line("🏆 Importation pour la ligue: {$league->name}");
             $this->line("");
             
-            $teams = Team::where('league_id', $leagueId)
-                         ->whereNotNull('sofascore_id')
-                         ->get();
+                        // Récupérer les équipes via la table pivot `league_team`
+                        $teams = Team::whereHas('leagues', function ($q) use ($leagueId) {
+                                                 $q->where('leagues.id', $leagueId);
+                                         })->whereNotNull('sofascore_id')
+                                             ->get();
             
             if ($teams->isEmpty()) {
                 $this->warn("⚠️ Aucune équipe trouvée pour la ligue {$league->name}");
@@ -94,9 +96,11 @@ class ImportPlayersByTeam extends Command
             $this->line("");
             
             foreach ($teams as $team) {
+                // S'assurer que la relation `league` pointe sur la ligue demandée
+                $team->setRelation('league', $league);
                 $this->processTeam($team, $force, $delay, $noCache);
                 $this->stats['teams_processed']++;
-                
+
                 if ($delay > 0) {
                     sleep($delay);
                 }

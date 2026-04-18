@@ -249,12 +249,11 @@ class ImportTeamsByLeague extends Command
      */
     private function getSeasonId($leagueSofascoreId, $noCache)
     {
-        try {
-            $url = "https://www.sofascore.com/api/v1/unique-tournament/{$leagueSofascoreId}/featured-events";
-            $cacheKey = md5($url);
-            $cacheFile = $this->cacheDirectory . '/' . $cacheKey . '.json';
+        $url = "https://www.sofascore.com/api/v1/unique-tournament/{$leagueSofascoreId}/featured-events";
+        $cacheKey = md5($url);
+        $cacheFile = $this->cacheDirectory . '/' . $cacheKey . '.json';
 
-            // Vérifier le cache
+        try {
             if (!$noCache && file_exists($cacheFile)) {
                 $cacheAge = round((time() - filemtime($cacheFile)) / 3600, 1);
                 $this->line("💾 Utilisation du cache pour featured events (âge: {$cacheAge}h)");
@@ -268,7 +267,7 @@ class ImportTeamsByLeague extends Command
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                     'Accept' => 'application/json',
                     'Referer' => 'https://www.sofascore.com/'
-                ])->timeout(10)->get($url);
+                ])->timeout(15)->get($url);
 
                 if (!$response->successful()) {
                     if ($response->status() === 403) {
@@ -287,14 +286,12 @@ class ImportTeamsByLeague extends Command
 
                 $data = $response->json();
 
-                // Sauvegarder en cache
                 if (!$noCache) {
                     file_put_contents($cacheFile, json_encode($data, JSON_PRETTY_PRINT));
                     $this->line("💾 Réponse sauvegardée en cache: {$cacheFile}");
                 }
             }
 
-            // Extraire l'ID de saison du premier événement
             if (isset($data['featuredEvents']) && !empty($data['featuredEvents'])) {
                 $firstEvent = $data['featuredEvents'][0];
                 return $firstEvent['season']['id'] ?? null;
@@ -417,16 +414,18 @@ class ImportTeamsByLeague extends Command
                 return;
             }
 
-            // Vérification des doublons par nom et slug dans la même ligue
+            // Vérification des doublons par nom et slug dans la même ligue (via pivot league_team)
             $duplicateByName = Team::where('name', $name)
-                ->where('league_id', $league->id)
                 ->where('sofascore_id', '!=', $sofascoreId)
-                ->first();
+                ->whereHas('leagues', function ($q) use ($league) {
+                    $q->where('leagues.id', $league->id);
+                })->first();
 
             $duplicateBySlug = Team::where('slug', $slug)
-                ->where('league_id', $league->id)
                 ->where('sofascore_id', '!=', $sofascoreId)
-                ->first();
+                ->whereHas('leagues', function ($q) use ($league) {
+                    $q->where('leagues.id', $league->id);
+                })->first();
 
             if ($duplicateByName || $duplicateBySlug) {
                 $this->stats['duplicates_detected']++;
@@ -439,11 +438,11 @@ class ImportTeamsByLeague extends Command
                 ]);
             }
 
-            // Créer ou mettre à jour l'équipe
+            // Créer ou mettre à jour l'équipe (utiliser addNickname pour éviter les doublons)
+            $short = trim((string) $shortName);
             $teamAttributes = [
                 'name' => $name,
                 'slug' => $slug,
-                'nickname' => $shortName,
                 'sofascore_id' => $sofascoreId,
                 'league_id' => $league->id
             ];
@@ -451,6 +450,9 @@ class ImportTeamsByLeague extends Command
             if ($existingTeam) {
                 $existingTeam->update($teamAttributes);
                 $team = $existingTeam;
+                if ($short !== '') {
+                    $team->addNickname($short);
+                }
                 $this->stats['teams_updated']++;
                 $this->line("🔄 Équipe mise à jour: {$name} (ID: {$sofascoreId}, Slug: {$slug})");
                 if ($shortName && $shortName !== $name) {

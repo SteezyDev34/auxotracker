@@ -6,6 +6,8 @@ use App\Models\Sport;
 use App\Models\League;
 use App\Models\Team;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -63,9 +65,11 @@ class SportController extends Controller
     public function getTeams(Request $request, $leagueId): JsonResponse
     {
         try {
-            $teams = Team::where('league_id', $leagueId)
-                ->orderBy('name')
-                ->get(['id', 'name', 'nickname', 'img']);
+            // Utiliser la table pivot `league_team` via la relation `leagues`
+            $teams = Team::whereHas('leagues', function ($q) use ($leagueId) {
+                $q->where('leagues.id', $leagueId);
+            })->orderBy('name')
+              ->get(['id', 'name', 'nickname', 'img']);
 
             return response()->json([
                 'success' => true,
@@ -184,22 +188,33 @@ class SportController extends Controller
             $limit = min((int) $request->get('limit', 200), 200); // Limiter à 50 max, défaut 30
             $leagueId = $request->get('league_id'); // Filtre optionnel par ligue
             $countryId = $request->get('country_id'); // Filtre optionnel par pays
+            $priorityOnly = $request->get('priority_only', false); // Filtrer uniquement les équipes prioritaires
 
-            // Build base query using pivot to compute max priority per team within the sport
+            // Détecter si le sport est le tennis (par slug)
+            $sportModel = Sport::find($sportId);
+            $isTennis = $sportModel && strtolower($sportModel->slug) === 'tennis';
+
+            // Build base subquery to compute max priority per team within the sport
             $baseSub = DB::table('league_team')
                 ->join('leagues', 'leagues.id', '=', 'league_team.league_id')
                 ->where('leagues.sport_id', $sportId)
                 ->select('league_team.team_id', DB::raw('MAX(leagues.priority) as max_priority'))
                 ->groupBy('league_team.team_id');
 
+            // Start building main query
             $query = Team::leftJoinSub($baseSub, 'lp', function ($join) {
                 $join->on('teams.id', '=', 'lp.team_id');
             })
-                ->with(['leagues:id,name'])
-                ->orderByDesc('lp.max_priority')
-                ->orderBy('teams.name');
+            // Filtrer uniquement les équipes qui ont au moins une ligue dans ce sport
+            ->whereNotNull('lp.team_id')
+            ->with(['leagues:id,name']);
 
-            // Apply country filter by ensuring team has at least one league in that country
+            // Si priority_only = true, ne retourner que les équipes avec priority > 0
+            if ($priorityOnly) {
+                $query->where('lp.max_priority', '>', 0);
+            }
+
+            // Apply country filter: require a league in that country (works for tennis and other sports)
             if (!empty($countryId)) {
                 $query->whereExists(function ($q) use ($countryId) {
                     $q->select(DB::raw(1))
@@ -210,17 +225,49 @@ class SportController extends Controller
                 });
             }
 
-            // Appliquer le filtre de recherche si fourni
+            // Apply search filter and advanced ordering
             if (!empty($search)) {
+                // Recherche LIKE dans name, nickname et short_name
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'LIKE', '%' . $search . '%')
-                        ->orWhere('nickname', 'LIKE', '%' . $search . '%');
+                    $q->where('teams.name', 'LIKE', '%' . $search . '%')
+                        ->orWhere('teams.nickname', 'LIKE', '%' . $search . '%')
+                        ->orWhere('teams.short_name', 'LIKE', '%' . $search . '%');
                 });
+
+                $searchLower = mb_strtolower($search);
+                $searchStartsWith = $searchLower . '%';
+
+                // Ordre de tri : 
+                // 1) Priorité de ligue (DESC)
+                // 2) Correspondance exacte dans name, nickname OU short_name (score 3)
+                // 3) Commence par le terme recherché (LIKE 'terme%') (score 2)
+                // 4) Contient le terme (LIKE '%terme%') (score 1 - par défaut)
+                // 5) Ordre alphabétique
+                $query->orderByDesc('lp.max_priority')
+                      ->orderByRaw(
+                          "CASE 
+                            WHEN LOWER(teams.name) = ? OR LOWER(teams.nickname) = ? OR LOWER(teams.short_name) = ? THEN 3
+                            WHEN LOWER(teams.name) LIKE ? OR LOWER(teams.nickname) LIKE ? OR LOWER(teams.short_name) LIKE ? THEN 2
+                            ELSE 1
+                          END DESC",
+                          [$searchLower, $searchLower, $searchLower, $searchStartsWith, $searchStartsWith, $searchStartsWith]
+                      )
+                      ->orderBy('teams.name');
+            } else {
+                // No search term: league priority first, then alphabetical
+                $query->orderByDesc('lp.max_priority')
+                      ->orderBy('teams.name');
             }
 
-            // Appliquer le filtre par ligue si fourni
+            // Appliquer le filtre par ligue si fourni (garde compatibilité avec l'ancienne API)
+            // Filtrer via la table pivot `league_team` pour tenir compte des équipes appartenant à plusieurs ligues
             if (!empty($leagueId)) {
-                $query->where('league_id', $leagueId);
+                $query->whereExists(function ($q) use ($leagueId) {
+                    $q->select(DB::raw(1))
+                        ->from('league_team')
+                        ->whereRaw('league_team.team_id = teams.id')
+                        ->where('league_team.league_id', $leagueId);
+                });
             }
 
             // Calculer l'offset
@@ -232,7 +279,7 @@ class SportController extends Controller
             // Récupérer les résultats avec pagination
             $teams = $query->skip($offset)
                 ->take($limit)
-                ->get(['id', 'name', 'nickname', 'img', 'league_id', 'sofascore_id']);
+                ->get(['id', 'name', 'nickname', 'short_name', 'img', 'league_id', 'sofascore_id']);
 
             // Déterminer s'il y a plus de résultats
             $hasMore = ($offset + $limit) < $total;

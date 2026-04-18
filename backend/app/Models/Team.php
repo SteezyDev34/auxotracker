@@ -16,7 +16,6 @@ class Team extends Model
     protected $fillable = [
         'name',
         'nickname',
-        'short_name',
         'slug',
         'img',
         'sofascore_id',
@@ -174,5 +173,58 @@ class Team extends Model
 
         // Fallback: rechercher par nom/nickname (LIKE)
         return self::findIdByName($value);
+    }
+
+    /**
+     * Ajoute un nickname à l'équipe en évitant les doublons (insensible à la casse).
+     * Conserve l'ordre et la casse d'origine des nicknames existants.
+     */
+    public function addNickname(string $nickname): void
+    {
+        $nickname = trim($nickname);
+        if ($nickname === '') {
+            return;
+        }
+
+        $existing = $this->nickname ?? '';
+        $parts = array_filter(array_map('trim', explode(',', $existing)));
+
+        // Build map lowercase=>original to dedupe case-insensitively
+        $map = [];
+        foreach ($parts as $p) {
+            $lower = mb_strtolower($p);
+            if ($lower !== '') {
+                $map[$lower] = $map[$lower] ?? $p;
+            }
+        }
+
+        $lowerNew = mb_strtolower($nickname);
+        if (!isset($map[$lowerNew])) {
+            // append keeping original casing
+            $map[$lowerNew] = $nickname;
+        }
+
+        // Rebuild nickname string preserving insertion order: existing first, then new if any
+        $normalized = implode(', ', array_values($map));
+        $this->nickname = $normalized;
+        $this->save();
+    }
+
+    /**
+     * Normalise et déduplique le champ `nickname` existant (insensible à la casse).
+     * Retourne la valeur normalisée (sans sauvegarder automatiquement).
+     */
+    public function normalizedNicknames(): string
+    {
+        $existing = $this->nickname ?? '';
+        $parts = array_filter(array_map('trim', explode(',', $existing)));
+        $map = [];
+        foreach ($parts as $p) {
+            $lower = mb_strtolower($p);
+            if ($lower !== '') {
+                $map[$lower] = $map[$lower] ?? $p;
+            }
+        }
+        return implode(', ', array_values($map));
     }
 }

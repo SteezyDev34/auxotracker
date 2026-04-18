@@ -31,11 +31,15 @@ class ExtractMarketFromBet extends Command
         // Recherche des équipes dans la ligue avec priorité > 0
         $teamsQuery = Team::query();
         if ($leagueId) {
-            $teamsQuery->where('league_id', $leagueId);
+            $teamsQuery->whereHas('leagues', function ($q) use ($leagueId) {
+                $q->where('leagues.id', $leagueId);
+            });
         } else {
             // Recherche dans toutes les ligues avec priorité > 0
-            $leagueIds = League::where('priority', '>', 0)->pluck('id');
-            $teamsQuery->whereIn('league_id', $leagueIds);
+            $leagueIds = League::where('priority', '>', 0)->pluck('id')->toArray();
+            $teamsQuery->whereHas('leagues', function ($q) use ($leagueIds) {
+                $q->whereIn('leagues.id', $leagueIds);
+            });
         }
 
         $team1 = $teamsQuery->where('name', 'LIKE', "%$team1Name%")->first();

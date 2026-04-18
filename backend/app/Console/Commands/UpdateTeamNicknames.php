@@ -145,20 +145,24 @@ class UpdateTeamNicknames extends Command
                 $newNickParts = array_values(array_unique(array_merge($existing, $candidates)));
                 $newNick = implode(', ', $newNickParts);
 
-                if ($newNick !== (string) $team->nickname) {
+                // Normaliser/dédupliquer insensible à la casse avant sauvegarde
+                $old = (string) $team->nickname;
+                $team->nickname = $newNick;
+                $normalized = $team->normalizedNicknames();
+
+                if ($normalized !== $old) {
                     if ($dryRun) {
-                        $this->info("[DRY] Changement prévu: {$team->id} -> {$team->name} ({$team->nickname} => {$newNick})");
-                        Log::info('UpdateTeamNicknames: dry-run changement prévu', ['team_id' => $team->id, 'old' => $team->nickname, 'new' => $newNick]);
+                        $this->info("[DRY] Changement prévu: {$team->id} -> {$team->name} ({$old} => {$normalized})");
+                        Log::info('UpdateTeamNicknames: dry-run changement prévu', ['team_id' => $team->id, 'old' => $old, 'new' => $normalized]);
                     } else {
-                        $old = $team->nickname;
-                        $team->nickname = $newNick;
+                        $team->nickname = $normalized;
                         $team->save();
                         $updated++;
-                        $this->info("Mis à jour: {$team->id} -> {$team->name} ({$newNick})");
-                        Log::info('UpdateTeamNicknames: equipe mise a jour', ['team_id' => $team->id, 'old' => $old, 'new' => $newNick]);
+                        $this->info("Mis à jour: {$team->id} -> {$team->name} ({$normalized})");
+                        Log::info('UpdateTeamNicknames: equipe mise a jour', ['team_id' => $team->id, 'old' => $old, 'new' => $normalized]);
                     }
                 } else {
-                    Log::debug('Nickname identique, pas de changement', ['team_id' => $team->id]);
+                    Log::debug('Nickname identique après normalisation, pas de changement', ['team_id' => $team->id]);
                 }
             } catch (Exception $e) {
                 $this->error("Erreur traitement équipe {$team->id}: " . $e->getMessage());
