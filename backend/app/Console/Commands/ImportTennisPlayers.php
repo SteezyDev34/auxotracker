@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Team;
+use App\Models\MatchModel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -48,6 +49,7 @@ class ImportTennisPlayers extends Command
         'tournaments_processed' => 0,
         'matches_processed' => 0,
         'players_processed' => 0,
+        'events_cached' => 0,
         'players_created' => 0,
         'players_updated' => 0,
         'players_skipped' => 0,
@@ -145,6 +147,7 @@ class ImportTennisPlayers extends Command
         // Créer la structure de cache hiérarchique
         $subdirs = [
             'tournaments',    // Cache des tournois
+            'tournaments/events', // Events individuels par tournoi
             'players',       // Cache des joueurs
             'players/logos', // Images des joueurs
             'players/statistics', // Statistiques des joueurs
@@ -199,7 +202,7 @@ class ImportTennisPlayers extends Command
     /**
      * Sauvegarder dans le cache intelligent
      */
-    private function setSmartCache($url, $data, $cacheType = 'default')
+    private function setSmartCache($url, $data, $cacheType = 'default', $compress = true)
     {
         $cacheKey = $this->generateSmartCacheKey($url, $cacheType);
         $cacheFile = $this->getCacheFilePath($cacheKey, $cacheType);
@@ -213,7 +216,7 @@ class ImportTennisPlayers extends Command
             'checksum' => md5(json_encode($data))
         ];
 
-        $this->writeCacheFile($cacheFile, $cacheData, $cacheType);
+        $this->writeCacheFile($cacheFile, $cacheData, $cacheType, $compress);
 
         $size = round($cacheData['size'] / 1024, 2);
         $this->line("💾 Cache intelligent sauvegardé ({$size}KB, type: {$cacheType})");
@@ -277,7 +280,18 @@ class ImportTennisPlayers extends Command
 
             // Détecter si le contenu est compressé
             if (substr($content, 0, 2) === "\x1f\x8b") {
-                $content = gzuncompress($content);
+                // gzip encoded
+                if (function_exists('gzdecode')) {
+                    $decoded = @gzdecode($content);
+                    if ($decoded !== false) {
+                        $content = $decoded;
+                    }
+                } else {
+                    $decoded = @gzuncompress($content);
+                    if ($decoded !== false) {
+                        $content = $decoded;
+                    }
+                }
             }
 
             return json_decode($content, true);
@@ -290,15 +304,18 @@ class ImportTennisPlayers extends Command
     /**
      * Écrire un fichier de cache avec compression si nécessaire
      */
-    private function writeCacheFile($cacheFile, $cacheData, $cacheType)
+    private function writeCacheFile($cacheFile, $cacheData, $cacheType, $compress = true)
     {
         try {
             $content = json_encode($cacheData, JSON_PRETTY_PRINT);
 
-            // Compresser les gros fichiers (> 50KB)
-            if (strlen($content) > 51200) {
-                $content = gzcompress($content, 6);
-                $this->line("🗜️ Cache compressé pour économiser l'espace");
+            if ($compress) {
+                // Compresser les gros fichiers (> 50KB)
+                if (strlen($content) > 51200) {
+                    // utiliser gzip pour être compatible avec gzdecode
+                    $content = gzencode($content, 6);
+                    $this->line("🗜️ Cache compressé pour économiser l'espace");
+                }
             }
 
             file_put_contents($cacheFile, $content);
@@ -448,14 +465,14 @@ class ImportTennisPlayers extends Command
      * Créer une requête HTTP avec retry.
      * (Harmonisé avec Football/Basketball : retry 3x, timeout 30s)
      */
-    private function makeHttpRequest($url)
+    private function makeHttpRequest($url, $retries = 1)
     {
         try {
             $headers = $this->getHttpHeaders();
 
             $this->line("🌐 Requête HTTP vers: {$url}");
 
-            $response = Http::retry(1, 2000)
+            $response = Http::retry($retries, 2000)
                 ->timeout(30)
                 ->withHeaders($headers)
                 ->withOptions([
@@ -504,6 +521,7 @@ class ImportTennisPlayers extends Command
         try {
             // URL pour récupérer les tournois en cours (sport tennis = 5)
             $currentDate = date('Y-m-d');
+            $this->line("DEBUG: Récupération des tournois en cours pour la date: {$currentDate}");
             $url = "https://www.sofascore.com/api/v1/sport/tennis/scheduled-events/{$currentDate}";
 
             // Vérifier d'abord les métadonnées pour éviter les requêtes inutiles (sauf si force)
@@ -594,9 +612,9 @@ class ImportTennisPlayers extends Command
 
         $data = $response->json();
 
-        // Sauvegarder en cache intelligent
+        // Sauvegarder en cache intelligent (non compressé pour faciliter lecture)
         if (!$noCache) {
-            $this->setSmartCache($url, $data, 'tournaments');
+            $this->setSmartCache($url, $data, 'tournaments', false);
         }
 
         return $data;
@@ -698,7 +716,77 @@ class ImportTennisPlayers extends Command
 
             // Détecter si c'est une compétition en double
             $isDoubles = $this->isDoublesCompetition($event);
+            // Mettre l'événement en cache JSON (Phase 1: API -> cache)
+            $this->cacheEventData($event);
 
+            // Enregistrer le match planifié si la date n'est pas encore passée en Europe/Paris
+            $startTs = $event['startTimestamp'] ?? null;
+            $eventId = $event['id'] ?? null;
+
+            $this->line("   [match] event_id={$eventId} startTimestamp=" . ($startTs ?? 'null'));
+
+            if (empty($startTs)) {
+                $this->warn("   [match] Pas de startTimestamp pour event_id={$eventId} - skip persistance");
+                Log::warning('match_persist_skip_no_timestamp', ['event_id' => $eventId]);
+            } else {
+                try {
+                    $tz = new \DateTimeZone('Europe/Paris');
+                    $eventDt = new \DateTime('@' . (int) $startTs);
+                    $eventDt->setTimezone($tz);
+                    $nowParis = new \DateTime('now', $tz);
+
+                    $this->line("   [match] heure Paris: " . $eventDt->format('Y-m-d H:i:s') . " | maintenant: " . $nowParis->format('Y-m-d H:i:s'));
+
+                    if ($eventDt <= $nowParis) {
+                        $this->line("   [match] event_id={$eventId} déjà passé - skip persistance");
+                        Log::info('match_persist_skip_past', ['event_id' => $eventId, 'start' => $eventDt->format('Y-m-d H:i:s')]);
+                    } else {
+                        $team1Id = $homeTeam['id'] ?? null;
+                        $team2Id = $awayTeam['id'] ?? null;
+                        $tournamentSofaId = $event['tournament']['uniqueTournament']['id'] ?? $event['tournament']['id'] ?? null;
+                        $slug = $event['slug'] ?? '';
+                        $customId = $event['customId'] ?? '';
+
+                        $sofascoreLink = 'https://www.sofascore.com/fr/tennis/match/+' . $slug . '/' . $customId . '#id:' . $eventId;
+
+                        $this->line("   [match] persistance BDD event_id={$eventId} team1={$team1Id} team2={$team2Id} tournament={$tournamentSofaId}");
+
+                        $record = MatchModel::updateOrCreate(
+                            ['event_id' => $eventId],
+                            [
+                                'team_1_sofascore_id'    => $team1Id,
+                                'team_2_sofascore_id'    => $team2Id,
+                                'match_start_date'       => $eventDt->format('Y-m-d'),
+                                'match_start_time'       => $eventDt->format('H:i:s'),
+                                'tournament_sofascore_id' => $tournamentSofaId,
+                                'sport_id'               => 5, // Tennis sur Sofascore
+                                'sofascore_link'         => $sofascoreLink,
+                            ]
+                        );
+
+                        $action = $record->wasRecentlyCreated ? 'créé' : 'mis à jour';
+                        $this->line("   [match] {$action} en BDD (id={$record->id}) event_id={$eventId}");
+                        Log::info('match_persisted', [
+                            'action'      => $action,
+                            'id'          => $record->id,
+                            'event_id'    => $eventId,
+                            'start'       => $eventDt->format('Y-m-d H:i:s'),
+                            'team1'       => $team1Id,
+                            'team2'       => $team2Id,
+                            'tournament'  => $tournamentSofaId,
+                            'sport_id'    => 5,
+                            'link'        => $sofascoreLink,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    $this->error("   [match] ERREUR persistance event_id={$eventId} : " . $e->getMessage());
+                    Log::error('match_persist_error', [
+                        'event_id' => $eventId,
+                        'error'    => $e->getMessage(),
+                        'trace'    => $e->getTraceAsString(),
+                    ]);
+                }
+            }
             if ($homeTeam && (!$limit || $this->stats['players_processed'] < $limit)) {
                 $this->cachePlayerData($homeTeam, $isDoubles, $noCache, $force, $downloadImages);
             }
@@ -712,6 +800,38 @@ class ImportTennisPlayers extends Command
                 'event_id' => $event['id'] ?? 'Inconnu',
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Mettre un événement (match) en cache JSON (Phase 1 : API -> cache).
+     */
+    private function cacheEventData($event)
+    {
+        try {
+            $eventId = $event['id'] ?? null;
+            $key = $eventId ? (string) $eventId : 'uid_' . uniqid();
+
+            $dir = $this->cacheDirectory . '/tournaments/events';
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+
+            $filename = $dir . '/event_' . $key . '.json';
+            file_put_contents($filename, json_encode($event, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+            $metaFile = $this->cacheDirectory . '/metadata/' . md5('event_' . $key) . '.meta';
+            $metadata = [
+                'timestamp' => time(),
+                'event_key' => $key,
+                'event_id' => $eventId,
+                'cached_file' => $filename
+            ];
+            file_put_contents($metaFile, json_encode($metadata, JSON_PRETTY_PRINT));
+
+            $this->stats['events_cached']++;
+        } catch (\Throwable $e) {
+            Log::warning('Erreur lors du cache de l\'événement', ['error' => $e->getMessage(), 'event_id' => $event['id'] ?? null]);
         }
     }
 

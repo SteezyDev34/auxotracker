@@ -5,15 +5,6 @@
 
 echo "🚀 Démarrage du déploiement en production..."
 
-# Configuration de l'environnement de production
-echo "📝 Configuration de l'environnement de production..."
-if [ -f ".env.production" ]; then
-    cp .env.production .env
-    echo "✅ Fichier .env.production copié vers .env"
-else
-    echo "❌ Erreur: Fichier .env.production introuvable"
-    exit 1
-fi
 
 # Installation des dépendances
 echo "📦 Installation des dépendances Composer..."

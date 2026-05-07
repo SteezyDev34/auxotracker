@@ -19,6 +19,7 @@ use App\Http\Controllers\SofaScoreController;
 use App\Http\Controllers\InteretController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\AdminLeagueController;
+use App\Http\Controllers\MatchController;
 use App\Http\Controllers\TeamSearchNotFoundController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -94,6 +95,10 @@ Route::prefix('teams')->group(function () {
 // Routes pour les statistiques SofaScore
 Route::get('/stats/tennis/sofascore_id/{sofascoreId}', [SofaScoreController::class, 'getPlayerStatistics']);
 Route::get('/stats/tennis/player/{teamId}', [SofaScoreController::class, 'getTeamStatistics']);
+
+// Retrouver le lien Sofascore d'un match tennis par date + noms des joueurs
+// GET /api/matches/tennis/link?team1=Alcaraz&team2=Djokovic&date=2026-05-07
+Route::get('/matches/tennis/link', [MatchController::class, 'findTennisLink']);
 
 // Routes protégées (commentées temporairement pour le dev)
 /*
@@ -189,8 +194,6 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->g
     // Routes superadmin uniquement
     Route::middleware('role:superadmin')->group(function () {
         Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole']);
-        
-  
     });
 });
 
@@ -225,8 +228,8 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->g
         Route::put('/users/{id}/role', [App\Http\Controllers\AdminController::class, 'updateUserRole']);
     });
 });
-      // Gestion des équipes non trouvées
-        Route::get('/team-searches/not-found', [TeamSearchNotFoundController::class, 'index']);
-        Route::post('/team-searches/not-found', [TeamSearchNotFoundController::class, 'store']);
-        Route::put('/team-searches/not-found/{id}/resolve', [TeamSearchNotFoundController::class, 'resolve']);
-        Route::delete('/team-searches/not-found/{id}', [TeamSearchNotFoundController::class, 'destroy']);
+// Gestion des équipes non trouvées
+Route::get('/team-searches/not-found', [TeamSearchNotFoundController::class, 'index']);
+Route::post('/team-searches/not-found', [TeamSearchNotFoundController::class, 'store']);
+Route::put('/team-searches/not-found/{id}/resolve', [TeamSearchNotFoundController::class, 'resolve']);
+Route::delete('/team-searches/not-found/{id}', [TeamSearchNotFoundController::class, 'destroy']);

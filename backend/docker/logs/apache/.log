@@ -33079,3 +33079,7 @@
 [Thu Apr 16 20:45:51.992855 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
 [Fri Apr 17 10:34:10.646049 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
 [Fri Apr 17 10:34:10.847341 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Thu May 07 10:42:33.744677 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Thu May 07 10:42:33.786857 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Thu May 07 10:49:08.020554 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Thu May 07 10:49:08.110361 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
