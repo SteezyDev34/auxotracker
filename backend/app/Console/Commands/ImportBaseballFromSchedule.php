@@ -656,7 +656,7 @@ class ImportBaseballFromSchedule extends Command
         $this->error("🔗 URL: {$url}");
         $this->error("💡 Suggestions:");
         $this->error("   - Attendre quelques minutes avant de relancer");
-        $this->error("   - Utiliser un VPN ou changer d'IP");
+        $this->error("   - Ne pas utiliser de VPN, pour IP locale");
         $this->error("   - Augmenter le délai (--delay=3)");
 
         Log::error('Erreur 403 - Challenge détecté', [

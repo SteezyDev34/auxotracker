@@ -45,12 +45,25 @@ if [ "${TENNIS_DOWNLOAD_IMAGES}" != "0" ]; then
 fi
 
 echo "$(date) : Exécution artisan tennis:import-from-cache $TENNIS_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
+# Exécuter la commande sans arrêter le script (set -e est actif)
+set +e
 $PHP_CMD artisan tennis:import-from-cache $TENNIS_IMPORT_OPTS 2>&1 | tee -a "$LOG"
-if [[ $? -eq 0 ]]; then
+RC=${PIPESTATUS[0]:-${?}}
+set -e
+if [[ $RC -eq 0 ]]; then
     echo "$(date) : ✅ Tennis import terminé" 2>&1 | tee -a "$LOG"
+
+    # Archivage post-import (délégué à script séparé)
+    if "$PROJECT_DIR/script/archive_sofascore_cache.sh" tennis_players tennis_leagues 2>&1 | tee -a "$LOG"; then
+        echo "$(date) : ✅ Archivage post-import terminé" 2>&1 | tee -a "$LOG"
+    else
+        echo "$(date) : ⚠️ Archivage post-import échoué" 2>&1 | tee -a "$LOG"
+    fi
+
+    echo "$(date) : 🎉 Import terminé" 2>&1 | tee -a "$LOG"
 else
-    echo "$(date) : ❌ Erreur lors de l'import Tennis" 2>&1 | tee -a "$LOG"
-    exit 1
+    echo "$(date) : ❌ Erreur lors de l'import Tennis (code=$RC)" 2>&1 | tee -a "$LOG"
+    exit $RC
 fi
 
 exit 0

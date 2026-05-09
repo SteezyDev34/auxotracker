@@ -101,3 +101,61 @@ netlify.toml
 
 # Ignore negative cache files (only useful locally)
 negative_*.json
+
+# Verrous d'exécution (mutex locaux — jamais utiles sur le serveur)
+.locks/
+
+# Logs des scripts shell (chaque serveur a les siens)
+script/logs/
+
+# ⚠️  NE PAS EXCLURE storage/app/sofascore_cache/ !
+# Le serveur o2switch est bloqué par Sofascore (403). Le cache JSON est récupéré
+# en local (Phase 1) puis envoyé au serveur via rsync (Phase 3) pour que le
+# serveur puisse importer en base (Phase 2) sans appeler l'API directement.
+# Les fichiers JSON/logos du cache sont le seul vecteur de données vers le serveur.
+
+# Marqueurs journaliers d'exécution (état local uniquement, inutiles sur le serveur)
+# Générés par cache_*.sh pour éviter les double-runs en local
+storage/app/sofascore_cache/*_CACHE_DONE_*
+storage/app/sofascore_cache/*_LEAGUE_DONE_*
+
+# Fichiers intermédiaires du smart-cache (non lus par import-from-cache)
+storage/app/sofascore_cache/**/*.cache
+storage/app/sofascore_cache/**/*.meta
+storage/app/sofascore_cache/**/metadata/
+
+# Fichier de suivi de synchronisation rsync (généré par le script deploy local)
+.last_sync
+
+# Fichier de configuration de déploiement (contient login/serveur/chemin — sensible)
+.dploycnf
+
+# Cache applicatif Laravel (régénéré via artisan sur le serveur)
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+bootstrap/cache/
+
+# Uploads/médias générés dynamiquement (ne pas écraser ceux du serveur)
+storage/app/public/team_logos/
+storage/app/public/league_logos/
+
+# Fichiers CI/CD et Docker (non utilisés sur o2switch)
+docker/
+docker-compose.yml
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Dépendances Node (non utilisées en prod Laravel o2switch)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Fichiers temporaires et système
+.DS_Store
+.DS_Store?
+._*
+*.tmp
+*.temp
+.last_sync

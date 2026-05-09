@@ -1,5 +1,5 @@
-FROM php:8.3-apache
-# Installer les extensions PHP nécessaires pour WordPress
+FROM php:8.3-fpm
+
 RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libpng-dev \
@@ -11,12 +11,10 @@ RUN apt-get update && apt-get install -y \
     zip \
     git \
     unzip \
-    libjpeg62-turbo-dev \
     default-libmysqlclient-dev \
     default-mysql-client \
     build-essential \
     ca-certificates \
-    gnupg \
     wget \
     procps \
     locales \
@@ -24,13 +22,15 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-venv
 
-# Install Python dependencies
-RUN pip3 install --break-system-packages requests
+RUN docker-php-ext-install pdo_mysql mysqli zip
 
-# Install Composer
+# Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-# Enable Apache modules
-RUN a2enmod rewrite headers ssl
-RUN docker-php-ext-install pdo_mysql mysqli zip bcmath
-EXPOSE 80
-EXPOSE 443
+
+RUN pip3 install --break-system-packages requests || true
+
+WORKDIR /var/www/html
+
+EXPOSE 9000
+
+CMD ["php-fpm"]

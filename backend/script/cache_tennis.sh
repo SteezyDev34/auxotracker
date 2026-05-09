@@ -50,8 +50,8 @@ if [ "${TENNIS_FORCE:-}" = "1" ]; then TEN_PARAMS="--force"; fi
 [ -n "${TENNIS_LIMIT:-}" ] && TEN_PARAMS="$TEN_PARAMS --limit=${TENNIS_LIMIT}"
 [ -n "${TENNIS_DELAY:-}" ] && TEN_PARAMS="$TEN_PARAMS --delay=${TENNIS_DELAY}"
 
-echo "$(date) : Exécution artisan tennis:cache-players $TEN_PARAMS" 2>&1 | tee -a "$LOG"
-$PHP_CMD artisan tennis:cache-players $TEN_PARAMS 2>&1 | tee -a "$LOG"
+echo "$(date) : Exécution artisan tennis:import-from-schedule $TEN_PARAMS" 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan tennis:import-from-schedule $TEN_PARAMS 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     printf "%s" "done" > "$TENNIS_CACHE_MARKER" 2>/dev/null || true
     echo "$(date) : ✅ Tennis Phase 1 (cache) terminée" 2>&1 | tee -a "$LOG"
