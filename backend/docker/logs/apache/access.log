@@ -82,3 +82,4 @@
 127.0.0.1 - - [14/Apr/2026:13:47:03 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.66 (Debian) PHP/8.3.30 OpenSSL/3.5.5 (internal dummy connection)"
 127.0.0.1 - - [14/Apr/2026:13:47:04 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.66 (Debian) PHP/8.3.30 OpenSSL/3.5.5 (internal dummy connection)"
 127.0.0.1 - - [14/Apr/2026:13:47:05 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.66 (Debian) PHP/8.3.30 OpenSSL/3.5.5 (internal dummy connection)"
+172.20.0.1 - - [08/May/2026:09:56:46 +0000] "-" 408 0 "-" "-"

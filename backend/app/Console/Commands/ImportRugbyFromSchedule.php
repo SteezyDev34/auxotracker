@@ -130,50 +130,50 @@ class ImportRugbyFromSchedule extends Command
                 }
                 $this->line("   📅 Season ID: {$seasonId}");
 
-                    $teams = $this->getTeamsFromStandings($sofascoreId, $seasonId, $noCache);
-                    $teamCount = count($teams);
-                    if ($teamCount > 0) {
-                        $this->stats['standings_cached']++;
-                        $this->line("   ✅ {$teamCount} équipes mises en cache");
+                $teams = $this->getTeamsFromStandings($sofascoreId, $seasonId, $noCache);
+                $teamCount = count($teams);
+                if ($teamCount > 0) {
+                    $this->stats['standings_cached']++;
+                    $this->line("   ✅ {$teamCount} équipes mises en cache");
 
-                        // Afficher les équipes (limitées pour éviter un flooding de logs)
-                        $maxShow = 50;
-                        $shown = 0;
-                        foreach (array_slice($teams, 0, $maxShow) as $team) {
-                            $tName = $team['name'] ?? ($team['shortName'] ?? 'unknown');
-                            $tId = $team['id'] ?? ($team['sofascore_id'] ?? 'N/A');
-                            // Vérifier si un cache par équipe existe (ex: teams_players/{slug}-{id})
-                            $teamCached = $this->teamPlayersCacheExists($tId, $tName);
-                            $cacheLabel = $teamCached ? ' [cache]' : '';
-                            $this->line("      - {$tName} (sofascore_id: {$tId}){$cacheLabel}");
-                            $shown++;
-                        }
-                        if ($teamCount > $maxShow) {
-                            $this->line("      ... + " . ($teamCount - $maxShow) . " autres équipes");
-                        }
+                    // Afficher les équipes (limitées pour éviter un flooding de logs)
+                    $maxShow = 50;
+                    $shown = 0;
+                    foreach (array_slice($teams, 0, $maxShow) as $team) {
+                        $tName = $team['name'] ?? ($team['shortName'] ?? 'unknown');
+                        $tId = $team['id'] ?? ($team['sofascore_id'] ?? 'N/A');
+                        // Vérifier si un cache par équipe existe (ex: teams_players/{slug}-{id})
+                        $teamCached = $this->teamPlayersCacheExists($tId, $tName);
+                        $cacheLabel = $teamCached ? ' [cache]' : '';
+                        $this->line("      - {$tName} (sofascore_id: {$tId}){$cacheLabel}");
+                        $shown++;
+                    }
+                    if ($teamCount > $maxShow) {
+                        $this->line("      ... + " . ($teamCount - $maxShow) . " autres équipes");
+                    }
 
-                        // Télécharger les logos des équipes dans le cache si --download-logos
-                        if ($downloadLogos) {
-                            $this->info("   📸 Téléchargement des logos pour {$teamCount} équipes...");
-                            $logosDownloaded = 0;
-                            $logosSkipped = 0;
-                            foreach ($teams as $team) {
-                                $tId = $team['id'] ?? null;
-                                $tName = $team['name'] ?? 'unknown';
-                                if ($tId) {
-                                    $result = $this->downloadTeamLogoToCache($tId, $tName);
-                                    if ($result === 'downloaded') {
-                                        $logosDownloaded++;
-                                    } else {
-                                        $logosSkipped++;
-                                    }
+                    // Télécharger les logos des équipes dans le cache si --download-logos
+                    if ($downloadLogos) {
+                        $this->info("   📸 Téléchargement des logos pour {$teamCount} équipes...");
+                        $logosDownloaded = 0;
+                        $logosSkipped = 0;
+                        foreach ($teams as $team) {
+                            $tId = $team['id'] ?? null;
+                            $tName = $team['name'] ?? 'unknown';
+                            if ($tId) {
+                                $result = $this->downloadTeamLogoToCache($tId, $tName);
+                                if ($result === 'downloaded') {
+                                    $logosDownloaded++;
+                                } else {
+                                    $logosSkipped++;
                                 }
                             }
-                            $this->line("   📸 Logos: {$logosDownloaded} téléchargés, {$logosSkipped} ignorés/erreurs");
                         }
-                    } else {
-                        $this->line("   ⏭️ Aucune équipe dans les standings");
+                        $this->line("   📸 Logos: {$logosDownloaded} téléchargés, {$logosSkipped} ignorés/erreurs");
                     }
+                } else {
+                    $this->line("   ⏭️ Aucune équipe dans les standings");
+                }
 
                 if ($delay > 0) {
                     usleep($delay * 500000);
@@ -726,7 +726,7 @@ class ImportRugbyFromSchedule extends Command
         $this->error("🔗 URL: {$url}");
         $this->error("💡 Suggestions:");
         $this->error("   - Attendre quelques minutes avant de relancer");
-        $this->error("   - Utiliser un VPN ou changer d'IP");
+        $this->error("   - Ne pas utiliser de VPN, pour IP locale");
         $this->error("   - Augmenter le délai (--delay=3)");
 
         Log::error('Erreur 403 - Challenge détecté (rugby)', [

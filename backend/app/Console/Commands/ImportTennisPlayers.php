@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Concerns\HasConsoleOutput;
 use App\Models\Team;
 use App\Models\MatchModel;
 use Illuminate\Console\Command;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ImportTennisPlayers extends Command
 {
+    use HasConsoleOutput;
     /**
      * Le nom et la signature de la commande console.
      *
@@ -364,7 +366,7 @@ class ImportTennisPlayers extends Command
      */
     private function cleanExpiredCache()
     {
-        $this->line("🧹 Nettoyage du cache expiré...");
+        $this->lineHeader("🧹 Nettoyage du cache expiré...");
         $cleaned = 0;
 
         $directories = ['tournaments', 'players', 'players/statistics', 'metadata', 'default'];
@@ -386,6 +388,8 @@ class ImportTennisPlayers extends Command
         if ($cleaned > 0) {
             $this->line("🗑️ {$cleaned} fichiers de cache expirés supprimés");
             $this->stats['cache_files_cleaned'] = $cleaned;
+        } else {
+            $this->line("Aucun fichier de cache expiré trouvé");
         }
     }
 
@@ -450,14 +454,21 @@ class ImportTennisPlayers extends Command
     private function getHttpHeaders(): array
     {
         return [
-            'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
             'Accept' => 'application/json, text/plain, */*',
-            'Accept-Language' => 'fr-FR,fr;q=0.9,en;q=0.8',
+            'Accept-Language' => 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
             'Accept-Encoding' => 'gzip, deflate, br',
             'Referer' => 'https://www.sofascore.com/',
             'Origin' => 'https://www.sofascore.com',
             'Cache-Control' => 'no-cache',
             'Connection' => 'keep-alive',
+            'sec-ch-ua' => '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+            'sec-ch-ua-mobile' => '?0',
+            'sec-ch-ua-platform' => '"macOS"',
+            'Sec-Fetch-Dest' => 'empty',
+            'Sec-Fetch-Mode' => 'cors',
+            'Sec-Fetch-Site' => 'same-origin',
+            'X-Requested-With' => 'XMLHttpRequest',
         ];
     }
 
@@ -518,6 +529,7 @@ class ImportTennisPlayers extends Command
      */
     private function getOngoingTournaments($noCache, $force = false)
     {
+        $this->lineHeader("🎾 Récupération des tournois de tennis en cours...");
         try {
             // URL pour récupérer les tournois en cours (sport tennis = 5)
             $currentDate = date('Y-m-d');
@@ -1002,6 +1014,7 @@ class ImportTennisPlayers extends Command
      */
     private function fetchAndCachePlayerDetails($sofascoreId, $noCache = false, $force = false)
     {
+        $this->lineHeader("🔍 Récupération des détails du joueur ID: {$sofascoreId}...");
         try {
             $url = "https://www.sofascore.com/api/v1/team/{$sofascoreId}";
             $cacheKey = "player_details_{$sofascoreId}";
@@ -1248,7 +1261,7 @@ class ImportTennisPlayers extends Command
         $this->error("🔍 Type de challenge détecté: {$challengeType}");
         $this->error("💡 Suggestions:");
         $this->error("   - Attendre quelques minutes avant de relancer");
-        $this->error("   - Utiliser un VPN ou changer d'IP");
+        $this->error("   - Ne pas utiliser de VPN, pour IP locale");
         $this->error("   - Réduire la fréquence des requêtes");
 
         Log::error('🚨 Erreur 403 - Challenge détecté', [

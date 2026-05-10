@@ -150,25 +150,25 @@ class ImportBasketballFromSchedule extends Command
                     if ($teamCount > $maxShow) {
                         $this->line("      ... + " . ($teamCount - $maxShow) . " autres équipes");
                     }
-                        // Télécharger les logos des équipes dans le cache si --download-logos
-                        if ($downloadLogos) {
-                            $this->info("   📸 Téléchargement des logos pour {$teamCount} équipes...");
-                            $logosDownloaded = 0;
-                            $logosSkipped = 0;
-                            foreach ($teams as $team) {
-                                $tId = $team['id'] ?? null;
-                                $tName = $team['name'] ?? 'unknown';
-                                if ($tId) {
-                                    $result = $this->downloadTeamLogoToCache($tId, $tName);
-                                    if ($result === 'downloaded') {
-                                        $logosDownloaded++;
-                                    } else {
-                                        $logosSkipped++;
-                                    }
+                    // Télécharger les logos des équipes dans le cache si --download-logos
+                    if ($downloadLogos) {
+                        $this->info("   📸 Téléchargement des logos pour {$teamCount} équipes...");
+                        $logosDownloaded = 0;
+                        $logosSkipped = 0;
+                        foreach ($teams as $team) {
+                            $tId = $team['id'] ?? null;
+                            $tName = $team['name'] ?? 'unknown';
+                            if ($tId) {
+                                $result = $this->downloadTeamLogoToCache($tId, $tName);
+                                if ($result === 'downloaded') {
+                                    $logosDownloaded++;
+                                } else {
+                                    $logosSkipped++;
                                 }
                             }
-                            $this->line("   📸 Logos: {$logosDownloaded} téléchargés, {$logosSkipped} ignorés/erreurs");
                         }
+                        $this->line("   📸 Logos: {$logosDownloaded} téléchargés, {$logosSkipped} ignorés/erreurs");
+                    }
                 } else {
                     $this->line("   ⏭️ Aucune équipe dans les standings");
                 }
@@ -765,7 +765,7 @@ class ImportBasketballFromSchedule extends Command
         $this->error("🔗 URL: {$url}");
         $this->error("💡 Suggestions:");
         $this->error("   - Attendre quelques minutes avant de relancer");
-        $this->error("   - Utiliser un VPN ou changer d'IP");
+        $this->error("   - Ne pas utiliser de VPN, pour IP locale");
         $this->error("   - Augmenter le délai (--delay=3)");
 
         Log::error('Erreur 403 - Challenge détecté (basketball)', [
