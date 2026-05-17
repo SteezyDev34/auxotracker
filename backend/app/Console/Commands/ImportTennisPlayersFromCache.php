@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Models\MatchModel;
 use App\Models\Team;
 use App\Models\League;
 use App\Models\Sport;
@@ -65,7 +66,12 @@ class ImportTennisPlayersFromCache extends Command
         'tournament_leagues_created' => 0,
         'tournament_leagues_updated' => 0,
         'tournament_leagues_skipped' => 0,
-        'tournament_logos_downloaded' => 0
+        'tournament_logos_downloaded' => 0,
+        'matches_processed' => 0,
+        'matches_created' => 0,
+        'matches_updated' => 0,
+        'matches_skipped' => 0,
+        'matches_errors' => 0,
     ];
 
     /**
@@ -118,6 +124,9 @@ class ImportTennisPlayersFromCache extends Command
         // Permet d'avoir les ligues même si le traitement des joueurs est interrompu
         $this->createTournamentLeagues($force, $downloadImages);
 
+        // Importer les matchs depuis les fichiers d'événements en cache (Phase 2)
+        $this->processEventCacheFiles($force);
+
         // Traiter les fichiers de cache des joueurs
         $this->processBasicPlayerCacheFiles($force, $limit, $downloadImages, $skipArchive);
 
@@ -125,6 +134,132 @@ class ImportTennisPlayersFromCache extends Command
         $this->displayFinalStats();
 
         return 0;
+    }
+
+    /**
+     * Importer les matchs depuis les fichiers d'événements en cache (cache → BDD).
+     * Aucun appel API ici : lecture seule du cache tournaments/events/.
+     */
+    private function processEventCacheFiles(bool $force): void
+    {
+        $eventsDir = $this->cacheDirectory . '/tournaments/events';
+
+        if (!is_dir($eventsDir)) {
+            $this->line("📌 Répertoire des événements introuvable: {$eventsDir} — aucun match à importer");
+            return;
+        }
+
+        $eventFiles = glob($eventsDir . '/event_*.json');
+
+        if (empty($eventFiles)) {
+            $this->line("📌 Aucun fichier d'événement dans le cache");
+            return;
+        }
+
+        $this->line("\n⚽ Importation des matchs depuis le cache: " . count($eventFiles) . " fichier(s)");
+
+        foreach ($eventFiles as $eventFile) {
+            try {
+                $event = json_decode(file_get_contents($eventFile), true);
+                if (!$event || !isset($event['id'])) {
+                    $this->warn("⚠️ Fichier d'événement invalide: " . basename($eventFile));
+                    continue;
+                }
+                $this->processMatchFromCache($event, $force);
+            } catch (\Exception $e) {
+                $this->stats['matches_errors']++;
+                Log::error('Erreur lecture fichier événement tennis', [
+                    'file'  => $eventFile,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $this->line("✅ Matchs traités: {$this->stats['matches_processed']} | créés: {$this->stats['matches_created']} | màj: {$this->stats['matches_updated']} | ignorés: {$this->stats['matches_skipped']}");
+    }
+
+    /**
+     * Persister un match en base depuis les données du cache (Phase 2).
+     * Seuls les matchs dont la date n'est pas encore passée (Europe/Paris) sont persistés,
+     * sauf si --force est actif.
+     */
+    private function processMatchFromCache(array $event, bool $force): void
+    {
+        $this->stats['matches_processed']++;
+
+        $eventId  = $event['id'] ?? null;
+        $startTs  = $event['startTimestamp'] ?? null;
+        $homeTeam = $event['homeTeam'] ?? null;
+        $awayTeam = $event['awayTeam'] ?? null;
+
+        if (empty($startTs)) {
+            $this->line("   [match] Pas de startTimestamp pour event_id={$eventId} — ignoré");
+            Log::warning('match_persist_skip_no_timestamp', ['event_id' => $eventId]);
+            $this->stats['matches_skipped']++;
+            return;
+        }
+
+        try {
+            $tz       = new \DateTimeZone('Europe/Paris');
+            $eventDt  = new \DateTime('@' . (int) $startTs);
+            $eventDt->setTimezone($tz);
+            $nowParis = new \DateTime('now', $tz);
+
+            if ($eventDt <= $nowParis && !$force) {
+                $this->line("   [match] event_id={$eventId} déjà passé — ignoré");
+                Log::info('match_persist_skip_past', ['event_id' => $eventId, 'start' => $eventDt->format('Y-m-d H:i:s')]);
+                $this->stats['matches_skipped']++;
+                return;
+            }
+
+            $team1Id          = $homeTeam['id'] ?? null;
+            $team2Id          = $awayTeam['id'] ?? null;
+            $tournamentSofaId = $event['tournament']['uniqueTournament']['id'] ?? $event['tournament']['id'] ?? null;
+            $slug             = $event['slug'] ?? '';
+            $customId         = $event['customId'] ?? '';
+            $sofascoreLink    = 'https://www.sofascore.com/fr/tennis/match/+' . $slug . '/' . $customId . '#id:' . $eventId;
+
+            $record = MatchModel::updateOrCreate(
+                ['event_id' => $eventId],
+                [
+                    'team_1_sofascore_id'      => $team1Id,
+                    'team_2_sofascore_id'      => $team2Id,
+                    'match_start_date'         => $eventDt->format('Y-m-d'),
+                    'match_start_time'         => $eventDt->format('H:i:s'),
+                    'tournament_sofascore_id'  => $tournamentSofaId,
+                    'sport_id'                 => 5, // Tennis (Sofascore)
+                    'sofascore_link'           => $sofascoreLink,
+                ]
+            );
+
+            $action = $record->wasRecentlyCreated ? 'créé' : 'mis à jour';
+            $this->line("   [match] {$action} en BDD (id={$record->id}) event_id={$eventId}");
+            Log::info('match_persisted', [
+                'action'     => $action,
+                'id'         => $record->id,
+                'event_id'   => $eventId,
+                'start'      => $eventDt->format('Y-m-d H:i:s'),
+                'team1'      => $team1Id,
+                'team2'      => $team2Id,
+                'tournament' => $tournamentSofaId,
+                'sport_id'   => 5,
+                'link'       => $sofascoreLink,
+            ]);
+
+            if ($record->wasRecentlyCreated) {
+                $this->stats['matches_created']++;
+            } else {
+                $this->stats['matches_updated']++;
+            }
+        } catch (\Throwable $e) {
+            $this->stats['matches_errors']++;
+            $this->error("   [match] ERREUR persistance event_id={$eventId} : " . $e->getMessage());
+            Log::error('match_persist_error', [
+                'event_id' => $eventId,
+                'error'    => $e->getMessage(),
+                'trace'    => $e->getTraceAsString(),
+            ]);
+        }
     }
 
     /**
@@ -762,6 +897,13 @@ class ImportTennisPlayersFromCache extends Command
         $this->line("⏭️ Ligues de tournois ignorées: {$this->stats['tournament_leagues_skipped']}");
         $this->line("📸 Logos de ligues téléchargés: {$this->stats['tournament_logos_downloaded']}");
         $this->line("❌ Erreurs: {$this->stats['errors']}");
+        $this->info('');
+        $this->info('⚽ === MATCHS ===');
+        $this->line("⚽ Matchs traités: {$this->stats['matches_processed']}");
+        $this->line("✅ Matchs créés: {$this->stats['matches_created']}");
+        $this->line("🔄 Matchs mis à jour: {$this->stats['matches_updated']}");
+        $this->line("⏭️ Matchs ignorés (passés): {$this->stats['matches_skipped']}");
+        $this->line("❌ Erreurs matchs: {$this->stats['matches_errors']}");
 
         if ($this->stats['errors'] > 0) {
             $this->warn("⚠️ Des erreurs ont été détectées. Consultez les logs pour plus de détails.");

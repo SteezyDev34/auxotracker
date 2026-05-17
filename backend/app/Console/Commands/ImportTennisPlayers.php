@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Console\Concerns\HasConsoleOutput;
 use App\Models\Team;
-use App\Models\MatchModel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -128,9 +127,9 @@ class ImportTennisPlayers extends Command
             $this->processTournament($tournament, $delay, $noCache, $force, $downloadImages, $limit);
             $this->stats['tournaments_processed']++;
 
-            if ($delay > 0) {
+            /* if ($delay > 0) {
                 sleep($delay);
-            }
+            } */
         }
 
         // L'export JSON a été retiré de la commande automatique.
@@ -689,9 +688,9 @@ class ImportTennisPlayers extends Command
                 $this->processMatch($event, $noCache, $force, $downloadImages, $limit);
                 $this->stats['matches_processed']++;
 
-                if ($delay > 0) {
+                /* if ($delay > 0) {
                     usleep($delay * 100000); // Délai plus court entre les matchs
-                }
+                } */
             }
 
             // Si on arrive ici sans exception, écrire un marker indiquant que le tournoi a été mis en cache pour cette date
@@ -717,7 +716,8 @@ class ImportTennisPlayers extends Command
     }
 
     /**
-     * Traiter un match pour extraire les joueurs
+     * Traiter un match pour extraire les joueurs (Phase 1 : API → cache uniquement).
+     * La persistance BDD des matchs est gérée par ImportTennisPlayersFromCache (Phase 2).
      */
     private function processMatch($event, $noCache, $force, $downloadImages, $limit = null)
     {
@@ -728,77 +728,10 @@ class ImportTennisPlayers extends Command
 
             // Détecter si c'est une compétition en double
             $isDoubles = $this->isDoublesCompetition($event);
-            // Mettre l'événement en cache JSON (Phase 1: API -> cache)
+
+            // Mettre l'événement en cache JSON (Phase 1 : API → cache, aucune écriture BDD)
             $this->cacheEventData($event);
 
-            // Enregistrer le match planifié si la date n'est pas encore passée en Europe/Paris
-            $startTs = $event['startTimestamp'] ?? null;
-            $eventId = $event['id'] ?? null;
-
-            $this->line("   [match] event_id={$eventId} startTimestamp=" . ($startTs ?? 'null'));
-
-            if (empty($startTs)) {
-                $this->warn("   [match] Pas de startTimestamp pour event_id={$eventId} - skip persistance");
-                Log::warning('match_persist_skip_no_timestamp', ['event_id' => $eventId]);
-            } else {
-                try {
-                    $tz = new \DateTimeZone('Europe/Paris');
-                    $eventDt = new \DateTime('@' . (int) $startTs);
-                    $eventDt->setTimezone($tz);
-                    $nowParis = new \DateTime('now', $tz);
-
-                    $this->line("   [match] heure Paris: " . $eventDt->format('Y-m-d H:i:s') . " | maintenant: " . $nowParis->format('Y-m-d H:i:s'));
-
-                    if ($eventDt <= $nowParis) {
-                        $this->line("   [match] event_id={$eventId} déjà passé - skip persistance");
-                        Log::info('match_persist_skip_past', ['event_id' => $eventId, 'start' => $eventDt->format('Y-m-d H:i:s')]);
-                    } else {
-                        $team1Id = $homeTeam['id'] ?? null;
-                        $team2Id = $awayTeam['id'] ?? null;
-                        $tournamentSofaId = $event['tournament']['uniqueTournament']['id'] ?? $event['tournament']['id'] ?? null;
-                        $slug = $event['slug'] ?? '';
-                        $customId = $event['customId'] ?? '';
-
-                        $sofascoreLink = 'https://www.sofascore.com/fr/tennis/match/+' . $slug . '/' . $customId . '#id:' . $eventId;
-
-                        $this->line("   [match] persistance BDD event_id={$eventId} team1={$team1Id} team2={$team2Id} tournament={$tournamentSofaId}");
-
-                        $record = MatchModel::updateOrCreate(
-                            ['event_id' => $eventId],
-                            [
-                                'team_1_sofascore_id'    => $team1Id,
-                                'team_2_sofascore_id'    => $team2Id,
-                                'match_start_date'       => $eventDt->format('Y-m-d'),
-                                'match_start_time'       => $eventDt->format('H:i:s'),
-                                'tournament_sofascore_id' => $tournamentSofaId,
-                                'sport_id'               => 5, // Tennis sur Sofascore
-                                'sofascore_link'         => $sofascoreLink,
-                            ]
-                        );
-
-                        $action = $record->wasRecentlyCreated ? 'créé' : 'mis à jour';
-                        $this->line("   [match] {$action} en BDD (id={$record->id}) event_id={$eventId}");
-                        Log::info('match_persisted', [
-                            'action'      => $action,
-                            'id'          => $record->id,
-                            'event_id'    => $eventId,
-                            'start'       => $eventDt->format('Y-m-d H:i:s'),
-                            'team1'       => $team1Id,
-                            'team2'       => $team2Id,
-                            'tournament'  => $tournamentSofaId,
-                            'sport_id'    => 5,
-                            'link'        => $sofascoreLink,
-                        ]);
-                    }
-                } catch (\Throwable $e) {
-                    $this->error("   [match] ERREUR persistance event_id={$eventId} : " . $e->getMessage());
-                    Log::error('match_persist_error', [
-                        'event_id' => $eventId,
-                        'error'    => $e->getMessage(),
-                        'trace'    => $e->getTraceAsString(),
-                    ]);
-                }
-            }
             if ($homeTeam && (!$limit || $this->stats['players_processed'] < $limit)) {
                 $this->cachePlayerData($homeTeam, $isDoubles, $noCache, $force, $downloadImages);
             }
