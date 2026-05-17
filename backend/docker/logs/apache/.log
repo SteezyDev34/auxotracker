@@ -33102,3 +33102,5 @@
 [Fri May 08 11:51:47.971557 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
 [Fri May 08 11:51:48.259174 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
 >>>>>>> Stashed changes
+[Sun May 10 06:23:16.445535 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Sun May 10 06:23:22.150553 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)

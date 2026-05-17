@@ -27,7 +27,8 @@ class ImportTennisPlayersFromCache extends Command
                             {--limit= : Limiter le nombre de joueurs à traiter}
                             {--import-teams : Importer les joueurs depuis le cache}
                             {--download-images : Télécharge les images des joueurs}
-                            {--download-logos : Télécharge les logos des ligues de tournois}';
+                            {--download-logos : Télécharge les logos des ligues de tournois}
+                            {--skip-archive : Ne pas déplacer les fichiers vers processed/ après import (utiliser en local avant rsync)}';
 
     /**
      * Description de la commande
@@ -87,6 +88,7 @@ class ImportTennisPlayersFromCache extends Command
         $force = $this->option('force');
         $limit = $this->option('limit') ? (int) $this->option('limit') : null;
         $downloadImages = $this->option('download-images');
+        $skipArchive = $this->option('skip-archive');
 
         $this->line("📋 Options:");
         $this->line("   - Forcer la mise à jour: " . ($force ? 'Oui' : 'Non'));
@@ -117,7 +119,7 @@ class ImportTennisPlayersFromCache extends Command
         $this->createTournamentLeagues($force, $downloadImages);
 
         // Traiter les fichiers de cache des joueurs
-        $this->processBasicPlayerCacheFiles($force, $limit, $downloadImages);
+        $this->processBasicPlayerCacheFiles($force, $limit, $downloadImages, $skipArchive);
 
         // Afficher les statistiques finales
         $this->displayFinalStats();
@@ -128,7 +130,7 @@ class ImportTennisPlayersFromCache extends Command
     /**
      * Traiter les fichiers de cache des données de base des joueurs
      */
-    private function processBasicPlayerCacheFiles($force, $limit, $downloadImages)
+    private function processBasicPlayerCacheFiles($force, $limit, $downloadImages, bool $skipArchive = false)
     {
         $playersDir = $this->cacheDirectory . '/players';
 
@@ -149,14 +151,14 @@ class ImportTennisPlayersFromCache extends Command
                 break;
             }
 
-            $this->processBasicPlayerCacheFile($cacheFile, $force, $downloadImages);
+            $this->processBasicPlayerCacheFile($cacheFile, $force, $downloadImages, $skipArchive);
         }
     }
 
     /**
      * Traiter un fichier de cache de données de base d'un joueur
      */
-    private function processBasicPlayerCacheFile($cacheFile, $force, $downloadImages)
+    private function processBasicPlayerCacheFile($cacheFile, $force, $downloadImages, bool $skipArchive = false)
     {
         try {
             $this->stats['cache_files_processed']++;
@@ -236,26 +238,31 @@ class ImportTennisPlayersFromCache extends Command
             }
 
             // Archiver (déplacer) le fichier de cache traité vers le dossier 'processed'
-            // Comportement : archiver systématiquement (suppression de la condition sur .synced_at).
-            try {
-                $processedDir = $this->cacheDirectory . '/players/processed';
-                if (!is_dir($processedDir)) {
-                    mkdir($processedDir, 0755, true);
-                }
-
-                $destPath = $processedDir . '/' . basename($cacheFile);
-
-                if (file_exists($cacheFile)) {
-                    if (rename($cacheFile, $destPath)) {
-                        $this->stats['cache_files_cleaned']++;
-                        $this->line("📦 Fichier archivé: " . basename($cacheFile));
-                        Log::info('cache_file_archived', ['file' => basename($cacheFile), 'dest' => $destPath]);
-                    } else {
-                        Log::warning('Échec déplacement du fichier de cache traité', ['file' => $cacheFile, 'dest' => $destPath]);
+            // En mode local (avant rsync), --skip-archive préserve les fichiers pour que rsync
+            // puisse les envoyer au serveur. L'archivage est alors effectué côté serveur (Phase 5).
+            if (!$skipArchive) {
+                try {
+                    $processedDir = $this->cacheDirectory . '/players/processed';
+                    if (!is_dir($processedDir)) {
+                        mkdir($processedDir, 0755, true);
                     }
+
+                    $destPath = $processedDir . '/' . basename($cacheFile);
+
+                    if (file_exists($cacheFile)) {
+                        if (rename($cacheFile, $destPath)) {
+                            $this->stats['cache_files_cleaned']++;
+                            $this->line("📦 Fichier archivé: " . basename($cacheFile));
+                            Log::info('cache_file_archived', ['file' => basename($cacheFile), 'dest' => $destPath]);
+                        } else {
+                            Log::warning('Échec déplacement du fichier de cache traité', ['file' => $cacheFile, 'dest' => $destPath]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Erreur lors de l\'archivage du fichier de cache', ['file' => $cacheFile, 'error' => $e->getMessage()]);
                 }
-            } catch (\Exception $e) {
-                Log::warning('Erreur lors de l\'archivage du fichier de cache', ['file' => $cacheFile, 'error' => $e->getMessage()]);
+            } else {
+                $this->line("📂 Fichier conservé (--skip-archive actif): " . basename($cacheFile));
             }
         } catch (\Exception $e) {
             $this->stats['errors']++;

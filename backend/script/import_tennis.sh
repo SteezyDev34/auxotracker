@@ -34,8 +34,10 @@ fi
 trap 'rm -rf "$LOCK"' EXIT
 
 # Options d'import (modifiable via variable d'environnement TENNIS_IMPORT_OPTS)
-# Par défaut : forcer
-TENNIS_IMPORT_OPTS="${TENNIS_IMPORT_OPTS:---force}"
+# --skip-archive : les fichiers player_basic_*.json sont conservés en place
+# afin que rsync (Phase 3) puisse les envoyer au serveur. L'archivage réel
+# est effectué côté serveur après l'import distant (Phase 5 Jenkins).
+TENNIS_IMPORT_OPTS="${TENNIS_IMPORT_OPTS:---force --skip-archive}"
 
 # Contrôle du téléchargement des images des joueurs
 # Par défaut activé (1). Pour désactiver: TENNIS_DOWNLOAD_IMAGES=0
@@ -47,19 +49,14 @@ fi
 echo "$(date) : Exécution artisan tennis:import-from-cache $TENNIS_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
 # Exécuter la commande sans arrêter le script (set -e est actif)
 set +e
-$PHP_CMD artisan tennis:import-from-cache $TENNIS_IMPORT_OPTS 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan tennis:import-from-cache --limit=10 $TENNIS_IMPORT_OPTS 2>&1 | tee -a "$LOG"
 RC=${PIPESTATUS[0]:-${?}}
 set -e
 if [[ $RC -eq 0 ]]; then
     echo "$(date) : ✅ Tennis import terminé" 2>&1 | tee -a "$LOG"
-
-    # Archivage post-import (délégué à script séparé)
-    if "$PROJECT_DIR/script/archive_sofascore_cache.sh" tennis_players tennis_leagues 2>&1 | tee -a "$LOG"; then
-        echo "$(date) : ✅ Archivage post-import terminé" 2>&1 | tee -a "$LOG"
-    else
-        echo "$(date) : ⚠️ Archivage post-import échoué" 2>&1 | tee -a "$LOG"
-    fi
-
+    # NOTE : pas d'archivage ici — le cache doit rester en place pour être
+    # envoyé au serveur via rsync (Phase 3) avant que le serveur importe (Phase 4).
+    # L'archivage est effectué côté serveur après l'import distant (Phase 5 Jenkins).
     echo "$(date) : 🎉 Import terminé" 2>&1 | tee -a "$LOG"
 else
     echo "$(date) : ❌ Erreur lors de l'import Tennis (code=$RC)" 2>&1 | tee -a "$LOG"
