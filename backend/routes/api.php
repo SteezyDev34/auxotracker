@@ -138,6 +138,10 @@ Route::get('/bookmakers/{id}', [BookmakerController::class, 'show']);
 
 // Routes protégées pour les bankrolls et bookmakers utilisateur
 Route::middleware('auth:sanctum')->group(function () {
+    // Calcul de mise recommandée (GET query params: tipster, target_percentage, recover_losses, odds, bankroll_id)
+    // Doit être défini AVANT l'apiResource 'bankrolls' pour ne pas être intercepté par la route show (GET /bankrolls/{bankroll})
+    Route::get('/bankrolls/recommended-stake', [UserBankrollController::class, 'recommendedStake']);
+
     // Routes pour les bankrolls de l'utilisateur
     Route::apiResource('bankrolls', UserBankrollController::class);
 

@@ -8,9 +8,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\StakeRecommendationService;
 
 class UserBankrollController extends Controller
 {
+    private StakeRecommendationService $stakeRecommendationService;
+
+    public function __construct(StakeRecommendationService $stakeRecommendationService)
+    {
+        $this->stakeRecommendationService = $stakeRecommendationService;
+    }
     /**
      * Affiche la liste des bankrolls de l'utilisateur connecté avec leurs bookmakers.
      *
@@ -68,6 +75,29 @@ class UserBankrollController extends Controller
             ->firstOrFail();
 
         return response()->json(['bankroll' => $bankroll]);
+    }
+
+    /**
+     * Retourne une mise recommandée selon la bankroll, tipster et options.
+     *
+     * Paramètres acceptés: `tipster`, `target_percentage`, `recover_losses`, `odds`, `bankroll_id`
+     */
+    public function recommendedStake(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'error' => 'Utilisateur non authentifié'], 401);
+        }
+
+        $params = $request->only(['tipster', 'target_percentage', 'recover_losses', 'odds', 'bankroll_id']);
+
+        try {
+            $result = $this->stakeRecommendationService->recommend($user, $params);
+            return response()->json(array_merge(['success' => true], $result));
+        } catch (\Exception $e) {
+            Log::error('Erreur recommendedStake: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'error' => 'Erreur lors du calcul de la mise recommandée'], 500);
+        }
     }
 
     /**
