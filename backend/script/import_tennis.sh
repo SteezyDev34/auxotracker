@@ -49,7 +49,7 @@ fi
 echo "$(date) : Exécution artisan tennis:import-from-cache $TENNIS_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
 # Exécuter la commande sans arrêter le script (set -e est actif)
 set +e
-$PHP_CMD artisan tennis:import-from-cache --limit=10 $TENNIS_IMPORT_OPTS 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan tennis:import-from-cache $TENNIS_IMPORT_OPTS 2>&1 | tee -a "$LOG"
 RC=${PIPESTATUS[0]:-${?}}
 set -e
 if [[ $RC -eq 0 ]]; then
