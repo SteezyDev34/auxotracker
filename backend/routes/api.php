@@ -62,8 +62,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bets/import/preview', [BetImportController::class, 'previewImport']);
 });
 
-// Route dédiée pour le bot local Auxobot (token + IP vérifiés par middleware)
+// Routes dédiées pour le bot local Auxobot (token vérifié par middleware)
 Route::post('/auxobot/bets', [BetController::class, 'storeAuxobot'])->middleware('auxobot');
+Route::get('/auxobot/recommended-stake', [UserBankrollController::class, 'recommendedStakeForBot'])->middleware('auxobot');
 
 // Routes des transactions
 Route::get('/transactions/stats', [TransactionController::class, 'stats']);
@@ -233,6 +234,34 @@ Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->g
     });
 });
 // Gestion des équipes non trouvées
+// Endpoint temporaire : réception des données fetchées par Chrome (offline cache)
+// Le header Access-Control-Allow-Private-Network permet les requêtes depuis sofascore.com → 127.0.0.1
+Route::options('/tennis-cache-write', function (\Illuminate\Http\Request $request) {
+    return response('', 204)
+        ->header('Access-Control-Allow-Origin', $request->header('Origin', '*'))
+        ->header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type')
+        ->header('Access-Control-Allow-Private-Network', 'true')
+        ->header('Access-Control-Allow-Credentials', 'false');
+});
+Route::post('/tennis-cache-write', function (\Illuminate\Http\Request $request) {
+    $type = $request->input('type');
+    $data = $request->input('data');
+    $origin = $request->header('Origin', '*');
+    $allowed = ['source_scheduled', 'source_live'];
+    if (!in_array($type, $allowed, true)) {
+        return response()->json(['error' => 'type non autorisé'], 400)
+            ->header('Access-Control-Allow-Origin', $origin)
+            ->header('Access-Control-Allow-Private-Network', 'true');
+    }
+    $date = date('Y-m-d');
+    $path = storage_path("app/sofascore_cache/{$type}_{$date}.json");
+    file_put_contents($path, json_encode($data, JSON_UNESCAPED_UNICODE));
+    return response()->json(['ok' => true, 'path' => $path, 'events' => count($data['events'] ?? [])])
+        ->header('Access-Control-Allow-Origin', $origin)
+        ->header('Access-Control-Allow-Private-Network', 'true');
+});
+
 Route::get('/team-searches/not-found', [TeamSearchNotFoundController::class, 'index']);
 Route::post('/team-searches/not-found', [TeamSearchNotFoundController::class, 'store']);
 Route::put('/team-searches/not-found/{id}/resolve', [TeamSearchNotFoundController::class, 'resolve']);

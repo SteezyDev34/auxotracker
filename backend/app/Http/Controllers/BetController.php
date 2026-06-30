@@ -609,131 +609,101 @@ class BetController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        // Récupérer l'utilisateur connecté pour valider les bankrolls
         $user = auth()->user();
         $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id')->toArray();
 
-        // Récupérer l'utilisateur connecté pour valider les bankrolls
-        $user = auth()->user();
-        $userBankrollIds = UserBankroll::where('user_id', $user->id)->pluck('id')->toArray();
-
-        // Validation des données principales du pari
         $validator = Validator::make($request->all(), [
-            'bet_date' => 'required|date',
-            'global_odds' => 'required|numeric|min:1',
-            'bet_code' => 'required|string|max:256',
-            'result' => 'nullable|in:win,lost,void,pending',
-            'stake' => 'required|numeric|min:0',
-            'stake_type' => 'required|in:currency,percentage',
-            'bankroll_id' => 'nullable|in:' . implode(',', $userBankrollIds),
-            'bankroll_id' => 'nullable|in:' . implode(',', $userBankrollIds),
-            // Validation du tableau d'événements
-            'events' => 'required|array|min:1',
-            'events.*.sport_id' => 'nullable|exists:sports,id',
-            'events.*.country_id' => 'nullable|exists:countries,id',
-            'events.*.league_id' => 'nullable|exists:leagues,id',
-            'events.*.team1_id' => 'nullable|exists:teams,id',
-            'events.*.team2_id' => 'nullable|exists:teams,id',
-            'events.*.description' => 'required|string|max:500',
-            'events.*.result' => 'nullable|in:win,lost,void,pending',
-            'events.*.odds' => 'nullable|numeric|min:1'
+            'bet_date'              => 'required|date',
+            'global_odds'           => 'required|numeric|min:1',
+            'bet_code'              => 'required|string|max:256',
+            'result'                => 'nullable|in:win,lost,void,pending',
+            'stake'                 => 'required|numeric|min:0',
+            'stake_type'            => 'required|in:currency,percentage',
+            'bankroll_id'           => 'nullable|in:' . implode(',', $userBankrollIds),
+            'tipster_id'            => 'nullable|integer|exists:tipsters,id',
+            'tipster_name'          => 'nullable|string|max:255',
+            'events'                => 'required|array|min:1',
+            'events.*.sport_id'     => 'nullable|exists:sports,id',
+            'events.*.country_id'   => 'nullable|exists:countries,id',
+            'events.*.league_id'    => 'nullable|exists:leagues,id',
+            'events.*.team1_id'     => 'nullable|exists:teams,id',
+            'events.*.team2_id'     => 'nullable|exists:teams,id',
+            'events.*.description'  => 'required|string|max:500',
+            'events.*.result'       => 'nullable|in:win,lost,void,pending',
+            'events.*.odds'         => 'nullable|numeric|min:1',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
         $validatedData = $validator->validated();
 
-        // Déterminer la bankroll à utiliser
-        $bankrollId = $validatedData['bankroll_id'] ?? null;
+        // Résolution du tipster : par ID (doit appartenir à l'user) ou par nom (créé si inconnu)
+        $tipsterId = null;
+        if (!empty($validatedData['tipster_id'])) {
+            $tipster = \App\Models\Tipster::where('id', $validatedData['tipster_id'])
+                ->where('user_id', $user->id)
+                ->first();
+            if ($tipster) {
+                $tipsterId = $tipster->id;
+            }
+        } elseif (!empty($validatedData['tipster_name'])) {
+            $tipster = \App\Models\Tipster::firstOrCreate(
+                ['user_id' => $user->id, 'name' => $validatedData['tipster_name']],
+                ['is_active' => true, 'link' => '']
+            );
+            $tipsterId = $tipster->id;
+        }
 
-        // Si pas de bankroll spécifiée, prendre la première de l'utilisateur
+        // Bankroll par défaut si non spécifiée
+        $bankrollId = $validatedData['bankroll_id'] ?? null;
         if (!$bankrollId) {
             $defaultBankroll = UserBankroll::where('user_id', $user->id)->first();
-
             if (!$defaultBankroll) {
                 return response()->json([
                     'success' => false,
-                    'error' => 'Aucune bankroll trouvée. Veuillez créer une bankroll avant d\'ajouter un pari.'
+                    'error'   => 'Aucune bankroll trouvée. Veuillez créer une bankroll avant d\'ajouter un pari.',
                 ], 400);
             }
-
             $bankrollId = $defaultBankroll->id;
         }
 
-
-        // Déterminer la bankroll à utiliser
-        $bankrollId = $validatedData['bankroll_id'] ?? null;
-
-        // Si pas de bankroll spécifiée, prendre la première de l'utilisateur
-        if (!$bankrollId) {
-            $defaultBankroll = UserBankroll::where('user_id', $user->id)->first();
-
-            if (!$defaultBankroll) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Aucune bankroll trouvée. Veuillez créer une bankroll avant d\'ajouter un pari.'
-                ], 400);
-            }
-
-            $bankrollId = $defaultBankroll->id;
-        }
-
-        // Extraire les données du pari (sans les événements)
-        $betData = [
-            'bet_date' => $validatedData['bet_date'],
+        $bet = Bet::create([
+            'bet_date'    => $validatedData['bet_date'],
             'global_odds' => $validatedData['global_odds'],
-            'bet_code' => $validatedData['bet_code'],
-            'result' => $validatedData['result'] ?? 'pending',
-            'stake' => $validatedData['stake'],
+            'bet_code'    => $validatedData['bet_code'],
+            'result'      => $validatedData['result'] ?? 'pending',
+            'stake'       => $validatedData['stake'],
             'bankroll_id' => $bankrollId,
-            'stake' => $validatedData['stake'],
-            'bankroll_id' => $bankrollId
-        ];
+            'tipster_id'  => $tipsterId,
+        ]);
 
-        // Créer le pari
-        $bet = Bet::create($betData);
-
-        // Créer et associer les événements
         $eventIds = [];
         foreach ($validatedData['events'] as $eventData) {
-            // Créer l'événement avec les données reçues
             $event = \App\Models\Event::create([
-                'team1_id' => $eventData['team1_id'],
-                'team2_id' => $eventData['team2_id'],
-                'league_id' => $eventData['league_id'],
-                'sport_id' => $eventData['sport_id'] ?? null,
-                'type' => $eventData['description'], // Utiliser la description comme type
-                'market' => $eventData['description'], // Utiliser la description comme marché
-                'odd' => $eventData['odds'],
-                'event_date' => $validatedData['bet_date'] // Utiliser la date du pari
+                'team1_id'   => $eventData['team1_id'],
+                'team2_id'   => $eventData['team2_id'],
+                'league_id'  => $eventData['league_id'],
+                'sport_id'   => $eventData['sport_id'] ?? null,
+                'type'       => $eventData['description'],
+                'market'     => $eventData['description'],
+                'odd'        => $eventData['odds'],
+                'event_date' => $validatedData['bet_date'],
             ]);
-
-
-
             $eventIds[] = $event->id;
         }
 
-        // Associer les événements au pari via la table pivot
         $bet->events()->attach($eventIds);
 
-        // Si tous les events ont le même sport_id, attribuer ce sport au pari, sinon null
         $sportIds = collect($validatedData['events'])->pluck('sport_id')->filter()->unique()->values();
-        if ($sportIds->count() === 1) {
-            $bet->sport_id = $sportIds->first();
-        } else {
-            $bet->sport_id = null;
-        }
+        $bet->sport_id = $sportIds->count() === 1 ? $sportIds->first() : null;
         $bet->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Pari créé avec succès',
-            'data' => $bet->load(['sport', 'events.sport', 'events.team1', 'events.team2', 'events.league.country'])
+            'data'    => $bet->load(['sport', 'tipster', 'events.sport', 'events.team1', 'events.team2', 'events.league.country']),
         ], 201);
     }
 

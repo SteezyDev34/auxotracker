@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ImportTennisPlayers extends Command
 {
@@ -24,7 +25,9 @@ class ImportTennisPlayers extends Command
                                 {--limit= : Limiter le nombre de joueurs à collecter}
                                 {--import-teams : Pré-charger aussi les données des équipes (saisons + standings) dans le cache}
                                 {--download-images : Télécharger les images des joueurs pendant la mise en cache}
-                                {--download-logos : Télécharger les logos des tournois pendant la mise en cache}';
+                                {--download-logos : Télécharger les logos des tournois pendant la mise en cache}
+                                {--date-offset=0 : Décalage en jours par rapport à aujourd\'hui (ex: 1 pour J+1, utile proche de minuit)}
+                                {--offline : Mode hors-ligne — lit uniquement le cache, aucun appel API (après fetch via navigateur)}';
 
     /**
      * La description de la commande console.
@@ -42,6 +45,11 @@ class ImportTennisPlayers extends Command
      * IDs des joueurs déjà traités dans cette exécution (évite les doublons)
      */
     private array $processedPlayerIds = [];
+
+    /**
+     * Date de référence (J+offset) utilisée pour les marqueurs et clés de cache
+     */
+    private string $referenceDate = '';
 
     /**
      * Statistiques d'importation avec cache intelligent
@@ -75,6 +83,8 @@ class ImportTennisPlayers extends Command
         $force = $this->option('force');
         $downloadImages = $this->option('download-images');
         $limit = $this->option('limit') ? (int) $this->option('limit') : null;
+        $dateOffset = (int) $this->option('date-offset');
+        $this->referenceDate = date('Y-m-d', strtotime("+{$dateOffset} days"));
 
         $this->line("🎾 Début de la collecte des données des joueurs de tennis");
         $this->line("💾 Cache: " . ($noCache ? 'Désactivé' : 'Activé'));
@@ -82,6 +92,9 @@ class ImportTennisPlayers extends Command
         // option --export-data supprimée : export géré séparément si nécessaire
         $this->line("📸 Téléchargement d'images: " . ($downloadImages ? 'Activé' : 'Désactivé'));
         $this->line("⏱️ Délai entre requêtes: {$delay} seconde(s)");
+        if ($dateOffset !== 0) {
+            $this->line("📅 Décalage date: J+{$dateOffset} → {$this->referenceDate}");
+        }
         if ($limit) {
             $this->line("🔢 Limite de joueurs: {$limit}");
         }
@@ -229,7 +242,7 @@ class ImportTennisPlayers extends Command
     private function generateSmartCacheKey($url, $cacheType)
     {
         $baseKey = md5($url);
-        $date = date('Y-m-d');
+        $date = $this->referenceDate ?: date('Y-m-d');
 
         // Clés différentes selon le type de cache
         switch ($cacheType) {
@@ -477,6 +490,12 @@ class ImportTennisPlayers extends Command
      */
     private function makeHttpRequest($url, $retries = 1)
     {
+        // Mode offline : aucun appel réseau autorisé
+        if ($this->option('offline')) {
+            $this->warn("🚫 Mode --offline : appel réseau bloqué pour {$url}");
+            return null;
+        }
+
         try {
             $headers = $this->getHttpHeaders();
 
@@ -524,46 +543,70 @@ class ImportTennisPlayers extends Command
 
 
     /**
-     * Récupérer les tournois de tennis en cours avec cache intelligent
+     * URLs des sources d'événements tennis (par ordre de priorité).
+     * - scheduled-events/{date} : retiré (404 depuis 2026-06)
+     * - events/live             : matchs en cours (clé JSON: "events")
+     * - odds/featured-events    : matchs mis en avant (clé JSON: "featuredEvents")
+     */
+    private function getTournamentSources(): array
+    {
+        return [
+            [
+                'url'  => 'https://www.sofascore.com/api/v1/sport/tennis/events/live',
+                'key'  => 'events',
+                'label' => 'live',
+            ],
+            [
+                'url'  => 'https://www.sofascore.com/api/v1/odds/1/featured-events/tennis',
+                'key'  => 'featuredEvents',
+                'label' => 'featured',
+            ],
+        ];
+    }
+
+    /**
+     * Récupérer les tournois de tennis en cours avec cache intelligent.
+     * Fusionne les événements live et featured en dédupliquant par event ID.
      */
     private function getOngoingTournaments($noCache, $force = false)
     {
         $this->lineHeader("🎾 Récupération des tournois de tennis en cours...");
         try {
-            // URL pour récupérer les tournois en cours (sport tennis = 5)
-            $currentDate = date('Y-m-d');
-            $this->line("DEBUG: Récupération des tournois en cours pour la date: {$currentDate}");
-            $url = "https://www.sofascore.com/api/v1/sport/tennis/scheduled-events/{$currentDate}";
+            $currentDate = $this->referenceDate ?: date('Y-m-d');
+
+            // Mode offline : lire les fichiers sources pré-fetchés via navigateur
+            if ($this->option('offline')) {
+                return $this->getOngoingTournamentsFromPreFetched($currentDate);
+            }
 
             // Vérifier d'abord les métadonnées pour éviter les requêtes inutiles (sauf si force)
             if (!$force) {
                 $metaKey = "tournaments_count_{$currentDate}";
                 $cachedMeta = $this->getMetadataCache($metaKey);
-
                 if ($cachedMeta && $cachedMeta['count'] === 0) {
                     $this->line("📊 Métadonnées: Aucun tournoi aujourd'hui (cache)");
                     return [];
                 }
             }
 
-            // Vérifier le cache intelligent
-            if (!$noCache) {
-                $cachedData = $this->getSmartCache($url, 'tournaments', $force);
-                if ($cachedData !== null) {
-                    $data = $cachedData;
-                } else {
-                    $data = $this->fetchTournamentsFromAPI($url, $noCache);
+            // Récupérer et fusionner les événements de toutes les sources
+            $allEventsById = [];
+            foreach ($this->getTournamentSources() as $source) {
+                $events = $this->fetchEventsFromSource($source, $noCache, $force);
+                foreach ($events as $event) {
+                    $eventId = $event['id'] ?? null;
+                    if ($eventId && !isset($allEventsById[$eventId])) {
+                        $allEventsById[$eventId] = $event;
+                    }
                 }
-            } else {
-                $data = $this->fetchTournamentsFromAPI($url, $noCache);
+                $this->line("   📡 Source [{$source['label']}]: " . count($events) . " événement(s) récupéré(s)");
             }
 
-            // Extraire les événements de tennis
-            $events = $data['events'] ?? [];
+            $this->line("🔀 Total après fusion/déduplication: " . count($allEventsById) . " événement(s)");
 
-            // Grouper par tournoi
+            // Grouper par uniqueTournament
             $tournaments = [];
-            foreach ($events as $event) {
+            foreach ($allEventsById as $event) {
                 if (isset($event['tournament']['uniqueTournament']['id'])) {
                     $tournamentId = $event['tournament']['uniqueTournament']['id'];
                     if (!isset($tournaments[$tournamentId])) {
@@ -578,12 +621,13 @@ class ImportTennisPlayers extends Command
 
             $tournamentsList = array_values($tournaments);
 
-            // Sauvegarder les métadonnées pour optimiser les futures requêtes
+            // Sauvegarder les métadonnées
             $metaKey = "tournaments_count_{$currentDate}";
             $this->setMetadataCache($metaKey, [
                 'count' => count($tournamentsList),
                 'last_check' => time(),
-                'has_events' => count($events) > 0
+                'has_events' => count($allEventsById) > 0,
+                'sources_used' => array_column($this->getTournamentSources(), 'label'),
             ]);
 
             return $tournamentsList;
@@ -597,25 +641,87 @@ class ImportTennisPlayers extends Command
     }
 
     /**
-     * Récupérer les tournois depuis l'API avec gestion d'erreur intelligente
+     * Lit les fichiers sources pré-fetchés via navigateur (mode --offline).
+     * Les fichiers sont écrits par tennis:generate-fetch-list puis fetchés via Chrome.
      */
-    private function fetchTournamentsFromAPI($url, $noCache)
+    private function getOngoingTournamentsFromPreFetched(string $date): array
     {
-        $this->line("🌐 Requête API en direct pour les tournois en cours");
+        $sources = [
+            ['path' => storage_path("app/sofascore_cache/source_scheduled_{$date}.json"), 'key' => 'events', 'label' => 'scheduled'],
+            ['path' => storage_path("app/sofascore_cache/source_live_{$date}.json"),      'key' => 'events', 'label' => 'live'],
+            ['path' => storage_path("app/sofascore_cache/source_featured_{$date}.json"),  'key' => 'featuredEvents', 'label' => 'featured'],
+        ];
+
+        $allEventsById = [];
+        foreach ($sources as $source) {
+            if (!file_exists($source['path'])) {
+                $this->warn("⚠️  Fichier source absent: {$source['path']}");
+                $this->warn("   → Lancer d'abord: php artisan tennis:generate-fetch-list");
+                continue;
+            }
+            $data   = json_decode(file_get_contents($source['path']), true) ?? [];
+            $events = $data[$source['key']] ?? [];
+            foreach ($events as $event) {
+                $eventId = $event['id'] ?? null;
+                if ($eventId && !isset($allEventsById[$eventId])) {
+                    $allEventsById[$eventId] = $event;
+                }
+            }
+            $this->line("   📂 Source [{$source['label']}] (fichier local): " . count($events) . " événement(s)");
+        }
+
+        if (empty($allEventsById)) {
+            $this->error('❌ Aucun événement trouvé dans les fichiers sources. Relancer tennis:generate-fetch-list puis le fetch navigateur.');
+            return [];
+        }
+
+        $this->line("🔀 Total après fusion/déduplication: " . count($allEventsById) . " événement(s)");
+
+        $tournaments = [];
+        foreach ($allEventsById as $event) {
+            if (isset($event['tournament']['uniqueTournament']['id'])) {
+                $tournamentId = $event['tournament']['uniqueTournament']['id'];
+                if (!isset($tournaments[$tournamentId])) {
+                    $tournaments[$tournamentId] = ['tournament' => $event['tournament'], 'events' => []];
+                }
+                $tournaments[$tournamentId]['events'][] = $event;
+            }
+        }
+
+        return array_values($tournaments);
+    }
+
+    /**
+     * Récupérer les événements depuis une source donnée (live ou featured).
+     * Gère le cache intelligent et le fallback sur cache expiré.
+     */
+    private function fetchEventsFromSource(array $source, bool $noCache, bool $force): array
+    {
+        $url   = $source['url'];
+        $key   = $source['key'];
+        $label = $source['label'];
+
+        $this->line("🌐 Source [{$label}]: {$url}");
+
+        // Cache intelligent
+        if (!$noCache) {
+            $cached = $this->getSmartCache($url, 'tournaments', $force);
+            if ($cached !== null) {
+                return $cached[$key] ?? [];
+            }
+        }
 
         $response = $this->makeHttpRequest($url);
 
-        if (!$response) {
+        if (!$response || !$response->successful()) {
             $this->stats['api_errors']++;
-            Log::warning('Erreur API lors de la récupération des tournois', [
-                'url' => $url
-            ]);
+            Log::warning("Erreur API source [{$label}]", ['url' => $url]);
 
-            // En cas d'erreur, essayer de récupérer un cache expiré comme fallback
-            $expiredCache = $this->getExpiredCacheAsFallback($url, 'tournaments');
-            if ($expiredCache) {
-                $this->warn("⚠️ Utilisation du cache expiré comme fallback");
-                return $expiredCache;
+            // Fallback cache expiré
+            $expired = $this->getExpiredCacheAsFallback($url, 'tournaments');
+            if ($expired) {
+                $this->warn("⚠️ [{$label}] Utilisation du cache expiré comme fallback");
+                return $expired[$key] ?? [];
             }
 
             return [];
@@ -623,12 +729,11 @@ class ImportTennisPlayers extends Command
 
         $data = $response->json();
 
-        // Sauvegarder en cache intelligent (non compressé pour faciliter lecture)
         if (!$noCache) {
             $this->setSmartCache($url, $data, 'tournaments', false);
         }
 
-        return $data;
+        return $data[$key] ?? [];
     }
 
     /**
@@ -667,7 +772,7 @@ class ImportTennisPlayers extends Command
             // --- Marqueur par ligue (tennis) ---
             // Empêche de re-traiter un même tournoi pour la même date
             $uniqueTournamentId = $tournament['uniqueTournament']['id'] ?? $tournament['id'] ?? null;
-            $dateForMarker = date('Y-m-d');
+            $dateForMarker = $this->referenceDate ?: date('Y-m-d');
             $leagueMarker = storage_path("app/sofascore_cache/tennis_LEAGUE_DONE_{$dateForMarker}_" . ($uniqueTournamentId ?? 'unknown'));
             $markerExists = file_exists($leagueMarker);
             $this->line("DEBUG: Vérification marker tournoi: {$leagueMarker} (exists=" . ($markerExists ? 'yes' : 'no') . ", force=" . ($force ? 'yes' : 'no') . ")");
@@ -693,10 +798,22 @@ class ImportTennisPlayers extends Command
                 } */
             }
 
-            // Si on arrive ici sans exception, écrire un marker indiquant que le tournoi a été mis en cache pour cette date
+            // Si on arrive ici sans exception, écrire un marker enrichi pour la Phase 2
             try {
                 if (!empty($uniqueTournamentId)) {
-                    @file_put_contents($leagueMarker, json_encode(['done_at' => time(), 'sofascore_id' => $uniqueTournamentId, 'name' => $tournamentName]));
+                    $uniqueTournament = $tournament['uniqueTournament'] ?? [];
+                    $markerPayload = [
+                        'done_at'        => time(),
+                        'sofascore_id'   => $uniqueTournamentId,
+                        'name'           => $uniqueTournament['name'] ?? $tournamentName,
+                        'slug'           => $uniqueTournament['slug'] ?? Str::slug($tournamentName),
+                        'tennis_points'  => $uniqueTournament['tennisPoints'] ?? null,
+                        'category_id'    => $uniqueTournament['category']['id'] ?? $tournament['category']['id'] ?? null,
+                        'category_name'  => $uniqueTournament['category']['name'] ?? $tournament['category']['name'] ?? null,
+                        'category_slug'  => $uniqueTournament['category']['slug'] ?? $tournament['category']['slug'] ?? null,
+                        'category_flag'  => $uniqueTournament['category']['flag'] ?? $tournament['category']['flag'] ?? null,
+                    ];
+                    @file_put_contents($leagueMarker, json_encode($markerPayload, JSON_PRETTY_PRINT));
 
                     // Télécharger le logo du tournoi dans le cache (Phase 1: API → cache)
                     if ($downloadImages) {
@@ -877,14 +994,15 @@ class ImportTennisPlayers extends Command
             $finalGender = $isDoubles ? 'double' : $gender;
 
             // Préparer les données de base du joueur
+            // Note : league_id Sofascore (ATP/WTA) exclu — la relation League ↔ Team passe par le pivot league_team
             $playerBasicData = [
-                'name' => $name,
-                'slug' => $slug,
-                'nickname' => $shortName,
+                'name'         => $name,
+                'slug'         => $slug,
+                'nickname'     => $shortName,
                 'sofascore_id' => $sofascoreId,
-                'league_id' => ($finalGender == 'M') ? 26535 : ($finalGender == 'F' ? 28924 : ($finalGender == 'double' ? 26534 : null)),
-                'gender' => $finalGender,
-                'country_code' => $country['alpha2'] ?? null
+                'gender'       => $finalGender,
+                'country_code' => $country['alpha2'] ?? null,
+                'ranking'      => $playerData['ranking'] ?? null,
             ];
 
             // Mettre en cache les données de base
@@ -966,22 +1084,6 @@ class ImportTennisPlayers extends Command
 
             $playerDetails = null;
             $fromCache = false;
-
-            // Ignorer le cache si force est activé
-            if ($force) {
-                $this->line("🔄 Mode force activé - Ignorer le cache pour le joueur ID: {$sofascoreId}");
-            }
-
-            // DEBUG: afficher chemins et contenu des métadonnées avant vérification
-            $this->line("DEBUG: Vérification cache détails joueur ID={$sofascoreId}");
-            $this->line("DEBUG: cacheFile={$cacheFile} exists=" . (file_exists($cacheFile) ? 'yes' : 'no') . " metadataFile={$metadataFile} exists=" . (file_exists($metadataFile) ? 'yes' : 'no'));
-            if (file_exists($metadataFile)) {
-                $metaRaw = @file_get_contents($metadataFile);
-                $metaJson = @json_decode($metaRaw, true);
-                $metaKeys = is_array($metaJson) ? implode(',', array_keys($metaJson)) : 'invalid';
-                $metaTimestamp = $metaJson['timestamp'] ?? ($metaJson['created_at'] ?? 'null');
-                $this->line("DEBUG: metadata keys={$metaKeys} timestamp={$metaTimestamp}");
-            }
 
             // Vérifier le cache
             if (!$noCache && !$force && file_exists($cacheFile) && file_exists($metadataFile)) {
@@ -1140,7 +1242,8 @@ class ImportTennisPlayers extends Command
 
                 if ($response && $response->successful()) {
                     $playerStatistics = $response->json();
-                    $playerName = $playerStatistics['team']['name'] ?? "ID: {$sofascoreId}";
+                    // La réponse year-statistics n'a pas de clé 'team' — on utilise l'ID comme label
+                    $playerName = "ID: {$sofascoreId}";
 
                     // Sauvegarder en cache
                     $cacheWritten = file_put_contents($cacheFile, json_encode($playerStatistics, JSON_PRETTY_PRINT));

@@ -33104,3 +33104,28 @@
 >>>>>>> Stashed changes
 [Sun May 10 06:23:16.445535 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
 [Sun May 10 06:23:22.150553 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Sun Jun 28 19:50:10.616508 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Sun Jun 28 19:50:10.665510 2026] [ssl:warn] [pid 1:tid 1] AH01906: api.auxotracker.lan:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+192.168.97.3 - - [29/Jun/2026:02:44:25 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:02:44:56 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.7.1"
+127.0.0.1 - - [29/Jun/2026:02:45:37 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.14.1"
+192.168.97.3 - - [29/Jun/2026:02:50:27 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:02:58:10 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:02:58:29 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:02:59:15 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:25:04 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:26:58 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:27:36 +0000] "POST /api/tennis-cache-write HTTP/1.1" 500 129826 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:29:20 +0000] "GET /api/test HTTP/1.1" 500 140264 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:29:20 +0000] "POST /api/test HTTP/1.1" 405 206787 "-" "curl/8.7.1"
+127.0.0.1 - - [29/Jun/2026:03:30:25 +0000] "GET /api/test HTTP/1.1" 500 140264 "-" "curl/8.14.1"
+192.168.97.3 - - [29/Jun/2026:03:31:14 +0000] "GET /writetest.php HTTP/1.1" 200 424 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:31:37 +0000] "GET /writetest.php HTTP/1.1" 200 283 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:32:22 +0000] "GET /api/test HTTP/1.1" 200 339 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:32:34 +0000] "POST /api/tennis-cache-write HTTP/1.1" 404 6853 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:33:06 +0000] "POST /api/tennis-cache-write HTTP/1.1" 200 396 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:34:07 +0000] "OPTIONS /api/tennis-cache-write HTTP/1.1" 204 219 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:34:27 +0000] "OPTIONS /api/tennis-cache-write HTTP/1.1" 204 219 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:35:29 +0000] "OPTIONS /api/tennis-cache-write HTTP/1.1" 204 453 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:38:34 +0000] "OPTIONS /api/tennis-cache-write HTTP/1.1" 204 453 "-" "curl/8.7.1"
+192.168.97.3 - - [29/Jun/2026:03:39:24 +0000] "OPTIONS /api/tennis-cache-write HTTP/1.1" 204 497 "-" "curl/8.7.1"

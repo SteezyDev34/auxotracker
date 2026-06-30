@@ -49,6 +49,7 @@ if [ "${TENNIS_FORCE:-}" = "1" ]; then TEN_PARAMS="--force"; fi
 [ -n "${TENNIS_DOWNLOAD_IMAGES:-}" ] && TEN_PARAMS="$TEN_PARAMS ${TENNIS_DOWNLOAD_IMAGES}"
 [ -n "${TENNIS_LIMIT:-}" ] && TEN_PARAMS="$TEN_PARAMS --limit=${TENNIS_LIMIT}"
 [ -n "${TENNIS_DELAY:-}" ] && TEN_PARAMS="$TEN_PARAMS --delay=${TENNIS_DELAY}"
+[ -n "${TENNIS_DATE_OFFSET:-}" ] && TEN_PARAMS="$TEN_PARAMS --date-offset=${TENNIS_DATE_OFFSET}"
 
 echo "$(date) : Exécution artisan tennis:import-from-schedule $TEN_PARAMS" 2>&1 | tee -a "$LOG"
 $PHP_CMD artisan tennis:import-from-schedule $TEN_PARAMS 2>&1 | tee -a "$LOG"

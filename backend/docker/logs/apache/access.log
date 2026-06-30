@@ -83,3 +83,5 @@
 127.0.0.1 - - [14/Apr/2026:13:47:04 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.66 (Debian) PHP/8.3.30 OpenSSL/3.5.5 (internal dummy connection)"
 127.0.0.1 - - [14/Apr/2026:13:47:05 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.66 (Debian) PHP/8.3.30 OpenSSL/3.5.5 (internal dummy connection)"
 172.20.0.1 - - [08/May/2026:09:56:46 +0000] "-" 408 0 "-" "-"
+127.0.0.1 - - [29/Jun/2026:02:45:18 +0000] "POST /api/tennis-cache-write HTTP/1.1" 404 472 "-" "curl/8.14.1"
+127.0.0.1 - - [29/Jun/2026:03:30:12 +0000] "GET /api/test HTTP/1.1" 404 472 "-" "curl/8.14.1"

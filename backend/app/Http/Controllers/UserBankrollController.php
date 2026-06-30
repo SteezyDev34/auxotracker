@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserBankroll;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -96,6 +97,33 @@ class UserBankrollController extends Controller
             return response()->json(array_merge(['success' => true], $result));
         } catch (\Exception $e) {
             Log::error('Erreur recommendedStake: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'error' => 'Erreur lors du calcul de la mise recommandée'], 500);
+        }
+    }
+
+    /**
+     * Calcule la mise recommandée pour le bot Auxobot (authentification par token bot, pas Sanctum).
+     * Paramètres: user_id (requis), tipster, target_percentage, recover_losses, odds, bankroll_id
+     */
+    public function recommendedStakeForBot(Request $request)
+    {
+        $userId = $request->query('user_id');
+        if (!$userId) {
+            return response()->json(['success' => false, 'error' => 'user_id requis'], 422);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return response()->json(['success' => false, 'error' => 'Utilisateur introuvable'], 404);
+        }
+
+        $params = $request->only(['tipster', 'target_percentage', 'recover_losses', 'odds', 'bankroll_id']);
+
+        try {
+            $result = $this->stakeRecommendationService->recommend($user, $params);
+            return response()->json(array_merge(['success' => true], $result));
+        } catch (\Exception $e) {
+            Log::error('Erreur recommendedStakeForBot: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json(['success' => false, 'error' => 'Erreur lors du calcul de la mise recommandée'], 500);
         }
     }

@@ -4,11 +4,11 @@
   <div class="layout-footer">
     AUXOBOT by
     <a
-      href="https://primevue.org"
+      href="https://auxobetting.com"
       target="_blank"
       rel="noopener noreferrer"
       class="text-primary font-bold hover:underline"
-      >PrimeVue</a
+      >Auxobetting</a
     >
   </div>
 </template>

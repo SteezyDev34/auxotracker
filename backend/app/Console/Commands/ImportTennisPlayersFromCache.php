@@ -91,15 +91,17 @@ class ImportTennisPlayersFromCache extends Command
     {
         $this->info('🚀 Démarrage de l\'importation des joueurs depuis le cache...');
 
-        $force = $this->option('force');
-        $limit = $this->option('limit') ? (int) $this->option('limit') : null;
-        $downloadImages = $this->option('download-images');
-        $skipArchive = $this->option('skip-archive');
+        $force         = $this->option('force');
+        $limit         = $this->option('limit') ? (int) $this->option('limit') : null;
+        $downloadImages = $this->option('download-images'); // images joueurs
+        $downloadLogos  = $this->option('download-logos');  // logos ligues/tournois
+        $skipArchive   = $this->option('skip-archive');
 
         $this->line("📋 Options:");
         $this->line("   - Forcer la mise à jour: " . ($force ? 'Oui' : 'Non'));
         $this->line("   - Limite: " . ($limit ? $limit . ' joueurs' : 'Aucune'));
-        $this->line("   - Télécharger les images: " . ($downloadImages ? 'Oui' : 'Non'));
+        $this->line("   - Télécharger les images joueurs: " . ($downloadImages ? 'Oui' : 'Non'));
+        $this->line("   - Télécharger les logos ligues: " . ($downloadLogos ? 'Oui' : 'Non'));
 
         // Récupérer ou créer la ligue Tennis
         $this->tennisLeague = $this->getTennisLeague();
@@ -109,8 +111,8 @@ class ImportTennisPlayersFromCache extends Command
         }
         $this->line("🎾 Ligue Tennis: {$this->tennisLeague->name} (ID: {$this->tennisLeague->id})");
 
-        // Télécharger le logo de la ligue Tennis si demandé
-        if ($downloadImages) {
+        // Logo de la ligue Tennis globale (cache uniquement — pas d'appel API)
+        if ($downloadLogos) {
             $this->downloadTennisLeagueLogo($this->tennisLeague, $force);
         }
 
@@ -120,9 +122,8 @@ class ImportTennisPlayersFromCache extends Command
             return 1;
         }
 
-        // Créer/mettre à jour les ligues de tournois EN PREMIER (Munich, Roland-Garros, etc.)
-        // Permet d'avoir les ligues même si le traitement des joueurs est interrompu
-        $this->createTournamentLeagues($force, $downloadImages);
+        // Créer/mettre à jour les ligues de tournois EN PREMIER
+        $this->createTournamentLeagues($force, $downloadLogos);
 
         // Importer les matchs depuis les fichiers d'événements en cache (Phase 2)
         $this->processEventCacheFiles($force);
@@ -180,17 +181,18 @@ class ImportTennisPlayersFromCache extends Command
 
     /**
      * Persister un match en base depuis les données du cache (Phase 2).
-     * Seuls les matchs dont la date n'est pas encore passée (Europe/Paris) sont persistés,
-     * sauf si --force est actif.
+     * Persistés : matchs à venir ET matchs en cours (live). Seuls les matchs
+     * terminés (status type = finished) sont ignorés, sauf si --force est actif.
      */
     private function processMatchFromCache(array $event, bool $force): void
     {
         $this->stats['matches_processed']++;
 
-        $eventId  = $event['id'] ?? null;
-        $startTs  = $event['startTimestamp'] ?? null;
-        $homeTeam = $event['homeTeam'] ?? null;
-        $awayTeam = $event['awayTeam'] ?? null;
+        $eventId    = $event['id'] ?? null;
+        $startTs    = $event['startTimestamp'] ?? null;
+        $homeTeam   = $event['homeTeam'] ?? null;
+        $awayTeam   = $event['awayTeam'] ?? null;
+        $statusType = $event['status']['type'] ?? null; // 'notstarted' | 'inprogress' | 'finished'
 
         if (empty($startTs)) {
             $this->line("   [match] Pas de startTimestamp pour event_id={$eventId} — ignoré");
@@ -200,14 +202,14 @@ class ImportTennisPlayersFromCache extends Command
         }
 
         try {
-            $tz       = new \DateTimeZone('Europe/Paris');
-            $eventDt  = new \DateTime('@' . (int) $startTs);
+            $tz      = new \DateTimeZone('Europe/Paris');
+            $eventDt = new \DateTime('@' . (int) $startTs);
             $eventDt->setTimezone($tz);
-            $nowParis = new \DateTime('now', $tz);
 
-            if ($eventDt <= $nowParis && !$force) {
-                $this->line("   [match] event_id={$eventId} déjà passé — ignoré");
-                Log::info('match_persist_skip_past', ['event_id' => $eventId, 'start' => $eventDt->format('Y-m-d H:i:s')]);
+            // Ignorer uniquement les matchs terminés (sauf --force)
+            if ($statusType === 'finished' && !$force) {
+                $this->line("   [match] event_id={$eventId} terminé (status=finished) — ignoré");
+                Log::info('match_persist_skip_finished', ['event_id' => $eventId, 'start' => $eventDt->format('Y-m-d H:i:s')]);
                 $this->stats['matches_skipped']++;
                 return;
             }
@@ -217,7 +219,11 @@ class ImportTennisPlayersFromCache extends Command
             $tournamentSofaId = $event['tournament']['uniqueTournament']['id'] ?? $event['tournament']['id'] ?? null;
             $slug             = $event['slug'] ?? '';
             $customId         = $event['customId'] ?? '';
-            $sofascoreLink    = 'https://www.sofascore.com/fr/tennis/match/+' . $slug . '/' . $customId . '#id:' . $eventId;
+            $sofascoreLink    = 'https://www.sofascore.com/fr/tennis/match/' . $slug . '/' . $customId . '#id:' . $eventId;
+
+            // Récupérer l'ID interne du sport Tennis (sofascore_id = 5)
+            $tennisSport = Sport::where('sofascore_id', 5)->orWhere('slug', 'tennis')->first();
+            $sportId     = $tennisSport?->id ?? 5;
 
             $record = MatchModel::updateOrCreate(
                 ['event_id' => $eventId],
@@ -227,7 +233,7 @@ class ImportTennisPlayersFromCache extends Command
                     'match_start_date'         => $eventDt->format('Y-m-d'),
                     'match_start_time'         => $eventDt->format('H:i:s'),
                     'tournament_sofascore_id'  => $tournamentSofaId,
-                    'sport_id'                 => 5, // Tennis (Sofascore)
+                    'sport_id'                 => $sportId,
                     'sofascore_link'           => $sofascoreLink,
                 ]
             );
@@ -344,18 +350,22 @@ class ImportTennisPlayersFromCache extends Command
                 ]);
             }
 
+            // Préparer les données pour le modèle Team (exclure les champs non mappés)
+            // league_id dans le cache = ID Sofascore de la ligue ATP/WTA, pas l'ID BDD → on l'exclut
+            // La relation League ↔ Team passe par le pivot league_team (syncWithoutDetaching ci-dessous)
+            $teamData = array_diff_key($basicData, array_flip(['league_id']));
+
             // Créer ou mettre à jour le joueur
             if ($existingPlayer) {
-                // Exclure le nickname lors de la mise à jour d'un joueur existant
-                $updateData = $basicData;
-                unset($updateData['nickname']);
+                // Préserver le nickname existant
+                $updateData = array_diff_key($teamData, array_flip(['nickname']));
                 $existingPlayer->update($updateData);
-                $existingPlayer->touch(); // Garantit la mise à jour d'updated_at
+                $existingPlayer->touch();
                 $this->stats['players_updated']++;
                 $this->line("🔄 Joueur mis à jour: {$name} (ID: {$sofascoreId}) - nickname préservé");
                 $player = $existingPlayer;
             } else {
-                $player = Team::create($basicData);
+                $player = Team::create($teamData);
                 $this->stats['players_created']++;
                 $this->line("✅ Joueur créé: {$name} (ID: {$sofascoreId})");
             }
@@ -437,68 +447,69 @@ class ImportTennisPlayersFromCache extends Command
     }
 
     /**
-     * Mettre à jour un joueur avec ses détails complets
+     * Mettre à jour un joueur avec ses détails complets depuis playerTeamInfo.
+     *
+     * Structure réelle de l'API /api/v1/team/{id} → team.playerTeamInfo :
+     *   height, weight, plays, birthDateTimestamp, turnedPro,
+     *   birthplace (string), residence (string),
+     *   birthCity { name, country { name } }, residenceCity { name, country { name } },
+     *   currentRanking
      */
     private function updatePlayerWithDetails($player, $playerDetails)
     {
         try {
             $updates = [];
 
-            // Date de naissance
             if (isset($playerDetails['birthDateTimestamp'])) {
-                $birthDate = date('Y-m-d', $playerDetails['birthDateTimestamp']);
-                $updates['birth_date'] = $birthDate;
+                $updates['birth_date'] = date('Y-m-d', $playerDetails['birthDateTimestamp']);
             }
 
-            // Taille
             if (isset($playerDetails['height'])) {
                 $updates['height'] = $playerDetails['height'];
             }
 
-            // Poids
             if (isset($playerDetails['weight'])) {
                 $updates['weight'] = $playerDetails['weight'];
             }
 
-            // Main dominante
             if (isset($playerDetails['plays'])) {
                 $updates['plays'] = $playerDetails['plays'];
             }
 
-            // Lieu de naissance
-            if (isset($playerDetails['birthPlace']['country']['name'])) {
-                $updates['birth_place'] = $playerDetails['birthPlace']['country']['name'];
-                if (isset($playerDetails['birthPlace']['city'])) {
-                    $updates['birth_place'] = $playerDetails['birthPlace']['city'] . ', ' . $updates['birth_place'];
-                }
+            // birthplace est une string ("Fort Worth, Texas, USA"), pas un objet
+            if (!empty($playerDetails['birthplace'])) {
+                $updates['birth_place'] = $playerDetails['birthplace'];
+            } elseif (isset($playerDetails['birthCity']['name'])) {
+                $countryName = $playerDetails['birthCity']['country']['name'] ?? '';
+                $updates['birth_place'] = $playerDetails['birthCity']['name'] . ($countryName ? ', ' . $countryName : '');
             }
 
-            // Lieu de résidence
-            if (isset($playerDetails['residence']['country']['name'])) {
-                $updates['residence'] = $playerDetails['residence']['country']['name'];
-                if (isset($playerDetails['residence']['city'])) {
-                    $updates['residence'] = $playerDetails['residence']['city'] . ', ' . $updates['residence'];
-                }
+            // residence est aussi une string ("Dallas, Texas, USA")
+            if (!empty($playerDetails['residence'])) {
+                $updates['residence'] = $playerDetails['residence'];
+            } elseif (isset($playerDetails['residenceCity']['name'])) {
+                $countryName = $playerDetails['residenceCity']['country']['name'] ?? '';
+                $updates['residence'] = $playerDetails['residenceCity']['name'] . ($countryName ? ', ' . $countryName : '');
             }
 
-            // Mettre à jour le joueur si on a des données
+            // Classement actuel (plus précis que le ranking de l'event)
+            if (isset($playerDetails['currentRanking'])) {
+                $updates['ranking'] = $playerDetails['currentRanking'];
+            }
+
             if (!empty($updates)) {
                 $player->update($updates);
-                $player->touch(); // Garantit la mise à jour d'updated_at
-
-
-
-                $updateInfo = [];
-                foreach ($updates as $field => $value) {
-                    $updateInfo[] = "{$field}: {$value}";
-                }
-
-                $this->line("   📝 Détails mis à jour: " . implode(', ', $updateInfo));
+                $player->touch();
+                $this->line("   📝 Détails mis à jour: " . implode(', ', array_map(
+                    fn($k, $v) => "{$k}: {$v}",
+                    array_keys($updates),
+                    array_values($updates)
+                )));
             }
         } catch (\Exception $e) {
             Log::error('Erreur lors de la mise à jour des détails du joueur', [
                 'player_id' => $player->id,
-                'error' => $e->getMessage()
+                'error'     => $e->getMessage(),
             ]);
         }
     }
@@ -629,15 +640,17 @@ class ImportTennisPlayersFromCache extends Command
 
         foreach ($markers as $markerFile) {
             try {
-                // Lire le contenu du marqueur
                 $markerData = json_decode(file_get_contents($markerFile), true);
                 if (!$markerData || !isset($markerData['sofascore_id'], $markerData['name'])) {
                     continue;
                 }
 
-                $tournamentId = $markerData['sofascore_id'];
+                $tournamentId   = $markerData['sofascore_id'];
                 $tournamentName = $markerData['name'];
-                $tournamentSlug = Str::slug($tournamentName);
+                // Utiliser le slug officiel Sofascore si disponible (marqueur enrichi depuis 2026-06)
+                $tournamentSlug = $markerData['slug'] ?? Str::slug($tournamentName);
+                $categoryName   = $markerData['category_name'] ?? null;
+                $tennisPoints   = $markerData['tennis_points'] ?? null;
 
                 // Vérifier si la ligue existe déjà
                 $existingLeague = League::where('sofascore_id', $tournamentId)
@@ -645,37 +658,34 @@ class ImportTennisPlayersFromCache extends Command
                     ->first();
 
                 if ($existingLeague && !$force) {
-                    $this->line("   ⏭️ Ligue déjà existante: {$tournamentName} (ID: {$existingLeague->id})");
+                    $this->line("   ⏭️ Ligue déjà existante: {$tournamentName} (sofascore_id: {$tournamentId})");
                     $this->stats['tournament_leagues_skipped']++;
 
-                    // Télécharger le logo si manquant
                     if ($downloadImages && empty($existingLeague->img)) {
                         $this->downloadLeagueLogo($existingLeague, $force);
                     }
                     continue;
                 }
 
+                $leagueData = [
+                    'name'     => $tournamentName,
+                    'slug'     => $tournamentSlug,
+                    'sport_id' => $tennisSport->id,
+                ];
+
                 // Créer ou mettre à jour la ligue
                 if ($existingLeague) {
-                    $existingLeague->update([
-                        'name' => $tournamentName,
-                        'slug' => $tournamentSlug,
-                    ]);
-                    $this->line("   🔄 Ligue mise à jour: {$tournamentName} (ID: {$existingLeague->id})");
+                    $existingLeague->update($leagueData);
+                    $this->line("   🔄 Ligue mise à jour: {$tournamentName}" . ($categoryName ? " [{$categoryName}]" : ''));
                     $this->stats['tournament_leagues_updated']++;
                     $league = $existingLeague;
                 } else {
-                    $league = League::create([
-                        'name' => $tournamentName,
-                        'slug' => $tournamentSlug,
-                        'sport_id' => $tennisSport->id,
-                        'sofascore_id' => $tournamentId,
-                    ]);
-                    $this->line("   ✅ Ligue créée: {$tournamentName} (ID: {$league->id})");
+                    $leagueData['sofascore_id'] = $tournamentId;
+                    $league = League::create($leagueData);
+                    $this->line("   ✅ Ligue créée: {$tournamentName}" . ($categoryName ? " [{$categoryName}]" : '') . ($tennisPoints ? " ({$tennisPoints}pts)" : ''));
                     $this->stats['tournament_leagues_created']++;
                 }
 
-                // Télécharger le logo de la ligue
                 if ($downloadImages) {
                     $this->downloadLeagueLogo($league, $force);
                 }
@@ -683,7 +693,7 @@ class ImportTennisPlayersFromCache extends Command
                 $this->warn("⚠️ Erreur lors du traitement du marqueur {$markerFile}: {$e->getMessage()}");
                 Log::warning('Erreur traitement marqueur tournoi tennis', [
                     'marker' => $markerFile,
-                    'error' => $e->getMessage(),
+                    'error'  => $e->getMessage(),
                 ]);
             }
         }
@@ -692,43 +702,31 @@ class ImportTennisPlayersFromCache extends Command
     }
 
     /**
-     * Télécharger le logo d'une ligue : vérifie le cache d'abord, sinon fallback vers API
+     * Copier le logo d'une ligue depuis le cache vers league_logos/.
+     * Phase 2 est cache-only : aucun appel API (le téléchargement depuis Sofascore
+     * est fait en Phase 1 via --download-logos sur la machine locale).
      */
     private function downloadLeagueLogo(League $league, bool $force): void
     {
         try {
-            // Vérifier d'abord si le logo existe dans le cache (Phase 1: API → cache)
             $cacheLogoPath = storage_path('app/sofascore_cache/tennis_leagues/logos/' . $league->sofascore_id . '.png');
 
-            if (file_exists($cacheLogoPath) && filesize($cacheLogoPath) > 0) {
-                // Copier depuis le cache vers league_logos/
-                $this->copyTournamentLogoFromCache($league, $cacheLogoPath);
+            if (!file_exists($cacheLogoPath) || filesize($cacheLogoPath) === 0) {
+                $this->line("      ⚠️ Logo absent du cache pour: {$league->name} (sofascore_id: {$league->sofascore_id}) — relancer Phase 1 avec --download-logos");
+                Log::warning('league_logo_missing_from_cache', [
+                    'league_id'    => $league->id,
+                    'sofascore_id' => $league->sofascore_id,
+                    'cache_path'   => $cacheLogoPath,
+                ]);
                 return;
             }
 
-            // Fallback : télécharger depuis l'API si pas dans le cache
-            $this->line("      ⚠️ Logo non trouvé dans le cache, téléchargement depuis API: {$league->name}");
-            $logoService = app(LeagueLogoService::class);
-            $result = $logoService->ensureLeagueLogos($league, $force);
-
-            if ($result && !empty($result['img_updated'])) {
-                $this->line("      📸 Logo téléchargé depuis API: {$league->name}");
-                $this->stats['tournament_logos_downloaded']++;
-                Log::info('Logo ligue Tennis téléchargé depuis API', [
-                    'league_id' => $league->id,
-                    'league_name' => $league->name,
-                    'result' => $result,
-                ]);
-            } elseif ($result) {
-                $this->line("      ⏭️ Logo déjà présent: {$league->name}");
-            } else {
-                $this->line("      ⚠️ Impossible de télécharger le logo: {$league->name}");
-            }
+            $this->copyTournamentLogoFromCache($league, $cacheLogoPath);
         } catch (\Exception $e) {
-            $this->warn("      ⚠️ Erreur téléchargement logo: {$e->getMessage()}");
-            Log::warning('Erreur téléchargement logo ligue tournoi tennis', [
+            $this->warn("      ⚠️ Erreur copie logo ligue: {$e->getMessage()}");
+            Log::warning('Erreur copie logo ligue tournoi tennis', [
                 'league_id' => $league->id,
-                'error' => $e->getMessage(),
+                'error'     => $e->getMessage(),
             ]);
         }
     }
@@ -792,34 +790,20 @@ class ImportTennisPlayersFromCache extends Command
     }
 
     /**
-     * Télécharger le logo de la ligue Tennis globale (ATP/WTA) via LeagueLogoService
+     * Copier le logo de la ligue Tennis globale (ATP/WTA) depuis le cache.
+     * La ligue globale a sofascore_id = 0 (pas de tournoi Sofascore direct),
+     * donc on cherche un logo manuel placé dans le cache.
      */
     private function downloadTennisLeagueLogo(League $league, bool $force): void
     {
-        try {
-            $this->line("📸 Téléchargement du logo de la ligue {$league->name}...");
-            $logoService = app(LeagueLogoService::class);
-            $result = $logoService->ensureLeagueLogos($league, $force);
+        $cacheLogoPath = storage_path('app/sofascore_cache/tennis_leagues/logos/global.png');
 
-            if ($result && !empty($result['img_updated'])) {
-                $this->info("✅ Logo de ligue téléchargé: {$league->name}");
-                Log::info('Logo ligue Tennis téléchargé', [
-                    'league_id' => $league->id,
-                    'league_name' => $league->name,
-                    'result' => $result,
-                ]);
-            } elseif ($result) {
-                $this->line("⏭️ Logo de ligue déjà présent: {$league->name}");
-            } else {
-                $this->warn("⚠️ Impossible de télécharger le logo de la ligue {$league->name}");
-            }
-        } catch (\Exception $e) {
-            $this->warn("⚠️ Erreur lors du téléchargement du logo de ligue: {$e->getMessage()}");
-            Log::warning('Erreur téléchargement logo ligue Tennis', [
-                'league_id' => $league->id,
-                'error' => $e->getMessage(),
-            ]);
+        if (!file_exists($cacheLogoPath) || filesize($cacheLogoPath) === 0) {
+            $this->line("⚠️ Logo global Tennis absent du cache ({$cacheLogoPath}) — ignoré");
+            return;
         }
+
+        $this->copyTournamentLogoFromCache($league, $cacheLogoPath);
     }
 
     /**

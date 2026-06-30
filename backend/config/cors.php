@@ -24,6 +24,8 @@ return [
         'https://auxotracker.sc2vagr6376.universe.wf',
         'https://api.auxotracker.p-com.studio',
         'https://auxotracker.p-com.studio',
+        'https://www.sofascore.com',
+        'https://sofascore.com',
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
