@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OptiFlow Conseil — Automatisation & Optimisation des Processus | Hérault</title>
+  <meta name="description" content="OptiFlow Conseil : Cabinet de conseil en automatisation et optimisation des processus pour PME. Audit terrain, scripts Python, IA, no-code. Hérault et toute la France." />
+  <meta name="keywords" content="automatisation processus, optimisation PME, consultant automatisation, python, IA entreprise, Montpellier, Hérault, audit processus" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #dbeafe;
+      --accent: #06b6d4;
+      --accent-light: #cffafe;
+      --dark: #0f172a;
+      --gray-900: #111827;
+      --gray-800: #1f2937;
+      --gray-700: #374151;
+      --gray-600: #4b5563;
+      --gray-400: #9ca3af;
+      --gray-200: #e5e7eb;
+      --gray-100: #f3f4f6;
+      --white: #ffffff;
+      --success: #10b981;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 48px rgba(0,0,0,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--gray-900);
+      background: var(--white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── NAVBAR ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 5%;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      align-items: center;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--gray-700);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--primary); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.4rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+      box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(37,99,235,0.4);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-outline:hover {
+      background: var(--primary-light);
+    }
+    .btn-lg {
+      padding: 0.9rem 2rem;
+      font-size: 1rem;
+      border-radius: 10px;
+    }
+    .btn-white {
+      background: var(--white);
+      color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .btn-white:hover {
+      background: var(--gray-100);
+      transform: translateY(-1px);
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .hamburger span {
+      width: 24px; height: 2px;
+      background: var(--gray-800);
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+
+    /* ─── SECTIONS ─── */
+    section { scroll-margin-top: 68px; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 5%;
+    }
+
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      color: var(--gray-900);
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .section-subtitle {
+      font-size: 1.1rem;
+      color: var(--gray-600);
+      max-width: 600px;
+      line-height: 1.7;
+    }
+
+    /* ─── HERO ─── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 100px 5% 60px;
+      background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 40%, #f0fffe 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; right: -200px;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    #hero::after {
+      content: '';
+      position: absolute;
+      bottom: -150px; left: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-content {
+      max-width: 680px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+    .hero-badge::before { content: '📍'; font-size: 0.9rem; }
+
+    #hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      color: var(--dark);
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+      letter-spacing: -1px;
+    }
+
+    #hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #hero p {
+      font-size: 1.15rem;
+      color: var(--gray-700);
+      margin-bottom: 2.5rem;
+      line-height: 1.75;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 2.5rem;
+      margin-top: 3.5rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid rgba(37,99,235,0.15);
+      flex-wrap: wrap;
+    }
+
+    .hero-stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .hero-stat-label {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      margin-top: 0.25rem;
+    }
+
+    /* ─── LOGOS / SOCIAL PROOF ─── */
+    .logos-bar {
+      background: var(--white);
+      padding: 2.5rem 5%;
+      border-bottom: 1px solid var(--gray-200);
+      text-align: center;
+    }
+    .logos-bar p {
+      font-size: 0.85rem;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1.5rem;
+    }
+    .logos-list {
+      display: flex;
+      gap: 2.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .logo-pill {
+      padding: 0.5rem 1.25rem;
+      background: var(--gray-100);
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--gray-500);
+      border: 1px solid var(--gray-200);
+    }
+
+    /* ─── HOW IT WORKS ─── */
+    #methode {
+      padding: 7rem 5%;
+      background: var(--white);
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    .step {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border-radius: var(--radius);
+      background: var(--gray-100);
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .step:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+    }
+    .step-num {
+      width: 48px; height: 48px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      margin: 0 auto 1.25rem;
+    }
+    .step-icon {
+      font-size: 2.2rem;
+      margin-bottom: 0.75rem;
+    }
+    .step h3 {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.75rem;
+      color: var(--gray-900);
+    }
+    .step p {
+      font-size: 0.9rem;
+      color: var(--gray-600);
+      line-height: 1.6;
+    }
+
+    /* ─── SERVICES ─── */
+    #services {
+      padding: 7rem 5%;
+      background: linear-gradient(180deg, var(--gray-100) 0%, var(--white) 100%);
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .service-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 2rem;
+      border: 1px solid var(--gray-200);
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transform: scaleX(0);
+      transition: transform 0.3s;
+      transform-origin: left;
+    }
+    .service-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-4px);
+    }
+    .service-card:hover::before { transform: scaleX(1); }
+
+    .service-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .service-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .service-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--gray-900);
+    }
+    .service-card p {
+      font-size: 0.9rem;
+      color: var(--gray-600);
+      line-height: 1.65;
+      margin-bottom: 1.25rem;
+    }
+    .service-price {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* ─── RESULTS / GAINS ─── */
+    #resultats {
+      padding: 7rem 5%;
+      background: linear-gradient(135deg, var(--dark) 0%, #1e3a6e 100%);
+      color: white;
+    }
+    #resultats .section-label { color: var(--accent); }
+    #resultats .section-title { color: white; }
+    #resultats .section-subtitle { color: rgba(255,255,255,0.7); }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin-top: 3.5rem;
+    }
+    .result-card {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+    }
+    .result-value {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .result-label {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.5;
+    }
+
+    /* ─── SECTORS ─── */
+    #secteurs {
+      padding: 7rem 5%;
+      background: var(--white);
+    }
+    .sectors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+    .sector-item {
+      padding: 1.25rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-200);
+      text-align: center;
+      cursor: default;
+      transition: all 0.2s;
+    }
+    .sector-item:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      transform: translateY(-2px);
+    }
+    .sector-item .icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .sector-item span {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    /* ─── TESTIMONIALS ─── */
+    #temoignages {
+      padding: 7rem 5%;
+      background: var(--gray-100);
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .testimonial-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+    }
+    .stars {
+      color: #f59e0b;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .testimonial-text {
+      font-size: 0.95rem;
+      color: var(--gray-700);
+      line-height: 1.7;
+      font-style: italic;
+      margin-bottom: 1.5rem;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .author-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .author-name { font-weight: 600; font-size: 0.9rem; color: var(--gray-900); }
+    .author-role { font-size: 0.8rem; color: var(--gray-500); }
+
+    /* ─── PRICING ─── */
+    #tarifs {
+      padding: 7rem 5%;
+      background: var(--white);
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+      align-items: start;
+    }
+    .pricing-card {
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      border: 2px solid var(--gray-200);
+      position: relative;
+      transition: all 0.25s;
+    }
+    .pricing-card.featured {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+    }
+    .pricing-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+    .popular-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: white;
+      padding: 0.25rem 1rem;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .pricing-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+    .pricing-price {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      margin-bottom: 0.25rem;
+      line-height: 1;
+    }
+    .pricing-price span {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--gray-500);
+    }
+    .pricing-desc {
+      font-size: 0.9rem;
+      color: var(--gray-600);
+      margin-bottom: 1.75rem;
+      line-height: 1.6;
+    }
+    .pricing-features {
+      list-style: none;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .pricing-features li {
+      font-size: 0.9rem;
+      color: var(--gray-700);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .pricing-features li::before {
+      content: '✓';
+      color: var(--success);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ─── FAQ ─── */
+    #faq {
+      padding: 7rem 5%;
+      background: var(--gray-100);
+    }
+    .faq-list {
+      max-width: 780px;
+      margin: 3rem auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .faq-item {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+    .faq-question {
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      color: var(--gray-900);
+      user-select: none;
+    }
+    .faq-question:hover { color: var(--primary); }
+    .faq-arrow {
+      font-size: 1.2rem;
+      transition: transform 0.3s;
+      color: var(--gray-400);
+    }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); color: var(--primary); }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .faq-item.open .faq-answer { max-height: 400px; }
+    .faq-answer-inner {
+      padding: 0 1.5rem 1.25rem;
+      font-size: 0.95rem;
+      color: var(--gray-600);
+      line-height: 1.7;
+    }
+
+    /* ─── CONTACT ─── */
+    #contact {
+      padding: 7rem 5%;
+      background: var(--white);
+    }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 4rem;
+      margin-top: 3rem;
+      align-items: start;
+    }
+    .contact-info h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--gray-900);
+    }
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .contact-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .contact-label {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .contact-value {
+      font-weight: 600;
+      color: var(--gray-900);
+      font-size: 0.95rem;
+    }
+    .contact-form {
+      background: var(--gray-100);
+      border-radius: 16px;
+      padding: 2.5rem;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 0.4rem;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: var(--gray-900);
+      background: var(--white);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .form-group textarea { resize: vertical; min-height: 120px; }
+
+    /* ─── CTA BANNER ─── */
+    #cta-banner {
+      padding: 6rem 5%;
+      background: linear-gradient(135deg, var(--primary) 0%, #1e40af 60%, var(--accent) 100%);
+      text-align: center;
+      color: white;
+    }
+    #cta-banner h2 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+    #cta-banner p {
+      font-size: 1.1rem;
+      opacity: 0.85;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,0.6);
+      padding: 3.5rem 5% 2rem;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+    .footer-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 0.75rem;
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-desc {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      margin-bottom: 1.25rem;
+    }
+    .footer-col h4 {
+      color: var(--white);
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .footer-links a {
+      text-decoration: none;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    /* ─── NOTIFICATION ─── */
+    .notification {
+      display: none;
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--success);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      font-weight: 600;
+      animation: slideUp 0.4s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── SCROLL TO TOP ─── */
+    .scroll-top {
+      position: fixed;
+      bottom: 2rem;
+      left: 2rem;
+      width: 44px; height: 44px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.2s;
+      z-index: 99;
+    }
+    .scroll-top.visible { opacity: 1; }
+    .scroll-top:hover { transform: translateY(-2px); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 68px; left: 0; right: 0;
+        background: white;
+        padding: 2rem;
+        box-shadow: var(--shadow-lg);
+        gap: 1.5rem;
+        z-index: 99;
+      }
+      .hamburger { display: flex; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+      .hero-stats { gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#hero" class="logo">Opti<span>Flow</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#methode">Notre méthode</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#secteurs">Secteurs</a></li>
+    <li><a href="#tarifs">Tarifs</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#contact" class="btn btn-primary">Audit gratuit</a></li>
+  </ul>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Hérault (34) & toute la France</div>
+    <h1>Vos processus métier méritent mieux que <em>le copier-coller</em></h1>
+    <p>OptiFlow Conseil audite vos opérations, identifie les tâches chronophages et déploie des solutions d'automatisation sur mesure — scripts Python, IA, ou no-code. Votre équipe récupère du temps, réduit les erreurs et se concentre sur ce qui compte vraiment.</p>
+    <div class="hero-cta">
+      <a href="#contact" class="btn btn-primary btn-lg">Audit diagnostic gratuit →</a>
+      <a href="#methode" class="btn btn-outline btn-lg">Comment ça marche ?</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-value">−60%</div>
+        <div class="hero-stat-label">de temps sur les tâches répétitives</div>
+      </div>
+      <div>
+        <div class="hero-stat-value">3-6 mois</div>
+        <div class="hero-stat-label">retour sur investissement</div>
+      </div>
+      <div>
+        <div class="hero-stat-value">100%</div>
+        <div class="hero-stat-label">solutions sur mesure</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGOS BAR -->
+<div class="logos-bar">
+  <p>Adapté à tous les secteurs</p>
+  <div class="logos-list">
+    <div class="logo-pill">🏭 Industrie</div>
+    <div class="logo-pill">🏗️ BTP</div>
+    <div class="logo-pill">🏪 Commerce</div>
+    <div class="logo-pill">🏥 Santé</div>
+    <div class="logo-pill">📦 Logistique</div>
+    <div class="logo-pill">💼 Services</div>
+    <div class="logo-pill">🏢 Immobilier</div>
+    <div class="logo-pill">⚖️ Juridique & Compta</div>
+  </div>
+</div>
+
+<!-- MÉTHODE -->
+<section id="methode">
+  <div class="container">
+    <div class="section-label">Notre approche</div>
+    <h2 class="section-title">On observe avant de coder</h2>
+    <p class="section-subtitle">Contrairement aux agences qui vendent des outils, nous partons du terrain. Nous observons vos équipes, comprenons vos contraintes réelles, puis proposons la solution la plus simple et efficace.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">🔍</div>
+        <div class="step-num">1</div>
+        <h3>Audit terrain</h3>
+        <p>Observation directe (shadowing), cartographie des processus, identification des pertes de temps et des risques d'erreurs.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">📊</div>
+        <div class="step-num">2</div>
+        <h3>Rapport & Priorisation</h3>
+        <p>Rapport détaillé avec les gains potentiels chiffrés, classés par impact et facilité de mise en œuvre.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">⚙️</div>
+        <div class="step-num">3</div>
+        <h3>Déploiement</h3>
+        <p>Développement des automatisations en Python, no-code, ou IA selon ce qui est le plus pertinent pour vous.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">🎓</div>
+        <div class="step-num">4</div>
+        <h3>Formation & Suivi</h3>
+        <p>Formation de vos équipes, documentation, et support 3 mois inclus pour garantir l'adoption réelle.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="container">
+    <div class="section-label">Nos prestations</div>
+    <h2 class="section-title">Ce que nous faisons pour vous</h2>
+    <p class="section-subtitle">Des interventions modulaires, de l'audit initial à l'automatisation avancée, avec ou sans intelligence artificielle selon vos besoins.</p>
+    <div class="services-grid">
+
+      <div class="service-card">
+        <div class="service-icon">🔎</div>
+        <div class="service-badge">Diagnostic</div>
+        <h3>Audit Process</h3>
+        <p>Observation de vos équipes en situation réelle, cartographie des flux, identification des goulots d'étranglement. Livrable : rapport d'audit complet avec recommandations priorisées.</p>
+        <div class="service-price">À partir de 800 €</div>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">⚡</div>
+        <div class="service-badge">Quick Wins</div>
+        <h3>Automatisation Légère</h3>
+        <p>Macros Excel, scripts Python simples, automatisations no-code (Make, Zapier, n8n). Résultats rapides en 1 à 4 semaines.</p>
+        <div class="service-price">1 500 — 5 000 €</div>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🐍</div>
+        <div class="service-badge">Développement</div>
+        <h3>Automatisation Python</h3>
+        <p>Développements Python sur mesure : intégrations API, pipelines de données, traitements batch, dashboards de suivi, génération automatique de documents.</p>
+        <div class="service-price">5 000 — 20 000 €</div>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🤖</div>
+        <div class="service-badge">Intelligence Artificielle</div>
+        <h3>Solutions IA</h3>
+        <p>Chatbots internes, extraction d'information (NLP/OCR), classification automatique de documents, analyse prédictive, traitement d'emails entrants.</p>
+        <div class="service-price">5 000 — 25 000 €</div>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">📅</div>
+        <div class="service-badge">Mensuel</div>
+        <h3>Optimisation Continue</h3>
+        <p>Partenariat mensuel : petites automatisations récurrentes, maintenance, veille sur les nouveaux outils, formations ponctuelles.</p>
+        <div class="service-price">500 — 2 000 €/mois</div>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🎓</div>
+        <div class="service-badge">Formation</div>
+        <h3>Formation & Montée en Compétences</h3>
+        <p>Formations sur Python pour non-développeurs, outils no-code, ChatGPT au travail, automatisation RPA. En présentiel ou distanciel.</p>
+        <div class="service-price">800 — 2 500 €/jour</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- RÉSULTATS -->
+<section id="resultats">
+  <div class="container">
+    <div class="section-label">Résultats concrets</div>
+    <h2 class="section-title">Ce que nos clients gagnent</h2>
+    <p class="section-subtitle">Des chiffres mesurables, pas des promesses vagues. Chaque mission commence par définir les métriques de succès.</p>
+    <div class="results-grid">
+      <div class="result-card">
+        <div class="result-value">10h</div>
+        <div class="result-label">récupérées par semaine et par employé sur les tâches ciblées</div>
+      </div>
+      <div class="result-card">
+        <div class="result-value">−85%</div>
+        <div class="result-label">d'erreurs sur les saisies manuelles automatisées</div>
+      </div>
+      <div class="result-card">
+        <div class="result-value">3 mois</div>
+        <div class="result-label">retour sur investissement moyen</div>
+      </div>
+      <div class="result-card">
+        <div class="result-value">24/7</div>
+        <div class="result-label">vos automatisations travaillent même quand vos équipes dorment</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTEURS -->
+<section id="secteurs">
+  <div class="container">
+    <div class="section-label">Secteurs d'activité</div>
+    <h2 class="section-title">Nous intervenons partout où il y a des processus</h2>
+    <p class="section-subtitle">Aucun secteur n'est épargné par les tâches répétitives. Nous avons développé une expertise particulière dans ces domaines.</p>
+    <div class="sectors-grid">
+      <div class="sector-item"><div class="icon">🏭</div><span>Industrie & Artisanat</span></div>
+      <div class="sector-item"><div class="icon">🏗️</div><span>BTP & Construction</span></div>
+      <div class="sector-item"><div class="icon">🏪</div><span>Commerce & Retail</span></div>
+      <div class="sector-item"><div class="icon">📦</div><span>Logistique & Transport</span></div>
+      <div class="sector-item"><div class="icon">🏥</div><span>Santé & Para-médical</span></div>
+      <div class="sector-item"><div class="icon">🏢</div><span>Immobilier</span></div>
+      <div class="sector-item"><div class="icon">💼</div><span>Services aux entreprises</span></div>
+      <div class="sector-item"><div class="icon">⚖️</div><span>Comptabilité & Juridique</span></div>
+      <div class="sector-item"><div class="icon">🛒</div><span>E-commerce</span></div>
+      <div class="sector-item"><div class="icon">🍽️</div><span>Restauration & Hôtellerie</span></div>
+      <div class="sector-item"><div class="icon">📚</div><span>Éducation & Formation</span></div>
+      <div class="sector-item"><div class="icon">🌱</div><span>Agriculture & Viticulture</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- TÉMOIGNAGES -->
+<section id="temoignages">
+  <div class="container">
+    <div class="section-label">Témoignages</div>
+    <h2 class="section-title">Ils nous font confiance</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"En 3 semaines, OptiFlow a automatisé notre processus de relance clients. On économise 8h par semaine au service administratif. Le ROI était là en moins de 2 mois."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">ML</div>
+          <div>
+            <div class="author-name">Marie L.</div>
+            <div class="author-role">Directrice Générale, PME logistique — Montpellier</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"L'audit terrain a révélé des pertes de temps qu'on n'avait même pas identifiées. Le script Python développé gère maintenant toute notre facturation automatiquement."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">PT</div>
+          <div>
+            <div class="author-name">Pierre T.</div>
+            <div class="author-role">DAF, Cabinet comptable — Béziers</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"Ce qui nous a séduits : ils ne vendent pas un produit, ils comprennent notre problème. La solution déployée est simple, efficace, et nos équipes l'ont adoptée naturellement."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">SC</div>
+          <div>
+            <div class="author-name">Sophie C.</div>
+            <div class="author-role">DRH, Entreprise de services — Sète</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TARIFS -->
+<section id="tarifs">
+  <div class="container">
+    <div class="section-label">Tarifs</div>
+    <h2 class="section-title">Transparent et sans surprise</h2>
+    <p class="section-subtitle">Chaque intervention fait l'objet d'un devis détaillé. Ces fourchettes vous donnent un ordre de grandeur.</p>
+    <div class="pricing-grid">
+
+      <div class="pricing-card">
+        <div class="pricing-name">Starter</div>
+        <div class="pricing-price">800 € <span>à 2 000 €</span></div>
+        <div class="pricing-desc">L'audit diagnostic pour savoir exactement où agir en priorité.</div>
+        <ul class="pricing-features">
+          <li>1 à 3 jours d'observation terrain</li>
+          <li>Cartographie des processus</li>
+          <li>Rapport d'audit complet</li>
+          <li>Priorisation des gains</li>
+          <li>Présentation et échange avec vos équipes</li>
+        </ul>
+        <a href="#contact" class="btn btn-outline" style="width:100%;justify-content:center;">Demander un audit</a>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="popular-badge">Le plus populaire</div>
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-price">1 500 € <span>à 8 000 €</span></div>
+        <div class="pricing-desc">Audit + déploiement d'automatisations légères avec retour rapide.</div>
+        <ul class="pricing-features">
+          <li>Audit terrain inclus</li>
+          <li>Scripts Python ou no-code</li>
+          <li>Intégrations API simples</li>
+          <li>Formation des équipes</li>
+          <li>Documentation technique</li>
+          <li>Support 3 mois inclus</li>
+        </ul>
+        <a href="#contact" class="btn btn-primary" style="width:100%;justify-content:center;">Démarrer maintenant</a>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-name">Entreprise</div>
+        <div class="pricing-price">Sur devis</div>
+        <div class="pricing-desc">Projets complexes d'automatisation avancée et solutions IA sur mesure.</div>
+        <ul class="pricing-features">
+          <li>Audit complet multi-services</li>
+          <li>Développements Python avancés</li>
+          <li>Intégrations IA (NLP, OCR, ML)</li>
+          <li>Pipelines de données</li>
+          <li>Formation approfondie</li>
+          <li>Support prioritaire 6 mois</li>
+        </ul>
+        <a href="#contact" class="btn btn-outline" style="width:100%;justify-content:center;">Nous contacter</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container">
+    <div class="section-label">Questions fréquentes</div>
+    <h2 class="section-title" style="text-align:center;">On a réponse à tout (ou presque)</h2>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Faut-il avoir des connaissances techniques pour travailler avec vous ?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Non. Vous n'avez besoin d'aucune compétence technique. Notre rôle est justement de faire le pont entre vos besoins métier et les solutions technologiques. Nous expliquons tout en termes simples et formons vos équipes à utiliser ce qu'on déploie.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Comment se passe l'audit terrain ? C'est intrusif ?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">L'audit est discret et non intrusif. Nous observons simplement vos équipes dans leur travail quotidien pendant 1 à 3 jours, posons quelques questions, et analysons les outils utilisés. Nous travaillons avec la direction et les équipes pour comprendre les vrais points de friction, sans perturber l'activité.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Est-ce que vous intervenez partout en France ?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Oui. Nous sommes basés en Hérault (34) et intervenons en priorité sur la région Occitanie, mais nous couvrons tout le territoire français. Les audits peuvent se faire sur site ou à distance via vidéo. Une partie des missions peut être réalisée entièrement en remote.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Quels outils utilisez-vous ? On est dépendants de vous après ?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Nous privilégions les solutions open-source ou les outils que vous possédez déjà. Notre code Python est livré avec la documentation complète. Notre objectif est votre autonomie, pas votre dépendance. La formation incluse vous permet de gérer et faire évoluer les solutions vous-mêmes.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          En combien de temps voit-on des résultats ?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Cela dépend de la complexité. Pour les automatisations légères (macros, scripts simples), les premiers résultats sont visibles en 1 à 4 semaines. Pour des projets plus complexes (IA, intégrations systèmes), comptez 1 à 3 mois. Le retour sur investissement intervient généralement entre 3 et 6 mois après déploiement.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Proposez-vous des aides financières pour les PME ?
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Oui, nous vous accompagnons dans l'identification des aides disponibles : subventions BPI France, chèques numériques de la région Occitanie, OPCO pour les formations. Certaines missions peuvent être partiellement financées à 70-80%, réduisant significativement votre reste à charge.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="section-label">Contact</div>
+    <h2 class="section-title">Parlons de votre projet</h2>
+    <p class="section-subtitle">Un audit diagnostic de 30 minutes à distance est offert pour tous les nouveaux contacts. Sans engagement.</p>
+    <div class="contact-grid">
+      <div class="contact-info">
+        <h3>On est disponibles</h3>
+        <div class="contact-item">
+          <div class="contact-icon">📍</div>
+          <div>
+            <div class="contact-label">Siège</div>
+            <div class="contact-value">Montpellier, Hérault (34)<br/>Occitanie — France</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">📧</div>
+          <div>
+            <div class="contact-label">Email</div>
+            <div class="contact-value">contact@optiflow-conseil.fr</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">📞</div>
+          <div>
+            <div class="contact-label">Téléphone</div>
+            <div class="contact-value">+33 (0)6 XX XX XX XX</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">🕐</div>
+          <div>
+            <div class="contact-label">Disponibilité</div>
+            <div class="contact-value">Lun – Ven, 9h – 18h<br/>Réponse sous 24h garantie</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">💼</div>
+          <div>
+            <div class="contact-label">LinkedIn</div>
+            <div class="contact-value">linkedin.com/company/optiflow-conseil</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-form">
+        <form id="contactForm" onsubmit="handleSubmit(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prénom *</label>
+              <input type="text" placeholder="Jean" required />
+            </div>
+            <div class="form-group">
+              <label>Nom *</label>
+              <input type="text" placeholder="Dupont" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email professionnel *</label>
+            <input type="email" placeholder="jean.dupont@societe.fr" required />
+          </div>
+          <div class="form-group">
+            <label>Nom de votre entreprise</label>
+            <input type="text" placeholder="Ma Société SAS" />
+          </div>
+          <div class="form-group">
+            <label>Secteur d'activité</label>
+            <select>
+              <option value="">Choisir...</option>
+              <option>Industrie / Artisanat</option>
+              <option>BTP / Construction</option>
+              <option>Commerce / Retail</option>
+              <option>Logistique / Transport</option>
+              <option>Santé / Para-médical</option>
+              <option>Immobilier</option>
+              <option>Services aux entreprises</option>
+              <option>Comptabilité / Juridique</option>
+              <option>E-commerce</option>
+              <option>Autre</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Votre besoin</label>
+            <textarea placeholder="Décrivez brièvement la tâche ou le processus qui vous pose problème..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+            Envoyer ma demande →
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section id="cta-banner">
+  <div class="container">
+    <h2>Prêt à récupérer du temps pour votre équipe ?</h2>
+    <p>Commencez par un audit diagnostic offert. 30 minutes pour identifier vos gains prioritaires.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="#contact" class="btn btn-white btn-lg">Audit gratuit de 30 min →</a>
+      <a href="tel:+33600000000" class="btn btn-lg" style="background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);">Appeler maintenant</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">Opti<span>Flow</span></div>
+        <p class="footer-desc">Cabinet de conseil spécialisé en automatisation et optimisation des processus pour les PME. Basé en Hérault, nous intervenons dans toute la France.</p>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+          <a href="#" style="color:rgba(255,255,255,0.6);font-size:0.85rem;text-decoration:none;">LinkedIn</a>
+          <a href="#" style="color:rgba(255,255,255,0.6);font-size:0.85rem;text-decoration:none;">Twitter/X</a>
+          <a href="#" style="color:rgba(255,255,255,0.6);font-size:0.85rem;text-decoration:none;">YouTube</a>
+        </div>
+      </div>
+      <div>
+        <h4>Services</h4>
+        <ul class="footer-links">
+          <li><a href="#services">Audit Process</a></li>
+          <li><a href="#services">Automatisation Python</a></li>
+          <li><a href="#services">Solutions IA</a></li>
+          <li><a href="#services">No-code / Low-code</a></li>
+          <li><a href="#services">Formation</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Entreprise</h4>
+        <ul class="footer-links">
+          <li><a href="#methode">Notre méthode</a></li>
+          <li><a href="#secteurs">Secteurs</a></li>
+          <li><a href="#temoignages">Témoignages</a></li>
+          <li><a href="#tarifs">Tarifs</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul class="footer-links">
+          <li><a href="#contact">Nous écrire</a></li>
+          <li><a href="#">Audit gratuit</a></li>
+          <li><a href="#">Mentions légales</a></li>
+          <li><a href="#">Politique de confidentialité</a></li>
+          <li><a href="#">CGV</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 OptiFlow Conseil. Tous droits réservés.</span>
+      <span>Made in Hérault 🌿 | SIRET : XXX XXX XXX XXXXX</span>
+    </div>
+  </div>
+</footer>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification">✓ Message envoyé ! On vous répond sous 24h.</div>
+
+<!-- SCROLL TOP -->
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+  function toggleMenu() {
+    const nav = document.getElementById('navLinks');
+    nav.classList.toggle('open');
+  }
+
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const notif = document.getElementById('notification');
+    notif.style.display = 'block';
+    setTimeout(() => { notif.style.display = 'none'; }, 4000);
+    e.target.reset();
+  }
+
+  window.addEventListener('scroll', () => {
+    const btn = document.getElementById('scrollTop');
+    btn.classList.toggle('visible', window.scrollY > 400);
+  });
+
+  // Smooth active nav link
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 120) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current ? 'var(--primary)' : '';
+    });
+  });
+
+  // Animate elements on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.step, .service-card, .result-card, .sector-item, .testimonial-card, .pricing-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(24px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
