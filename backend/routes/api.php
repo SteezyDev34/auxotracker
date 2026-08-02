@@ -19,6 +19,7 @@ use App\Http\Controllers\SofaScoreController;
 use App\Http\Controllers\InteretController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\AdminLeagueController;
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\TeamSearchNotFoundController;
 use Illuminate\Http\Request;
@@ -55,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bets/detailed-stats', [BetController::class, 'detailedStats']);
     Route::get('/bets/capital-evolution', [BetController::class, 'capitalEvolution']);
     Route::get('/bets/filter-options', [BetController::class, 'filterOptions']);
+    Route::post('/bets/resolve', [BetController::class, 'resolve']);
     Route::apiResource('bets', BetController::class);
 
     // Routes d'importation de paris
@@ -84,6 +86,7 @@ Route::get('/sports/{sportId}/leagues', [SportController::class, 'getLeagues']);
 Route::get('/sports/{sportId}/leagues/search', [SportController::class, 'searchLeaguesBySport']);
 Route::get('/sports/{sportId}/teams', [SportController::class, 'getTeamsBySport']);
 Route::get('/sports/{sportId}/teams/search', [SportController::class, 'searchTeamsBySport']);
+Route::get('/sports/{sportId}/teams/with-logo', [SportController::class, 'getTeamsWithLogoBySport']);
 Route::get('/leagues/{leagueId}/teams', [SportController::class, 'getTeams']);
 
 // Routes pour la gestion des logos d'équipes
@@ -100,6 +103,8 @@ Route::get('/stats/tennis/player/{teamId}', [SofaScoreController::class, 'getTea
 // Retrouver le lien Sofascore d'un match tennis par date + noms des joueurs
 // GET /api/matches/tennis/link?team1=Alcaraz&team2=Djokovic&date=2026-05-07
 Route::get('/matches/tennis/link', [MatchController::class, 'findTennisLink']);
+// GET /api/matches/today?date=YYYY-MM-DD&sport_id=2
+Route::get('/matches/today', [MatchController::class, 'today']);
 
 // Routes protégées (commentées temporairement pour le dev)
 /*
@@ -189,6 +194,11 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'role:admin,superadmin'])->prefix('admin')->group(function () {
     Route::get('/users', [AdminController::class, 'getUsers']);
     Route::get('/stats', [AdminController::class, 'getSystemStats']);
+
+    // Logs d'activité
+    Route::get('/logs', [ActivityLogController::class, 'index']);
+    Route::delete('/logs/clear', [ActivityLogController::class, 'clear']);
+    Route::delete('/logs/{id}', [ActivityLogController::class, 'destroy']);
 
     // Gestion des ligues (admin)
     Route::get('/leagues', [AdminLeagueController::class, 'index']);

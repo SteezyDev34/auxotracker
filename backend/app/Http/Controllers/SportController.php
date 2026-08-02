@@ -337,4 +337,44 @@ class SportController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Liste des sofascore_id d'équipes déjà pourvues d'un logo en base, pour
+     * un sport donné — utilisé par fetch_sofascore_cache.py afin de ne pas
+     * retélécharger un logo déjà présent en prod quand le cache local a été
+     * archivé/vidé entre deux runs. Ne concerne QUE les logos d'équipe :
+     * effectifs joueurs et statistiques changent en cours d'année/chaque jour
+     * et doivent toujours être refetchés.
+     */
+    public function getTeamsWithLogoBySport(Request $request, $sportId): JsonResponse
+    {
+        try {
+            // Accepte un id numérique (table sports) ou un slug (ex: "football") —
+            // le script de fetch Python ne connaît que les slugs.
+            $resolvedSportId = ctype_digit((string) $sportId)
+                ? (int) $sportId
+                : \App\Models\Sport::where('slug', $sportId)->orWhere('name', $sportId)->value('id');
+
+            $ids = Team::whereHas('league', function ($q) use ($resolvedSportId) {
+                    $q->where('sport_id', $resolvedSportId);
+                })
+                ->orWhereHas('leagues', function ($q) use ($resolvedSportId) {
+                    $q->where('sport_id', $resolvedSportId);
+                })
+                ->whereNotNull('sofascore_id')
+                ->whereNotNull('img')
+                ->pluck('sofascore_id');
+
+            return response()->json([
+                'success' => true,
+                'data' => $ids,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des équipes avec logo',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
