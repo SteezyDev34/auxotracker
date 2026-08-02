@@ -87,6 +87,7 @@ Route::get('/sports/{sportId}/leagues/search', [SportController::class, 'searchL
 Route::get('/sports/{sportId}/teams', [SportController::class, 'getTeamsBySport']);
 Route::get('/sports/{sportId}/teams/search', [SportController::class, 'searchTeamsBySport']);
 Route::get('/sports/{sportId}/teams/with-logo', [SportController::class, 'getTeamsWithLogoBySport']);
+Route::get('/tennis/players/with-details', [SportController::class, 'getTennisPlayersWithDetails']);
 Route::get('/leagues/{leagueId}/teams', [SportController::class, 'getTeams']);
 
 // Routes pour la gestion des logos d'équipes

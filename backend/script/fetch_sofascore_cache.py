@@ -561,6 +561,28 @@ def _build_player_basic(details_json: dict):
     return basic
 
 
+def _fetch_tennis_players_with_details_from_prod() -> set:
+    """Sofascore_id des joueurs tennis dont les détails statiques (naissance,
+    taille, main directrice...) sont déjà en base de prod — permet de ne pas
+    refaire ce fetch quand le cache local a été archivé/vidé, ces infos ne
+    changeant plus une fois connues. Ne concerne QUE les détails : les stats
+    (year-statistics) sont, elles, toujours refetchées à chaque run."""
+    try:
+        url = "https://api.auxotracker.p-com.studio/api/tennis/players/with-details"
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200 and r.json().get("success"):
+            out = set()
+            for v in r.json().get("data", []):
+                try:
+                    out.add(int(v))
+                except (TypeError, ValueError):
+                    pass
+            return out
+    except Exception as e:
+        print(f"  ⚠️  Impossible de récupérer les joueurs tennis déjà détaillés en prod: {e}", file=sys.stderr)
+    return set()
+
+
 def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: Path, year: int):
     """Fetch and cache player details, stats, and images for all given player IDs."""
     players_dir = cache_dir / "players"
@@ -572,6 +594,10 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
 
     total = len(player_ids)
     print(f"\n👤 Fetch détails joueurs: {total} joueur(s)")
+
+    already_detailed_prod = _fetch_tennis_players_with_details_from_prod()
+    if already_detailed_prod:
+        print(f"  ⏭️  {len(already_detailed_prod)} joueur(s) déjà détaillé(s) en prod — skip détails (stats toujours refetchées)")
 
     for i, (pid, name) in enumerate(player_ids, 1):
         print(f"  [{i}/{total}] {name} (ID: {pid})")
@@ -592,6 +618,8 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
                     # Ne pas faire continue ici — on vérifie quand même les stats
             except Exception:
                 pass
+        elif pid in already_detailed_prod:
+            print(f"    ⏭️  Détails déjà en prod — skip")
         else:
             url = f"https://www.sofascore.com/api/v1/team/{pid}"
             data = fetch_json(driver, url)
@@ -668,7 +696,9 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
         # --- Image ---
         logo_file = logos_dir / f"{pid}.png"
         img_meta_file = meta_dir / f"player_image_{pid}.meta"
-        if not logo_file.exists():
+        if pid in already_detailed_prod:
+            print(f"    ⏭️  Image déjà en prod (joueur détaillé) — skip")
+        elif not logo_file.exists():
             # Check tombstone
             if img_meta_file.exists():
                 try:

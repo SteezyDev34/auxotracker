@@ -377,4 +377,32 @@ class SportController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Sofascore_id des joueurs de tennis dont les détails "statiques" (date de
+     * naissance, taille, main directrice...) sont déjà en base — utilisé par
+     * fetch_sofascore_cache.py pour ne pas retélécharger ces infos si elles ne
+     * peuvent de toute façon plus changer. Ne concerne QUE les détails :
+     * les statistiques (year-statistics), elles, changent chaque jour et
+     * doivent toujours être refetchées.
+     */
+    public function getTennisPlayersWithDetails(): JsonResponse
+    {
+        try {
+            $ids = Team::whereNotNull('sofascore_id')
+                ->whereNotNull('date_of_birth')
+                ->pluck('sofascore_id');
+
+            return response()->json([
+                'success' => true,
+                'data' => $ids,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des joueurs tennis avec détails',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
