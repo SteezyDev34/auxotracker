@@ -770,12 +770,14 @@ class BetController extends Controller
                 $leagueId = $leagueVal ? League::findIdBySofascoreOrName($leagueVal) : null;
 
                 $input['events'][] = [
-                    'team1_id' => $team1Id,
-                    'team2_id' => $team2Id,
-                    'league_id' => $leagueId,
+                    'team1_id'   => $team1Id,
+                    'team2_id'   => $team2Id,
+                    'team1_name' => $eq1Name,
+                    'team2_name' => $eq2Name,
+                    'league_id'  => $leagueId,
                     'description' => $description,
-                    'odds' => $event['odds'] ?? $input['odds'] ?? null,
-                    'sport_id' => $event['sport_id'] ?? $input['sport_id'] ?? null,
+                    'odds'       => $event['odds'] ?? $input['odds'] ?? null,
+                    'sport_id'   => $event['sport_id'] ?? $input['sport_id'] ?? null,
                 ];
             }
 
@@ -802,12 +804,14 @@ class BetController extends Controller
             $leagueId = $leagueVal ? League::findIdBySofascoreOrName($leagueVal) : null;
 
             $input['events'][] = [
-                'team1_id' => $team1Id,
-                'team2_id' => $team2Id,
-                'league_id' => $leagueId,
+                'team1_id'   => $team1Id,
+                'team2_id'   => $team2Id,
+                'team1_name' => $eq1Name,
+                'team2_name' => $eq2Name,
+                'league_id'  => $leagueId,
                 'description' => $description,
-                'odds' => $input['odds'] ?? null,
-                'sport_id' => $input['sport_id'] ?? null,
+                'odds'       => $input['odds'] ?? null,
+                'sport_id'   => $input['sport_id'] ?? null,
             ];
         }
 
@@ -884,6 +888,8 @@ class BetController extends Controller
             $event = \App\Models\Event::create([
                 'team1_id' => $eventData['team1_id'] ?? null,
                 'team2_id' => $eventData['team2_id'] ?? null,
+                'team1_name' => $eventData['team1_name'] ?? null,
+                'team2_name' => $eventData['team2_name'] ?? null,
                 'league_id' => $eventData['league_id'] ?? null,
                 'sport_id' => $eventData['sport_id'] ?? null,
                 'type' => $eventData['description'],

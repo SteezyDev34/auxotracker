@@ -14,6 +14,8 @@ class Event extends Model
     protected $fillable = [
         'team1_id',
         'team2_id',
+        'team1_name',
+        'team2_name',
         'league_id',
         'sport_id',
         'type',
@@ -56,8 +58,8 @@ class Event extends Model
     // Méthodes utilitaires
     public function getEventNameAttribute()
     {
-        $team1Name = $this->team1 ? $this->team1->name : 'Équipe 1';
-        $team2Name = $this->team2 ? $this->team2->name : 'Équipe 2';
+        $team1Name = $this->team1 ? $this->team1->name : ($this->team1_name ?? 'Équipe 1');
+        $team2Name = $this->team2 ? $this->team2->name : ($this->team2_name ?? 'Équipe 2');
         return "{$team1Name} vs {$team2Name}";
     }
 
