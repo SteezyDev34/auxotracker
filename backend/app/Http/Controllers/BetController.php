@@ -8,6 +8,7 @@ use App\Models\UserBankroll;
 use App\Models\User;
 use App\Models\Team;
 use App\Models\League;
+use App\Models\TeamSearchNotFound;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -749,8 +750,21 @@ class BetController extends Controller
         } elseif (!empty($input['event_list'])) {
             foreach ($input['event_list'] as $event) {
                 $eventSport = $event['sport_id'] ?? $input['sport_id'] ?? null;
-                $team1Id = isset($event['equipe_1']) ? Team::findIdBySofascoreOrName($event['equipe_1'], $eventSport) : null;
-                $team2Id = isset($event['equipe_2']) ? Team::findIdBySofascoreOrName($event['equipe_2'], $eventSport) : null;
+                $eq1Name = $event['equipe_1'] ?? null;
+                $eq2Name = $event['equipe_2'] ?? null;
+                $team1Id = $eq1Name ? Team::findIdBySofascoreOrName($eq1Name, $eventSport) : null;
+                $team2Id = $eq2Name ? Team::findIdBySofascoreOrName($eq2Name, $eventSport) : null;
+
+                // Log équipes non trouvées + enrichir description avec le nom complet
+                $description = $event['selection'] ?? $input['selection'] ?? null;
+                if ($eq1Name && !$team1Id) {
+                    TeamSearchNotFound::firstOrCreate(['search_term' => $eq1Name, 'sport_id' => $eventSport], ['user_id' => $user->id, 'resolved' => false]);
+                    $description = trim(($eq1Name . ' - ' . ($eq2Name ?? '')) . ($description ? ' | ' . $description : ''));
+                }
+                if ($eq2Name && !$team2Id) {
+                    TeamSearchNotFound::firstOrCreate(['search_term' => $eq2Name, 'sport_id' => $eventSport], ['user_id' => $user->id, 'resolved' => false]);
+                    if ($team1Id) $description = trim((($eq1Name ?? '') . ' - ' . $eq2Name) . ($description ? ' | ' . $description : ''));
+                }
 
                 $leagueVal = $event['league_id'] ?? $event['league'] ?? null;
                 $leagueId = $leagueVal ? League::findIdBySofascoreOrName($leagueVal) : null;
@@ -759,7 +773,7 @@ class BetController extends Controller
                     'team1_id' => $team1Id,
                     'team2_id' => $team2Id,
                     'league_id' => $leagueId,
-                    'description' => $event['selection'] ?? $input['selection'] ?? null,
+                    'description' => $description,
                     'odds' => $event['odds'] ?? $input['odds'] ?? null,
                     'sport_id' => $event['sport_id'] ?? $input['sport_id'] ?? null,
                 ];
@@ -769,8 +783,20 @@ class BetController extends Controller
         } else {
 
             $topSport = $input['sport_id'] ?? null;
-            $team1Id = isset($input['equipe_1']) ? Team::findIdBySofascoreOrName($input['equipe_1'], $topSport) : null;
-            $team2Id = isset($input['equipe_2']) ? Team::findIdBySofascoreOrName($input['equipe_2'], $topSport) : null;
+            $eq1Name = $input['equipe_1'] ?? null;
+            $eq2Name = $input['equipe_2'] ?? null;
+            $team1Id = $eq1Name ? Team::findIdBySofascoreOrName($eq1Name, $topSport) : null;
+            $team2Id = $eq2Name ? Team::findIdBySofascoreOrName($eq2Name, $topSport) : null;
+
+            $description = $input['selection'] ?? null;
+            if ($eq1Name && !$team1Id) {
+                TeamSearchNotFound::firstOrCreate(['search_term' => $eq1Name, 'sport_id' => $topSport], ['user_id' => $user->id, 'resolved' => false]);
+                $description = trim(($eq1Name . ' - ' . ($eq2Name ?? '')) . ($description ? ' | ' . $description : ''));
+            }
+            if ($eq2Name && !$team2Id) {
+                TeamSearchNotFound::firstOrCreate(['search_term' => $eq2Name, 'sport_id' => $topSport], ['user_id' => $user->id, 'resolved' => false]);
+                if ($team1Id) $description = trim((($eq1Name ?? '') . ' - ' . $eq2Name) . ($description ? ' | ' . $description : ''));
+            }
 
             $leagueVal = $input['league_id'] ?? $input['league'] ?? null;
             $leagueId = $leagueVal ? League::findIdBySofascoreOrName($leagueVal) : null;
@@ -779,7 +805,7 @@ class BetController extends Controller
                 'team1_id' => $team1Id,
                 'team2_id' => $team2Id,
                 'league_id' => $leagueId,
-                'description' => $input['selection'] ?? null,
+                'description' => $description,
                 'odds' => $input['odds'] ?? null,
                 'sport_id' => $input['sport_id'] ?? null,
             ];
