@@ -883,6 +883,28 @@ class BetController extends Controller
         return response()->json(['success' => true, 'message' => 'Pari créé par Auxobot', 'data' => $bet->load(['sport', 'events.sport', 'events.team1', 'events.team2', 'events.league.country'])], 201);
     }
 
+    public function updateAuxobot(Request $request, int $id): JsonResponse
+    {
+        $bet = Bet::find($id);
+
+        if (!$bet) {
+            return response()->json(['success' => false, 'error' => 'Pari non trouvé'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'result' => 'required|in:win,lost,void,pending',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $bet->result = $request->input('result');
+        $bet->save();
+
+        return response()->json(['success' => true, 'message' => 'Résultat mis à jour', 'data' => $bet], 200);
+    }
+
     /**
      * Recherche l'ID d'une équipe par son nom (ou nickname) en utilisant un LIKE.
      */
@@ -1125,5 +1147,34 @@ class BetController extends Controller
         }
 
         Log::info("Filtres présents dans {$method}:", $presentFilters);
+    }
+
+    /**
+     * POST /api/bets/resolve
+     * Déclenche la résolution automatique des paris pending.
+     */
+    public function resolve(Request $request): JsonResponse
+    {
+        $days   = (int) ($request->get('days', 30));
+        $dryRun = $request->boolean('dry_run');
+        $betIds = $request->get('bet_ids');
+
+        $params = ['--days' => $days];
+        if ($dryRun) $params['--dry-run'] = true;
+        if ($betIds) $params['--bet-ids'] = $betIds;
+
+        \Illuminate\Support\Facades\Artisan::call('bets:resolve', $params);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+
+        // Compter les paris mis à jour
+        $resolved = 0;
+        if (preg_match('/(\d+) résolu/', $output, $m)) $resolved = (int)$m[1];
+
+        return response()->json([
+            'success'  => true,
+            'output'   => $output,
+            'resolved' => $resolved,
+            'dry_run'  => $dryRun,
+        ]);
     }
 }

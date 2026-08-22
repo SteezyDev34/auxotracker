@@ -16,6 +16,7 @@ use App\Http\Controllers\UserBookmakerController;
 use App\Http\Controllers\TipsterController;
 use App\Http\Controllers\UserSportPreferenceController;
 use App\Http\Controllers\SofaScoreController;
+use App\Http\Controllers\TennisPlayerTensionStatController;
 use App\Http\Controllers\InteretController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\AdminLeagueController;
@@ -66,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Routes dédiées pour le bot local Auxobot (token vérifié par middleware)
 Route::post('/auxobot/bets', [BetController::class, 'storeAuxobot'])->middleware('auxobot');
+Route::patch('/auxobot/bets/{id}', [BetController::class, 'updateAuxobot'])->middleware('auxobot');
 Route::get('/auxobot/recommended-stake', [UserBankrollController::class, 'recommendedStakeForBot'])->middleware('auxobot');
 
 // Routes des transactions
@@ -100,6 +102,9 @@ Route::prefix('teams')->group(function () {
 // Routes pour les statistiques SofaScore
 Route::get('/stats/tennis/sofascore_id/{sofascoreId}', [SofaScoreController::class, 'getPlayerStatistics']);
 Route::get('/stats/tennis/player/{teamId}', [SofaScoreController::class, 'getTeamStatistics']);
+
+// Stats "match serré" / martingale d'un joueur (15A/30A/40A, patterns, leads, perte service)
+Route::get('/stats/tennis/player/{teamId}/tension', [TennisPlayerTensionStatController::class, 'show']);
 
 // Retrouver le lien Sofascore d'un match tennis par date + noms des joueurs
 // GET /api/matches/tennis/link?team1=Alcaraz&team2=Djokovic&date=2026-05-07
@@ -273,7 +278,12 @@ Route::post('/tennis-cache-write', function (\Illuminate\Http\Request $request) 
         ->header('Access-Control-Allow-Private-Network', 'true');
 });
 
-Route::get('/team-searches/not-found', [TeamSearchNotFoundController::class, 'index']);
-Route::post('/team-searches/not-found', [TeamSearchNotFoundController::class, 'store']);
-Route::put('/team-searches/not-found/{id}/resolve', [TeamSearchNotFoundController::class, 'resolve']);
-Route::delete('/team-searches/not-found/{id}', [TeamSearchNotFoundController::class, 'destroy']);
+// N'importe quel utilisateur connecté peut signaler une recherche infructueuse.
+Route::middleware('auth:sanctum')->post('/team-searches/not-found', [TeamSearchNotFoundController::class, 'store']);
+
+// Consultation/gestion de la liste réservée aux superadmins.
+Route::middleware(['auth:sanctum', 'role:superadmin'])->group(function () {
+    Route::get('/team-searches/not-found', [TeamSearchNotFoundController::class, 'index']);
+    Route::put('/team-searches/not-found/{id}/resolve', [TeamSearchNotFoundController::class, 'resolve']);
+    Route::delete('/team-searches/not-found/{id}', [TeamSearchNotFoundController::class, 'destroy']);
+});
