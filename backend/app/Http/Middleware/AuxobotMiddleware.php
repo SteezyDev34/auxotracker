@@ -12,7 +12,7 @@ class AuxobotMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $expectedToken = env('AUXOBOT_TOKEN');
+        $expectedToken = config('services.auxobot.token');
 
         // Vérifier le Bearer token
         $token = $request->bearerToken();
