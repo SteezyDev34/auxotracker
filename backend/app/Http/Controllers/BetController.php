@@ -715,7 +715,7 @@ class BetController extends Controller
     public function storeAuxobot(Request $request): JsonResponse
     {
         // Trouver l'utilisateur associé au bot
-        $auxUserId = env('AUXOBOT_USER_ID');
+        $auxUserId = config('services.auxobot.user_id');
         $user = $auxUserId ? User::find($auxUserId) : null;
 
         if (!$user) {

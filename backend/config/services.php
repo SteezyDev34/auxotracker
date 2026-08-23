@@ -36,7 +36,8 @@ return [
     ],
 
     'auxobot' => [
-        'token' => env('AUXOBOT_TOKEN'),
+        'token'   => env('AUXOBOT_TOKEN'),
+        'user_id' => env('AUXOBOT_USER_ID'),
     ],
 
 ];
