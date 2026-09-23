@@ -4,7 +4,10 @@ namespace App\Console\Commands;
 
 use App\Console\Concerns\HasConsoleOutput;
 use App\Models\Team;
+use App\Services\ActivityLogger;
+use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\Response as HttpResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -148,6 +151,15 @@ class ImportTennisPlayers extends Command
         // L'export JSON a été retiré de la commande automatique.
 
         $this->displayStats();
+
+        ActivityLogger::importFinished('tennis:import-from-schedule', 'tennis', [
+            'tournaments' => $this->stats['tournaments_processed'] ?? 0,
+            'matches'     => $this->stats['matches_processed'] ?? 0,
+            'created'     => $this->stats['players_created'] ?? 0,
+            'updated'     => $this->stats['players_updated'] ?? 0,
+            'errors'      => $this->stats['errors'] ?? 0,
+        ]);
+
         return 0;
     }
 
@@ -518,7 +530,10 @@ class ImportTennisPlayers extends Command
 
             // Gestion spécifique du 403
             if ($response->status() === 403) {
-                $this->handleForbiddenError($response, $url);
+                $manualResponse = $this->handleForbiddenError($response, $url);
+                if ($manualResponse) {
+                    return $manualResponse;
+                }
                 return null;
             }
 
@@ -1286,19 +1301,19 @@ class ImportTennisPlayers extends Command
 
     /**
      * Gérer les erreurs 403 (anti-bot Sofascore).
-     * (Harmonisé avec Football/Basketball : log + continue, pas exit(1))
+     * Demande à l'utilisateur d'ouvrir l'URL dans son navigateur et de coller le
+     * contenu JSON retourné, afin de contourner le blocage anti-bot sans interrompre
+     * le script. Retourne une réponse HTTP fabriquée à partir du contenu collé,
+     * ou null si l'utilisateur annule (la requête est alors considérée en échec).
      */
-    private function handleForbiddenError($response, $url)
+    private function handleForbiddenError($response, $url): ?HttpResponse
     {
         $responseBody = $response->json();
         $challengeType = $responseBody['error']['reason'] ?? 'unknown';
 
         $this->error("🚨 ERREUR 403 - Accès interdit");
         $this->error("🔍 Type de challenge détecté: {$challengeType}");
-        $this->error("💡 Suggestions:");
-        $this->error("   - Attendre quelques minutes avant de relancer");
-        $this->error("   - Ne pas utiliser de VPN, pour IP locale");
-        $this->error("   - Réduire la fréquence des requêtes");
+        $this->error("🔗 URL: {$url}");
 
         Log::error('🚨 Erreur 403 - Challenge détecté', [
             'status' => $response->status(),
@@ -1306,6 +1321,124 @@ class ImportTennisPlayers extends Command
             'challenge_type' => $challengeType,
             'response_body' => $responseBody
         ]);
+
+        return $this->promptManualFetch($url);
+    }
+
+    /**
+     * Demande à l'utilisateur d'ouvrir l'URL bloquée (403) dans son navigateur et
+     * de coller le contenu JSON retourné, pour continuer sans cette requête API.
+     * L'utilisateur peut annuler pour passer à la suite (requête considérée en échec).
+     */
+    private function promptManualFetch(string $url): ?HttpResponse
+    {
+        if (!$this->input->isInteractive()) {
+            $this->warn("⏭️ Mode non-interactif : impossible de demander une saisie manuelle, requête ignorée.");
+            return null;
+        }
+
+        $this->warn("🌐 Merci d'ouvrir cette URL dans votre navigateur puis de copier le contenu JSON affiché :");
+        $this->line("   {$url}");
+        $this->line("💡 Collez le contenu dans un fichier texte (le JSON peut dépasser plusieurs dizaines de Ko, le terminal ne peut pas gérer un collage direct au-delà de ~4 Ko) puis indiquez son chemin.");
+
+        if (!$this->confirm('Voulez-vous fournir le contenu JSON via un fichier pour continuer ?', true)) {
+            $this->warn("⏭️ Annulé par l'utilisateur, passage à la suite.");
+            return null;
+        }
+
+        while (true) {
+            $content = $this->readJsonFromFile();
+
+            if ($content === null || trim($content) === '') {
+                $this->warn("⏭️ Contenu vide, passage à la suite.");
+                if (!$this->confirm('Réessayer avec un autre fichier ?', true)) {
+                    return null;
+                }
+                continue;
+            }
+
+            $content = $this->sanitizeJsonControlChars(trim($content));
+
+            json_decode($content);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->error("❌ JSON invalide: " . json_last_error_msg());
+                if (!$this->confirm('Réessayer ?', true)) {
+                    return null;
+                }
+                continue;
+            }
+
+            $this->line("✅ Contenu JSON valide reçu, poursuite du traitement.");
+            return new HttpResponse(new GuzzleResponse(200, [], $content));
+        }
+    }
+
+    /**
+     * Échappe les caractères de contrôle bruts (retours à la ligne, tabulations, etc.)
+     * trouvés à l'intérieur des chaînes JSON, sans toucher aux séquences déjà échappées.
+     * Corrige l'erreur "Control character error" quand le contenu collé/collecté
+     * contient des caractères de contrôle non échappés (fréquent lors d'un copier-coller).
+     */
+    private function sanitizeJsonControlChars(string $json): string
+    {
+        // Retirer un éventuel BOM UTF-8
+        $json = preg_replace('/^\xEF\xBB\xBF/', '', $json);
+
+        $result = '';
+        $inString = false;
+        $escapeNext = false;
+        $length = strlen($json);
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $json[$i];
+
+            if ($inString && $escapeNext) {
+                $result .= $char;
+                $escapeNext = false;
+                continue;
+            }
+
+            if ($inString && $char === '\\') {
+                $result .= $char;
+                $escapeNext = true;
+                continue;
+            }
+
+            if ($inString && ord($char) < 0x20) {
+                $result .= match ($char) {
+                    "\n" => '\\n',
+                    "\r" => '\\r',
+                    "\t" => '\\t',
+                    "\x08" => '\\b',
+                    "\x0C" => '\\f',
+                    default => sprintf('\\u%04x', ord($char)),
+                };
+                continue;
+            }
+
+            if ($char === '"') {
+                $inString = !$inString;
+            }
+
+            $result .= $char;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Demande le chemin d'un fichier contenant le JSON collé et en lit le contenu.
+     */
+    private function readJsonFromFile(): ?string
+    {
+        $path = $this->ask('📁 Chemin absolu du fichier contenant le JSON');
+
+        if (!$path || !is_file($path)) {
+            $this->error("❌ Fichier introuvable: {$path}");
+            return null;
+        }
+
+        return file_get_contents($path) ?: null;
     }
 
     /**
@@ -1361,6 +1494,14 @@ class ImportTennisPlayers extends Command
             $response = $this->makeHttpRequest($imageUrl);
 
             if (!$response || !$response->successful()) {
+                // Mode --offline : on n'a jamais vraiment tenté l'appel réseau
+                // (makeHttpRequest bloque tout et renvoie null), donc ce n'est
+                // pas un vrai échec confirmé — ne pas tombstoner pour ne pas
+                // bloquer 24h un logo qui existe peut-être réellement.
+                if ($this->option('offline')) {
+                    $this->line("      ⏭️ Logo tournoi non tenté (mode --offline): {$tournamentName} (ID: {$tournamentId})");
+                    return false;
+                }
                 // Écrire un tombstone négatif pour éviter de retenter pendant 24h
                 $negativeMeta = [
                     'timestamp' => time(),
@@ -1451,6 +1592,12 @@ class ImportTennisPlayers extends Command
             $response = $this->makeHttpRequest($imageUrl);
 
             if (!$response || !$response->successful()) {
+                // Mode --offline : appel jamais réellement tenté (makeHttpRequest
+                // bloque tout), donc pas un vrai échec confirmé — pas de tombstone.
+                if ($this->option('offline')) {
+                    $this->line("⏭️  Image non tentée (mode --offline): {$playerName} (ID: {$sofascoreId})");
+                    return false;
+                }
                 // Écrire un tombstone négatif pour éviter de retenter pendant 24h
                 $negativeMeta = [
                     'timestamp' => time(),

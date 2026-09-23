@@ -43,6 +43,10 @@ else
     echo "$(date) : ⚠️ Football force demandé (FOOTBALL_FORCE=1) — exécution Phase 1" 2>&1 | tee -a "$LOG"
 fi
 
+# Phase 0 : fetch des données Sofascore via Chrome headless (contourne le ban IP/TLS)
+echo "$(date) : Fetch Sofascore cache via Chrome headless (football)..." 2>&1 | tee -a "$LOG"
+/usr/bin/python3 "$SCRIPT_DIR/fetch_sofascore_cache.py" --sport football --date "$(date +%Y-%m-%d)" 2>&1 | tee -a "$LOG"
+
 echo "$(date) : Exécution artisan football:import-from-schedule --import-teams --download-logos" 2>&1 | tee -a "$LOG"
 $PHP_CMD artisan football:import-from-schedule --import-teams --download-logos 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then

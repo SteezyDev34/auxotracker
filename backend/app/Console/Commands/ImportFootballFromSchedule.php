@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\ActivityLogger;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -122,6 +123,11 @@ class ImportFootballFromSchedule extends Command
                 }
 
                 $this->line("   🔑 Sofascore ID: {$sofascoreId}");
+
+                // Télécharger les logos de la ligue dans le cache (Phase 1 → rsync → prod sans HTTP)
+                if ($downloadLogos) {
+                    $this->downloadLeagueLogoToCache($sofascoreId, $leagueName);
+                }
 
                 $seasonId = $this->getSeasonId($sofascoreId, $noCache);
                 if (!$seasonId) {
@@ -736,6 +742,52 @@ class ImportFootballFromSchedule extends Command
         }
     }
 
+    /**
+     * Télécharger les logos (light + dark) d'une ligue depuis img.sofascore.com et les stocker dans le cache.
+     * Fichiers cibles : {cacheDirectory}/league_logos/{sofascoreId}-light.png et {sofascoreId}-dark.png
+     */
+    private function downloadLeagueLogoToCache(int $sofascoreId, string $leagueName): void
+    {
+        $logoDir = $this->cacheDirectory . '/league_logos';
+        if (!is_dir($logoDir)) {
+            mkdir($logoDir, 0755, true);
+        }
+
+        foreach (['light', 'dark'] as $type) {
+            $logoPath = $logoDir . "/{$sofascoreId}-{$type}.png";
+            if (file_exists($logoPath) && filesize($logoPath) > 0) {
+                continue;
+            }
+
+            $negFile = $logoDir . "/negative_{$sofascoreId}_{$type}.json";
+            if (file_exists($negFile)) {
+                $meta = json_decode(file_get_contents($negFile), true);
+                $age = time() - ($meta['_cached_at'] ?? 0);
+                if (($meta['_negative_cache'] ?? false) && $age < 86400) {
+                    continue;
+                }
+                @unlink($negFile);
+            }
+
+            $url = "https://img.sofascore.com/api/v1/unique-tournament/{$sofascoreId}/image/{$type}";
+            try {
+                $response = Http::timeout(30)->withHeaders($this->getHttpHeaders())->get($url);
+                if ($response->successful()) {
+                    file_put_contents($logoPath, $response->body());
+                } elseif (in_array($response->status(), [403, 404])) {
+                    file_put_contents($negFile, json_encode([
+                        '_negative_cache' => true, '_cached_at' => time(),
+                        'sofascore_id' => $sofascoreId, 'type' => $type, 'status' => $response->status(),
+                    ]));
+                }
+            } catch (\Exception $e) {
+                Log::warning('Erreur téléchargement logo ligue en cache (football Phase 1)', [
+                    'sofascore_id' => $sofascoreId, 'type' => $type, 'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
     // ─── HTTP HELPERS ───────────────────────────────────────────────────
 
     /**
@@ -793,5 +845,12 @@ class ImportFootballFromSchedule extends Command
         $this->line("🌐 Erreurs API: {$this->stats['api_errors']}");
 
         Log::info('Football Phase 1 (cache) terminée', $this->stats);
+
+        ActivityLogger::importFinished('football:import-from-schedule', 'football', [
+            'leagues_discovered' => $this->stats['leagues_discovered'] ?? 0,
+            'seasons_cached' => $this->stats['seasons_cached'] ?? 0,
+            'api_errors' => $this->stats['api_errors'] ?? 0,
+        ]);
+        ActivityLogger::flush();
     }
 }

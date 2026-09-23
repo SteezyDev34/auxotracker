@@ -405,4 +405,38 @@ class SportController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Sofascore_id des joueurs de tennis dont les stats de la saison en cours
+     * ont été fetchées il y a moins de $days jours — permet au script de fetch
+     * (fetch_sofascore_cache.py) de ne pas refaire le fetch year-statistics à
+     * chaque cycle alors que le cache local est archivé/vidé après chaque sync.
+     * Les stats saison ne changent significativement qu'après plusieurs matchs
+     * joués, pas besoin de les refetcher tous les jours.
+     */
+    public function getTennisPlayersWithFreshSeasonStats(Request $request): JsonResponse
+    {
+        try {
+            $days = (int) $request->get('days', 7);
+            $year = (int) $request->get('year', now()->year);
+
+            $ids = Team::whereNotNull('teams.sofascore_id')
+                ->join('tennis_player_season_stats', 'tennis_player_season_stats.team_id', '=', 'teams.id')
+                ->where('tennis_player_season_stats.season_year', $year)
+                ->where('tennis_player_season_stats.fetched_at', '>=', now()->subDays($days))
+                ->distinct()
+                ->pluck('teams.sofascore_id');
+
+            return response()->json([
+                'success' => true,
+                'data' => $ids,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des joueurs tennis avec stats fraîches',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

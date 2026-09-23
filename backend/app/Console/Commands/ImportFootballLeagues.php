@@ -244,6 +244,13 @@ class ImportFootballLeagues extends Command
                 'force_mode' => $this->option('force')
             ]);
 
+        ActivityLogger::importFinished('football:import-leagues', 'football', [
+            'leagues_created' => $this->stats['leagues_created'] ?? 0,
+            'leagues_updated' => $this->stats['leagues_updated'] ?? 0,
+            'errors' => $this->stats['errors'] ?? 0,
+        ]);
+        ActivityLogger::flush();
+
             return Command::SUCCESS;
         } catch (\Exception $e) {
             $this->error('❌ Erreur générale: ' . $e->getMessage());

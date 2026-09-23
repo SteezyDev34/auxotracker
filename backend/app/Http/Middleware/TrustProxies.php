@@ -10,9 +10,14 @@ class TrustProxies extends Middleware
     /**
      * The trusted proxies for this application.
      *
+     * o2switch fait transiter les requêtes via son reverse-proxy
+     * (PowerBoost) avant PHP-FPM. Sans faire confiance à ce proxy, Laravel
+     * ne détecte pas correctement le schéma HTTPS d'origine (X-Forwarded-Proto),
+     * ce qui peut provoquer des redirections HTTP↔HTTPS intermittentes.
+     *
      * @var array<int, string>|string|null
      */
-    protected $proxies;
+    protected $proxies = '*';
 
     /**
      * The headers that should be used to detect proxies.

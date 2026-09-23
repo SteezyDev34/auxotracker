@@ -44,6 +44,10 @@ else
 fi
 
 # Utiliser la commande dédiée de Phase 1 si présente
+# Phase 0 : fetch des données Sofascore via Chrome headless (contourne le ban IP/TLS)
+echo "$(date) : Fetch Sofascore cache via Chrome headless (futsal)..." 2>&1 | tee -a "$LOG"
+/usr/bin/python3 "$SCRIPT_DIR/fetch_sofascore_cache.py" --sport futsal --date "$(date +%Y-%m-%d)" 2>&1 | tee -a "$LOG"
+
 echo "$(date) : Exécution artisan futsal:import-from-schedule --import-teams --download-logos" 2>&1 | tee -a "$LOG"
 $PHP_CMD artisan futsal:import-from-schedule --import-teams --download-logos 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then

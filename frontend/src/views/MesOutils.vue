@@ -13,6 +13,7 @@ import RembourseSiNul from '@/components/calculators/RembourseSiNul.vue';
 import DoubleChance from '@/components/calculators/DoubleChance.vue';
 import TauxRetourJoueur from '@/components/calculators/TauxRetourJoueur.vue';
 import Dutching from '@/components/calculators/Dutching.vue';
+import TodayMatches from '@/components/tools/TodayMatches.vue';
 
 // Onglet actif par défaut
 const activeTab = ref('0');
@@ -41,22 +42,27 @@ const activeTab = ref('0');
                             <Tab value="1">Double Chance</Tab>
                             <Tab value="2">Taux de Retour Joueur</Tab>
                             <Tab value="3">Dutching</Tab>
+                            <Tab value="4">Matchs du jour</Tab>
                         </TabList>
                         <TabPanels>
                             <TabPanel value="0">
                                 <RembourseSiNul />
                             </TabPanel>
-                            
+
                             <TabPanel value="1">
                                 <DoubleChance />
                             </TabPanel>
-                            
+
                             <TabPanel value="2">
                                 <TauxRetourJoueur />
                             </TabPanel>
-                            
+
                             <TabPanel value="3">
                                 <Dutching />
+                            </TabPanel>
+
+                            <TabPanel value="4">
+                                <TodayMatches />
                             </TabPanel>
                         </TabPanels>
                     </Tabs>

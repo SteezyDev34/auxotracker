@@ -167,7 +167,13 @@ class ImportHandballLeagues extends Command
                 ]
             );
             
-            return 0;
+            ActivityLogger::importFinished('handball:import-leagues', 'handball', [
+            'leagues_created' => $this->stats['leagues_created'] ?? 0,
+            'leagues_updated' => $this->stats['leagues_updated'] ?? 0,
+            'errors' => $this->stats['errors'] ?? 0,
+        ]);
+        ActivityLogger::flush();
+        return 0;
             
         } catch (\Exception $e) {
             $this->error('❌ Erreur lors de l\'importation: ' . $e->getMessage());

@@ -1,0 +1,11 @@
+{
+    "done_at": 1783821643,
+    "sofascore_id": 2361,
+    "name": "Wimbledon, Men",
+    "slug": "wimbledon",
+    "tennis_points": 2000,
+    "category_id": 3,
+    "category_name": "ATP",
+    "category_slug": "atp",
+    "category_flag": "atp"
+}

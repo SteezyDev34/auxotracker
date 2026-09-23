@@ -9,6 +9,7 @@ services:
       - VIRTUAL_PORT=80
       - LETSENCRYPT_HOST=api.auxotracker.lan
       - LETSENCRYPT_EMAIL=your-email@api.auxotracker.lan
+      - TZ=Europe/Paris
     networks:
       - shared_network
     volumes:

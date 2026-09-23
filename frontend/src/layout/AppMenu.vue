@@ -135,6 +135,11 @@ const model = computed(() => {
             icon: "pi pi-fw pi-sitemap",
             to: "/mes-outils/dutching",
           },
+          {
+            label: "Matchs du jour",
+            icon: "pi pi-fw pi-calendar",
+            to: "/mes-outils/matchs-du-jour",
+          },
         ],
       },
       {
@@ -314,17 +319,16 @@ const model = computed(() => {
         // Gestion (admin)
         const gestionItems = [
           { label: 'Ligues', icon: 'pi pi-fw pi-globe', to: '/gestion/ligues' },
+          { label: 'Logs', icon: 'pi pi-fw pi-list', to: '/admin/logs' },
         ];
 
-        // TODO: Remettre la condition isSuperAdmin.value une fois les tests terminés
-        // Actuellement accessible à tous les admins pour tests
-        // if (isSuperAdmin.value) {
+        if (isSuperAdmin.value) {
           gestionItems.push({
             label: 'Équipes non trouvées',
             icon: 'pi pi-fw pi-question-circle',
             to: '/gestion/equipes-non-trouvees',
           });
-        // }
+        }
 
         baseMenu.push({
           label: 'Gestion',

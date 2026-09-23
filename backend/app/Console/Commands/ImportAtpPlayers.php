@@ -138,6 +138,13 @@ class ImportAtpPlayers extends Command
                 'force_mode' => $this->option('force')
             ]);
 
+        ActivityLogger::importFinished('tennis:import-atp', 'tennis', [
+            'created' => $this->stats['players_created'] ?? $this->stats['created'] ?? 0,
+            'updated' => $this->stats['players_updated'] ?? $this->stats['updated'] ?? 0,
+            'errors' => $this->stats['errors'] ?? 0,
+        ]);
+        ActivityLogger::flush();
+
             return Command::SUCCESS;
         } catch (\Exception $e) {
             $this->error('Erreur générale: ' . $e->getMessage());

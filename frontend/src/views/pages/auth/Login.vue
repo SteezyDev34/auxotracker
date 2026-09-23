@@ -15,6 +15,13 @@ const checked = ref(false);
 const loading = ref(false);
 const errorMessage = ref("");
 
+// Pré-remplir l'email si "Se souvenir de moi" était coché lors d'une session précédente
+const savedEmail = localStorage.getItem("remembered_email");
+if (savedEmail) {
+  email.value = savedEmail;
+  checked.value = true;
+}
+
 const login = async () => {
   if (!email.value || !password.value) {
     errorMessage.value = "Veuillez remplir tous les champs.";
@@ -27,23 +34,19 @@ const login = async () => {
   try {
     const apiUrl = import.meta.env.VITE_API_URL;
     if (!apiUrl) throw new Error("VITE_API_URL must be set in environment (no fallback allowed).");
-    // Requête de connexion avec authentification par token uniquement
     const response = await axios.post(
       `${apiUrl}/login`,
-      {
-        email: email.value,
-        password: password.value,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }
+      { email: email.value, password: password.value },
+      { headers: { "Content-Type": "application/json", Accept: "application/json" }, withCredentials: true }
     );
 
     if (response.status === 200) {
       localStorage.setItem("token", response.data.token);
+      if (checked.value) {
+        localStorage.setItem("remembered_email", email.value);
+      } else {
+        localStorage.removeItem("remembered_email");
+      }
       router.push("/");
     }
   } catch (error) {
@@ -52,6 +55,10 @@ const login = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const onKeydown = (e) => {
+  if (e.key === "Enter") login();
 };
 
 const goToRegister = () => {
@@ -111,6 +118,7 @@ const goToRegister = () => {
               placeholder="Adresse e-mail"
               class="w-full md:w-[30rem] mb-8"
               v-model="email"
+              @keydown="onKeydown"
             />
 
             <label
@@ -126,6 +134,7 @@ const goToRegister = () => {
               class="mb-4"
               fluid
               :feedback="false"
+              @keydown="onKeydown"
             ></Password>
 
             <div class="flex items-center justify-between mt-2 mb-8 gap-8">

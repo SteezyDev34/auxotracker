@@ -57,6 +57,18 @@ if [[ $RC -eq 0 ]]; then
     # NOTE : pas d'archivage ici — le cache doit rester en place pour être
     # envoyé au serveur via rsync (Phase 3) avant que le serveur importe (Phase 4).
     # L'archivage est effectué côté serveur après l'import distant (Phase 5 Jenkins).
+
+    echo "$(date) : Exécution artisan tennis:compute-tightness-scores --days=14 --force" 2>&1 | tee -a "$LOG"
+    set +e
+    $PHP_CMD artisan tennis:compute-tightness-scores --days=14 --force 2>&1 | tee -a "$LOG"
+    SCORE_RC=${PIPESTATUS[0]:-${?}}
+    set -e
+    if [[ $SCORE_RC -eq 0 ]]; then
+        echo "$(date) : ✅ Scores 'match serré' recalculés" 2>&1 | tee -a "$LOG"
+    else
+        echo "$(date) : ⚠️ Erreur lors du calcul des scores (code=$SCORE_RC), import conservé" 2>&1 | tee -a "$LOG"
+    fi
+
     echo "$(date) : 🎉 Import terminé" 2>&1 | tee -a "$LOG"
 else
     echo "$(date) : ❌ Erreur lors de l'import Tennis (code=$RC)" 2>&1 | tee -a "$LOG"

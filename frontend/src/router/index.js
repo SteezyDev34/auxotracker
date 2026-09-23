@@ -142,11 +142,16 @@ const router = createRouter({
           meta: { requiresAuth: true, requiresRole: ["admin", "superadmin"] },
         },
         {
+          path: "/admin/logs",
+          name: "adminLogs",
+          component: () => import("@/views/admin/AdminLogs.vue"),
+          meta: { requiresAuth: true, requiresRole: ["admin", "superadmin"] },
+        },
+        {
           path: "/gestion/equipes-non-trouvees",
           name: "gestionEquipesNonTrouvees",
           component: () => import("@/views/admin/team-searches-not-found.vue"),
-          // TODO: Remettre requiresAuth et requiresRole une fois les tests terminés
-          // meta: { requiresAuth: true, requiresRole: ["superadmin"] },
+          meta: { requiresAuth: true, requiresRole: ["superadmin"] },
         },
         {
           path: "/pages/empty",
@@ -257,6 +262,15 @@ const router = createRouter({
           path: "/mes-outils/dutching",
           name: "dutching",
           component: () => import("@/components/calculators/Dutching.vue"),
+          meta: {
+            requiresAuth: true,
+            requiresRole: ["user", "admin", "superadmin", "manager"],
+          },
+        },
+        {
+          path: "/mes-outils/matchs-du-jour",
+          name: "matchs-du-jour",
+          component: () => import("@/components/tools/TodayMatches.vue"),
           meta: {
             requiresAuth: true,
             requiresRole: ["user", "admin", "superadmin", "manager"],

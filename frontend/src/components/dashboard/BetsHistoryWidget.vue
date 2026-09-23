@@ -8,12 +8,15 @@ import AddBetDialog from "./AddBetDialog.vue";
 import Button from "primevue/button";
 import Chip from "primevue/chip";
 import Tooltip from "primevue/tooltip";
+import { useToast } from "primevue/usetoast";
 import { useBetResults } from "@/composables/useBetResults";
 import { useLayout } from "@/layout/composables/layout";
 import { useAuth } from "@/composables/useAuth";
 
 // Enregistrement des directives
 const vTooltip = Tooltip;
+
+const toast = useToast();
 
 // Variables réactives
 const bets = ref([]);
@@ -24,6 +27,7 @@ const expandedMonths = ref(new Set());
 const expandedBets = ref(new Set());
 const showAddBetDialog = ref(false);
 const editingBet = ref(null);
+const resolving = ref(false);
 // API base (obligatoire)
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 if (!apiBaseUrl) {
@@ -635,6 +639,25 @@ onMounted(() => {
   loadBets();
   loadSports();
 });
+
+async function resolvePending() {
+  resolving.value = true;
+  try {
+    const res = await BetService.resolvePendingBets({ days: 60 });
+    const count = res.resolved ?? 0;
+    toast.add({
+      severity: count > 0 ? 'success' : 'info',
+      summary: count > 0 ? `${count} pari(s) résolu(s)` : 'Aucun pari résolu',
+      detail: res.output?.split('\n').filter(l => l.trim()).pop() ?? '',
+      life: 4000,
+    });
+    if (count > 0) await loadBets();
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: e.message, life: 4000 });
+  } finally {
+    resolving.value = false;
+  }
+}
 </script>
 
 <template>
@@ -642,19 +665,31 @@ onMounted(() => {
     <div class="card-header">
       <div class="flex justify-between items-center">
         <h5 class="text-xl font-semibold mb-0">Historique des Paris</h5>
-        <!-- Bouton avec animation de survol - Visible uniquement pour les utilisateurs autorisés -->
-        <Button
-          v-if="canCreateBets"
-          @click="openAddBetDialog"
-          class="animated-add-button"
-          severity="success"
-          rounded
-          v-tooltip.top="'Ajouter un nouveau pari'"
-          size="small"
-        >
-          <i class="pi pi-plus button-icon"></i>
-          <span class="button-text">Ajouter un pari</span>
-        </Button>
+        <div class="flex items-center gap-2">
+          <!-- Résoudre les paris pending -->
+          <Button
+            @click="resolvePending"
+            :loading="resolving"
+            severity="secondary"
+            rounded
+            v-tooltip.top="'Résoudre automatiquement les paris en attente'"
+            size="small"
+            icon="pi pi-bolt"
+          />
+          <!-- Bouton avec animation de survol - Visible uniquement pour les utilisateurs autorisés -->
+          <Button
+            v-if="canCreateBets"
+            @click="openAddBetDialog"
+            class="animated-add-button"
+            severity="success"
+            rounded
+            v-tooltip.top="'Ajouter un nouveau pari'"
+            size="small"
+          >
+            <i class="pi pi-plus button-icon"></i>
+            <span class="button-text">Ajouter un pari</span>
+          </Button>
+        </div>
       </div>
     </div>
 

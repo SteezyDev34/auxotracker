@@ -114,8 +114,11 @@ build_production() {
         exit 1
     fi
     
-    # Copier le fichier .htaccess dans dist
-    if [ -f ".htaccess" ]; then
+    # Copier le fichier .htaccess dans dist (depuis deploy/ qui contient les règles SPA)
+    if [ -f "deploy/.htaccess" ]; then
+        cp deploy/.htaccess "$LOCAL_DIST_DIR/"
+        log "📄 Fichier .htaccess copié dans dist (depuis deploy/.htaccess)"
+    elif [ -f ".htaccess" ]; then
         cp .htaccess "$LOCAL_DIST_DIR/"
         log "📄 Fichier .htaccess copié dans dist"
     fi

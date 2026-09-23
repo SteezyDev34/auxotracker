@@ -165,6 +165,13 @@ class ImportSportLeagues extends Command
                 'success_rate' => $successRate,
                 'force_mode' => $this->option('force')
             ]);
+
+        ActivityLogger::importFinished('all:import-leagues', 'all', [
+            'leagues_created' => $this->stats['leagues_created'] ?? 0,
+            'leagues_updated' => $this->stats['leagues_updated'] ?? 0,
+            'errors' => $this->stats['errors'] ?? 0,
+        ]);
+        ActivityLogger::flush();
             
             return Command::SUCCESS;
             

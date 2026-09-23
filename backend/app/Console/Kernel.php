@@ -29,6 +29,16 @@ class Kernel extends ConsoleKernel
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/tennis-import.log'));
 
+        // Phase 3 : Score "match serré" pour les matchs du jour (lecture BDD
+        // seule, aucun appel réseau) — lancé après l'import pour disposer des
+        // rankings/stats/H2H/cotes fraîchement importés.
+        $schedule->command('tennis:compute-tightness-scores --force')
+            ->dailyAt('01:55')
+            ->timezone('Europe/Paris')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/tennis-tightness-scores.log'));
+
         // ─── FOOTBALL ───────────────────────────────────────────────────
         // Phase 1 : Cache des tournois depuis l'API
         $schedule->command('football:import-from-schedule --import-teams')
@@ -39,7 +49,7 @@ class Kernel extends ConsoleKernel
             ->appendOutputTo(storage_path('logs/football-cache.log'));
 
         // Phase 2 : Import depuis le cache vers la BDD
-        $schedule->command('football:import-from-cache --import-teams --download-logos')
+        $schedule->command('sport:import-from-cache football --import-teams --download-logos')
             ->dailyAt('02:40')
             ->timezone('Europe/Paris')
             ->withoutOverlapping()
@@ -56,7 +66,7 @@ class Kernel extends ConsoleKernel
             ->appendOutputTo(storage_path('logs/basketball-cache.log'));
 
         // Phase 2 : Import depuis le cache vers la BDD
-        $schedule->command('basketball:import-from-cache --import-teams --download-logos')
+        $schedule->command('sport:import-from-cache basketball --import-teams --download-logos')
             ->dailyAt('03:40')
             ->timezone('Europe/Paris')
             ->withoutOverlapping()

@@ -29,7 +29,11 @@ class Team extends Model
         'backhand',
         'birthplace',
         'residence',
-        'coach'
+        'coach',
+        'ranking',
+        'utr_rating',
+        'livetennis_ranking',
+        'ranking_updated_at',
     ];
 
     // Relations

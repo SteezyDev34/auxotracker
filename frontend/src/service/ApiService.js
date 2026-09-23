@@ -101,6 +101,7 @@ class ApiService {
     const response = await fetch(url, {
       method: "GET",
       headers: this.getDefaultHeaders(),
+      credentials: "include",
       ...fetchOptions,
     });
 
@@ -115,6 +116,7 @@ class ApiService {
       method: "POST",
       headers: this.getDefaultHeaders(),
       body: data ? JSON.stringify(data) : null,
+      credentials: "include",
       ...options,
     });
 
@@ -129,6 +131,7 @@ class ApiService {
       method: "PUT",
       headers: this.getDefaultHeaders(),
       body: data ? JSON.stringify(data) : null,
+      credentials: "include",
       ...options,
     });
 
@@ -142,6 +145,7 @@ class ApiService {
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: "DELETE",
       headers: this.getDefaultHeaders(),
+      credentials: "include",
       ...options,
     });
 
@@ -156,6 +160,7 @@ class ApiService {
       method: "PATCH",
       headers: this.getDefaultHeaders(),
       body: data ? JSON.stringify(data) : null,
+      credentials: "include",
       ...options,
     });
 
@@ -188,6 +193,7 @@ class ApiService {
           ? `Bearer ${this.getAuthToken()}`
           : "",
       },
+      credentials: "include",
     });
 
     if (!response.ok) {

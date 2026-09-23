@@ -43,6 +43,10 @@ else
     echo "$(date) : ⚠️ Ice Hockey force demandé (ICE_HOCKEY_FORCE=1) — exécution Phase 1" 2>&1 | tee -a "$LOG"
 fi
 
+# Phase 0 : fetch des données Sofascore via Chrome headless (contourne le ban IP/TLS)
+echo "$(date) : Fetch Sofascore cache via Chrome headless (ice-hockey)..." 2>&1 | tee -a "$LOG"
+/usr/bin/python3 "$SCRIPT_DIR/fetch_sofascore_cache.py" --sport ice-hockey --date "$(date +%Y-%m-%d)" 2>&1 | tee -a "$LOG"
+
 echo "$(date) : Exécution artisan ice-hockey:import-from-schedule --import-teams --download-logos" 2>&1 | tee -a "$LOG"
 $PHP_CMD artisan ice-hockey:import-from-schedule --import-teams --download-logos 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then

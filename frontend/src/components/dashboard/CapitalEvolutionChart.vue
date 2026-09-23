@@ -121,6 +121,30 @@
       </div>
     </div>
 
+    <!-- Simulation de gain journalier (ligne de repère) -->
+    <div class="flex flex-wrap items-end gap-4 mb-4 p-3 bg-surface-50 dark:bg-surface-800/50 rounded-lg">
+      <div class="flex items-center gap-2">
+        <ToggleSwitch v-model="simulationEnabled" inputId="simulation-toggle" />
+        <label for="simulation-toggle" class="text-sm font-medium cursor-pointer">Simuler un gain journalier</label>
+      </div>
+      <div class="field" :class="{ 'opacity-50 pointer-events-none': !simulationEnabled }">
+        <label class="block text-sm font-medium mb-2">Gain journalier (%)</label>
+        <InputNumber
+          v-model="simulationDailyRate"
+          :min="-100"
+          :max="100"
+          :minFractionDigits="0"
+          :maxFractionDigits="2"
+          suffix=" %"
+          class="w-40"
+        />
+      </div>
+      <div class="field" :class="{ 'opacity-50 pointer-events-none': !simulationEnabled }">
+        <label class="block text-sm font-medium mb-2">Date de fin</label>
+        <DatePicker v-model="simulationEndDate" dateFormat="dd/mm/yy" showIcon class="w-44" />
+      </div>
+    </div>
+
     <!-- Indicateur de filtres actifs -->
     <div
       v-if="hasActiveFilters"
@@ -200,7 +224,7 @@
 
       <Chart
         type="line"
-        :data="chartData"
+        :data="displayChartData"
         :options="chartOptions"
         class="w-full"
         style="height: 400px"
@@ -276,6 +300,9 @@ import Chart from "primevue/chart";
 import Button from "primevue/button";
 import MultiSelect from "primevue/multiselect";
 import Skeleton from "primevue/skeleton";
+import ToggleSwitch from "primevue/toggleswitch";
+import InputNumber from "primevue/inputnumber";
+import DatePicker from "primevue/datepicker";
 
 // Services
 import { BetService } from "@/service/BetService";
@@ -348,6 +375,11 @@ const apiData = ref({
 
 // Capital initial calculé depuis les bankrolls utilisateur
 const userInitialCapital = ref(0);
+
+// États de la simulation de gain journalier (ligne de repère)
+const simulationEnabled = ref(false);
+const simulationDailyRate = ref(1);
+const simulationEndDate = ref(null);
 
 // Configuration avancée du graphique Chart.js
 const chartOptions = ref({
@@ -444,6 +476,100 @@ const getTipsterLabel = (value) => {
   const tipster = tipsters.value.find((t) => t.value === value);
   return tipster ? tipster.label : value;
 };
+
+// ===== SIMULATION DE GAIN JOURNALIER =====
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Parse une date au format "dd/mm/yyyy" (labels normaux) ou "dd/mm" (fallback
+ * backend quand l'utilisateur n'a encore aucun pari — cf. BetController::capitalEvolution).
+ * Retombe sur l'année en cours quand elle est absente.
+ */
+const parseFrDate = (str) => {
+  const parts = str.split("/").map(Number);
+  const [d, m, y] = parts;
+  return new Date(y ?? new Date().getFullYear(), m - 1, d);
+};
+
+/** Formate une date au format "dd/mm/yyyy" pour rester cohérent avec les labels existants */
+const formatFrDate = (date) => {
+  const d = String(date.getDate()).padStart(2, "0");
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const y = date.getFullYear();
+  return `${d}/${m}/${y}`;
+};
+
+// Initialise une date de fin par défaut (90 jours après la dernière date réelle) dès l'activation
+watch(simulationEnabled, (enabled) => {
+  if (enabled && !simulationEndDate.value) {
+    const labels = chartData.value.labels;
+    const parsedLastReal = labels.length ? parseFrDate(labels[labels.length - 1]) : null;
+    const lastReal = parsedLastReal && !isNaN(parsedLastReal.getTime()) ? parsedLastReal : new Date();
+    const defaultEnd = new Date(lastReal);
+    defaultEnd.setDate(defaultEnd.getDate() + 90);
+    simulationEndDate.value = defaultEnd;
+  }
+});
+
+/**
+ * Données du graphique enrichies de la ligne de simulation, si activée.
+ * Part de la même date de départ que les données réelles (capital initial),
+ * applique une croissance composée journalière de X% jusqu'à la date de fin choisie.
+ */
+const displayChartData = computed(() => {
+  const base = chartData.value;
+
+  if (!simulationEnabled.value || !base.labels.length) {
+    return base;
+  }
+
+  const realDates = base.labels.map(parseFrDate);
+  const startDate = realDates[0];
+  const startCapital = base.datasets[0].data[0] ?? userInitialCapital.value ?? 0;
+  const realEndDate = realDates[realDates.length - 1];
+  const simEndDate = simulationEndDate.value ? new Date(simulationEndDate.value) : realEndDate;
+  const finalEndDate = simEndDate.getTime() > realEndDate.getTime() ? simEndDate : realEndDate;
+
+  const allDates = [];
+  for (let t = startDate.getTime(); t <= finalEndDate.getTime(); t += MS_PER_DAY) {
+    allDates.push(new Date(t));
+  }
+
+  const realValuesByTime = new Map();
+  realDates.forEach((d, i) => realValuesByTime.set(d.getTime(), base.datasets[0].data[i]));
+
+  const realData = allDates.map((d) =>
+    realValuesByTime.has(d.getTime()) ? realValuesByTime.get(d.getTime()) : null
+  );
+
+  const rate = (simulationDailyRate.value || 0) / 100;
+  const simData = allDates.map((d) => {
+    if (d.getTime() < startDate.getTime() || d.getTime() > simEndDate.getTime()) {
+      return null;
+    }
+    const dayIndex = Math.round((d.getTime() - startDate.getTime()) / MS_PER_DAY);
+    return startCapital * Math.pow(1 + rate, dayIndex);
+  });
+
+  return {
+    labels: allDates.map(formatFrDate),
+    datasets: [
+      { ...base.datasets[0], data: realData },
+      {
+        label: `Simulation (${simulationDailyRate.value}%/jour)`,
+        data: simData,
+        borderColor: "#F59E0B",
+        backgroundColor: "transparent",
+        borderDash: [6, 4],
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+      },
+    ],
+  };
+});
 
 // ===== COMPUTED PROPERTIES =====
 /**

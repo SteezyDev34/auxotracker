@@ -359,6 +359,25 @@ export const BetService = {
     }
   },
 
+  // Résoudre automatiquement les paris pending
+  async resolvePendingBets(options = {}) {
+    const params = new URLSearchParams();
+    if (options.days)    params.append('days', options.days);
+    if (options.dryRun)  params.append('dry_run', '1');
+    if (options.betIds)  params.append('bet_ids', options.betIds.join(','));
+
+    const response = await fetch(`${API_BASE_URL}/bets/resolve?${params}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return response.json();
+  },
+
   // Supprimer un pari
   async deleteBet(betId) {
     try {

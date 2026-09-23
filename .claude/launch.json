@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "source ~/.nvm/nvm.sh && nvm use 20 && npm run dev"],
+      "cwd": "/Volumes/WORKSPACE/NEW BET TRACKER/frontend",
+      "port": 5173
+    }
+  ]
+}

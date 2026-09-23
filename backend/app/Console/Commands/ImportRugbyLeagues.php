@@ -158,6 +158,13 @@ class ImportRugbyLeagues extends Command
                 'total_updated' => $totalUpdated,
                 'total_skipped' => $totalSkipped
             ]);
+
+        ActivityLogger::importFinished('rugby:import-leagues', 'rugby', [
+            'leagues_created' => $this->stats['leagues_created'] ?? 0,
+            'leagues_updated' => $this->stats['leagues_updated'] ?? 0,
+            'errors' => $this->stats['errors'] ?? 0,
+        ]);
+        ActivityLogger::flush();
             
             return 0;
             

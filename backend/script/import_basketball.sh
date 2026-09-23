@@ -37,8 +37,8 @@ trap 'rm -rf "$LOCK"' EXIT
 # Par défaut : forcer + importer les équipes + télécharger les logos
 BASKETBALL_IMPORT_OPTS="${BASKETBALL_IMPORT_OPTS:---force --import-teams --download-logos}"
 
-echo "$(date) : Exécution artisan basketball:import-from-cache $BASKETBALL_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
-$PHP_CMD artisan basketball:import-from-cache $BASKETBALL_IMPORT_OPTS 2>&1 | tee -a "$LOG"
+echo "$(date) : Exécution artisan sport:import-from-cache basketball $BASKETBALL_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan sport:import-from-cache basketball $BASKETBALL_IMPORT_OPTS 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     echo "$(date) : ✅ Basketball import terminé" 2>&1 | tee -a "$LOG"
 else

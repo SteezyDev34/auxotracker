@@ -43,8 +43,12 @@ else
     echo "$(date) : ⚠️ Basketball force demandé (BASKETBALL_FORCE=1) — exécution Phase 1" 2>&1 | tee -a "$LOG"
 fi
 
-echo "$(date) : Exécution artisan basketball:import-from-schedule --import-teams --download-logos" 2>&1 | tee -a "$LOG"
-$PHP_CMD artisan basketball:import-from-schedule --import-teams --download-logos 2>&1 | tee -a "$LOG"
+# Phase 0 : fetch des données Sofascore via Chrome headless (contourne le ban IP/TLS)
+echo "$(date) : Fetch Sofascore cache via Chrome headless (basketball)..." 2>&1 | tee -a "$LOG"
+/usr/bin/python3 "$SCRIPT_DIR/fetch_sofascore_cache.py" --sport basketball --date "$(date +%Y-%m-%d)" 2>&1 | tee -a "$LOG"
+
+echo "$(date) : Exécution artisan basketball:import-from-schedule $(date +%Y-%m-%d) --import-teams --download-logos" 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan basketball:import-from-schedule "$(date +%Y-%m-%d)" --import-teams --download-logos 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     printf "%s" "done" > "$BASKETBALL_CACHE_MARKER" 2>/dev/null || true
     echo "$(date) : ✅ Basketball Phase 1 (cache) terminée" 2>&1 | tee -a "$LOG"

@@ -35,8 +35,8 @@ trap 'rm -rf "$LOCK"' EXIT
 
 VOLLEYBALL_IMPORT_OPTS="${VOLLEYBALL_IMPORT_OPTS:---force --import-teams --download-logos}"
 
-echo "$(date) : Exécution artisan volleyball:import-from-cache $VOLLEYBALL_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
-$PHP_CMD artisan volleyball:import-from-cache $VOLLEYBALL_IMPORT_OPTS 2>&1 | tee -a "$LOG"
+echo "$(date) : Exécution artisan sport:import-from-cache volleyball $VOLLEYBALL_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan sport:import-from-cache volleyball $VOLLEYBALL_IMPORT_OPTS 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     echo "$(date) : ✅ Volleyball import terminé" 2>&1 | tee -a "$LOG"
 else

@@ -188,8 +188,15 @@ for SPORT in "${SPORTS[@]}"; do
     fi
 
     # Phase 2 : cache → BDD (toujours exécutée, la commande gère les doublons)
+    # Le tennis garde sa propre commande dédiée (particularités : point-by-point,
+    # catégories ATP/WTA/Challenger/ITF/UTR, tennis_points) — tous les autres
+    # sports passent par la commande générique sport:import-from-cache.
     echo "$(date) : ▶️ $SPORT Phase 2 (cache → BDD)..." 2>&1 | tee -a "$LOG"
-    $PHP_CMD artisan $SPORT:import-from-cache --force --import-teams --download-logos 2>&1 | tee -a "$LOG"
+    if [[ "$SPORT" == "tennis" ]]; then
+        $PHP_CMD artisan tennis:import-from-cache --force --import-teams --download-logos 2>&1 | tee -a "$LOG"
+    else
+        $PHP_CMD artisan sport:import-from-cache "$SPORT" --force --import-teams --download-logos 2>&1 | tee -a "$LOG"
+    fi
     if [[ $? -eq 0 ]]; then
         echo "$(date) : ✅ $SPORT Phase 2 (import) terminée" 2>&1 | tee -a "$LOG"
     else
@@ -227,7 +234,7 @@ fi
 
 # Phase 2 : cache → BDD (toujours exécutée, la commande gère les doublons)
 echo "$(date) : ⚽ Football Phase 2 (cache → BDD)..." 2>&1 | tee -a "$LOG"
-$PHP_CMD artisan football:import-from-cache --force --import-teams --download-logos 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan sport:import-from-cache football --force --import-teams --download-logos 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     echo "$(date) : ✅ Football Phase 2 (import) terminée" 2>&1 | tee -a "$LOG"
 else
@@ -264,7 +271,7 @@ fi
 
 # Phase 2 : cache → BDD (toujours exécutée, la commande gère les doublons)
 echo "$(date) : 🏀 Basketball Phase 2 (cache → BDD)..." 2>&1 | tee -a "$LOG"
-$PHP_CMD artisan basketball:import-from-cache --force --import-teams --download-logos 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan sport:import-from-cache basketball --force --import-teams --download-logos 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     echo "$(date) : ✅ Basketball Phase 2 (import) terminée" 2>&1 | tee -a "$LOG"
 else

@@ -51,6 +51,45 @@ if [ "${TENNIS_FORCE:-}" = "1" ]; then TEN_PARAMS="--force"; fi
 [ -n "${TENNIS_DELAY:-}" ] && TEN_PARAMS="$TEN_PARAMS --delay=${TENNIS_DELAY}"
 [ -n "${TENNIS_DATE_OFFSET:-}" ] && TEN_PARAMS="$TEN_PARAMS --date-offset=${TENNIS_DATE_OFFSET}"
 
+# Phase 0 : fetch des données Sofascore via Chrome headless (contourne le ban IP/TLS)
+echo "$(date) : Fetch Sofascore cache via Chrome headless..." 2>&1 | tee -a "$LOG"
+FETCH_DATE="${TENNIS_DATE_OFFSET:+$(date -v+${TENNIS_DATE_OFFSET}d +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)}"
+FETCH_DATE="${FETCH_DATE:-$(date +%Y-%m-%d)}"
+
+# Retry automatique (jusqu'à 2 tentatives supplémentaires) si le script Python
+# sort avec le code 42 : ça signifie que Chrome a crashé en cours de route
+# (session morte) — une nouvelle session Chrome fraîche repart du cache déjà
+# écrit sur disque (pas de perte), plutôt que de laisser tourner un process
+# qui boucle pendant des heures sans plus rien récupérer.
+CRASH_RETRIES=0
+MAX_CRASH_RETRIES=2
+while true; do
+    /usr/bin/python3 -u "$SCRIPT_DIR/fetch_sofascore_cache.py" --sport tennis --date "$FETCH_DATE" 2>&1 | tee -a "$LOG" || true
+    FETCH_EXIT=${PIPESTATUS[0]:-${?}}
+    if [[ "$FETCH_EXIT" -eq 42 && "$CRASH_RETRIES" -lt "$MAX_CRASH_RETRIES" ]]; then
+        CRASH_RETRIES=$((CRASH_RETRIES + 1))
+        echo "$(date) : 💥 Chrome a crashé — relance automatique (tentative $CRASH_RETRIES/$MAX_CRASH_RETRIES)" 2>&1 | tee -a "$LOG"
+        pkill -f chromedriver 2>/dev/null || true
+        sleep 2
+        continue
+    fi
+    break
+done
+
+if [[ "$FETCH_EXIT" -ne 0 ]]; then
+    echo "$(date) : ⚠️  Fetch Chrome échoué, tentative sans --offline" 2>&1 | tee -a "$LOG"
+else
+    # Le fetch Python a réussi : on passe en mode --offline et on retire --force
+    # (en --offline --force, PHP ignorerait les caches Python et créerait des caches négatifs)
+    # On supprime les markers de tournois pour que artisan retraite sans --force
+    CACHE_DIR="$PROJECT_DIR/storage/app/sofascore_cache"
+    find "$CACHE_DIR" -name "tennis_LEAGUE_DONE_${FETCH_DATE}_*" -delete 2>/dev/null || true
+    echo "$(date) : Markers de tournois supprimés pour ${FETCH_DATE}" 2>&1 | tee -a "$LOG"
+    TEN_PARAMS="${TEN_PARAMS//--force/} --offline"
+    TEN_PARAMS="$(echo "$TEN_PARAMS" | xargs)"  # trim whitespace
+    echo "$(date) : Fetch Chrome OK — artisan lancé en mode --offline (sans --force)" 2>&1 | tee -a "$LOG"
+fi
+
 echo "$(date) : Exécution artisan tennis:import-from-schedule $TEN_PARAMS" 2>&1 | tee -a "$LOG"
 $PHP_CMD artisan tennis:import-from-schedule $TEN_PARAMS 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then

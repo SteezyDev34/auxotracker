@@ -124,6 +124,15 @@ storage/app/sofascore_cache/**/*.cache
 storage/app/sofascore_cache/**/*.meta
 storage/app/sofascore_cache/**/metadata/
 
+# Marqueur d'idempotence LOCAL du parsing point-by-point (--skip-archive) —
+# ne doit jamais partir vers prod : sa BDD est distincte et doit traiter tous
+# les fichiers reçus, indépendamment de ce que le local a déjà compté.
+storage/app/sofascore_cache/**/.counted_event_ids.json
+
+# Historique archivé local (créé par send_cache_and_archive.sh) — inutile sur
+# le serveur, ne fait que ralentir le sync (grossit indéfiniment avec images)
+storage/app/sofascore_cache/archives/
+
 # Fichier de suivi de synchronisation rsync (généré par le script deploy local)
 .last_sync
 
@@ -136,7 +145,8 @@ storage/framework/sessions/
 storage/framework/views/
 bootstrap/cache/
 
-# Uploads/médias générés dynamiquement (ne pas écraser ceux du serveur)
+
+# Logos publics — les IDs BDD diffèrent entre local et prod, le serveur génère les siens via import-from-cache
 storage/app/public/team_logos/
 storage/app/public/league_logos/
 

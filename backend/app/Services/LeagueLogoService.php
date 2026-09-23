@@ -10,6 +10,49 @@ use Illuminate\Support\Facades\Log;
 class LeagueLogoService
 {
     /**
+     * Répertoires de cache à inspecter pour les logos de ligues (par sofascore_id).
+     * Format attendu : {dir}/league_logos/{sofascoreId}-light.png et {dir}/league_logos/{sofascoreId}-dark.png
+     */
+    private function getCacheCandidateDirs(): array
+    {
+        $base = storage_path('app/sofascore_cache');
+        $dirs = [];
+        $sports = ['football_schedule', 'basketball_schedule', 'baseball_schedule',
+                   'futsal_schedule', 'handball_schedule', 'ice_hockey_schedule',
+                   'rugby_schedule', 'volleyball_schedule', 'tennis_leagues'];
+        foreach ($sports as $sport) {
+            $sportDir = $base . '/' . $sport;
+            if (!is_dir($sportDir)) {
+                continue;
+            }
+            // Prefer most recent dated sub-directory
+            $dates = array_filter(scandir($sportDir), fn($d) => is_dir("$sportDir/$d") && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d));
+            if ($dates) {
+                rsort($dates);
+                $dirs[] = "$sportDir/" . reset($dates);
+            }
+            $dirs[] = $sportDir;
+        }
+        return $dirs;
+    }
+
+    /**
+     * Cherche un logo de ligue dans le cache local (évite HTTP sur le serveur prod).
+     * Fichiers : {cacheDir}/league_logos/{sofascoreId}-light.png ou {sofascoreId}-dark.png
+     */
+    private function findCachedLeagueLogo(int $sofascoreId, string $type): ?string
+    {
+        $filename = "{$sofascoreId}-{$type}.png";
+        foreach ($this->getCacheCandidateDirs() as $dir) {
+            $path = $dir . '/league_logos/' . $filename;
+            if (file_exists($path) && filesize($path) > 0) {
+                return $path;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Vérifie et télécharge les logos d'une ligue si nécessaire
      *
      * @param League $league
@@ -153,6 +196,21 @@ class LeagueLogoService
                 }
                 // expired
                 @unlink($negFile);
+            }
+
+            // Chercher d'abord dans le cache local (évite tout appel HTTP — requis sur prod o2switch)
+            $cachedFile = $this->findCachedLeagueLogo($league->sofascore_id, $type);
+            if ($cachedFile) {
+                $logoPath = $type === 'light'
+                    ? "league_logos/{$league->id}.png"
+                    : "league_logos/{$league->id}-dark.png";
+                Storage::disk('public')->makeDirectory('league_logos');
+                Storage::disk('public')->put($logoPath, file_get_contents($cachedFile));
+                Log::info("Logo {$type} copié depuis le cache pour la ligue {$league->name}", [
+                    'path' => $logoPath,
+                    'source' => $cachedFile,
+                ]);
+                return $logoPath;
             }
 
             // retrieve force flag if provided (back compat: last arg may be force)

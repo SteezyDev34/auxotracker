@@ -10,12 +10,6 @@ use Illuminate\Http\JsonResponse;
 
 class TeamSearchNotFoundController extends Controller
 {
-    public function __construct()
-    {
-        // Middleware désactivé temporairement pour tests
-        // $this->middleware(['auth:sanctum', 'role:superadmin']);
-    }
-
     /**
      * Enregistrer un terme de recherche non trouvé
      */

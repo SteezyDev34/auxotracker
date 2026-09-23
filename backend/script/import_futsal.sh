@@ -37,8 +37,8 @@ trap 'rm -rf "$LOCK"' EXIT
 # Par défaut : forcer + importer les équipes + télécharger les logos
 FUTSAL_IMPORT_OPTS="${FUTSAL_IMPORT_OPTS:---force --import-teams --download-logos}"
 
-echo "$(date) : Exécution artisan futsal:import-from-cache $FUTSAL_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
-$PHP_CMD artisan futsal:import-from-cache $FUTSAL_IMPORT_OPTS 2>&1 | tee -a "$LOG"
+echo "$(date) : Exécution artisan sport:import-from-cache futsal $FUTSAL_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan sport:import-from-cache futsal $FUTSAL_IMPORT_OPTS 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     echo "$(date) : ✅ Futsal import terminé" 2>&1 | tee -a "$LOG"
 else

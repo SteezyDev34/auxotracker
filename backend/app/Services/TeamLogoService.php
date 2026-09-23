@@ -10,6 +10,44 @@ use Illuminate\Support\Facades\Log;
 class TeamLogoService
 {
     /**
+     * Répertoires de cache à inspecter pour les logos d'équipe (par sofascore_id).
+     * Format attendu : {dir}/team_logos/{sofascoreId}.png (écrit par
+     * fetch_team_logos() dans fetch_sofascore_cache.py — fetch navigateur,
+     * l'endpoint image étant bloqué en HTTP direct depuis ce serveur).
+     */
+    private function getCacheCandidateDirs(): array
+    {
+        $base = storage_path('app/sofascore_cache');
+        $dirs = [];
+        $sports = ['football_schedule', 'basketball_schedule', 'baseball_schedule',
+                   'futsal_schedule', 'handball_schedule', 'ice_hockey_schedule',
+                   'rugby_schedule', 'volleyball_schedule'];
+        foreach ($sports as $sport) {
+            $sportDir = $base . '/' . $sport;
+            if (!is_dir($sportDir)) {
+                continue;
+            }
+            $dates = array_filter(scandir($sportDir), fn($d) => is_dir("$sportDir/$d") && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d));
+            if ($dates) {
+                rsort($dates);
+                $dirs[] = "$sportDir/" . reset($dates);
+            }
+        }
+        return $dirs;
+    }
+
+    private function findCachedTeamLogo(int $sofascoreId): ?string
+    {
+        foreach ($this->getCacheCandidateDirs() as $dir) {
+            $path = $dir . '/team_logos/' . $sofascoreId . '.png';
+            if (file_exists($path) && filesize($path) > 0) {
+                return $path;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Vérifie et télécharge le logo d'une équipe si nécessaire
      *
      * @param Team $team
@@ -24,6 +62,16 @@ class TeamLogoService
             if ($team->img !== $logoPath) {
                 $team->update(['img' => $logoPath]);
             }
+            return $logoPath;
+        }
+
+        // Chercher d'abord dans le cache local (fetch navigateur en amont) — évite
+        // tout appel HTTP, requis sur prod o2switch (403 confirmé sur cet endpoint)
+        if ($team->sofascore_id && $cached = $this->findCachedTeamLogo((int) $team->sofascore_id)) {
+            Storage::disk('public')->makeDirectory('team_logos');
+            Storage::disk('public')->put($logoPath, file_get_contents($cached));
+            $team->update(['img' => $logoPath]);
+            Log::info('Logo équipe copié depuis le cache', ['team_id' => $team->id, 'source' => $cached]);
             return $logoPath;
         }
 

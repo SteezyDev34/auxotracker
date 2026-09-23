@@ -37,6 +37,13 @@ from selenium.common.exceptions import WebDriverException, TimeoutException
 
 STORAGE_BASE = Path(__file__).parent.parent / "storage" / "app" / "sofascore_cache"
 
+# TEMPORAIRE (demande utilisateur, 2026-09-21) : exclut les tournois UTR et
+# Doubles du fetch tennis pour réduire le volume de requêtes en direct
+# (moins de joueurs/matchs à traiter = moins de risque de rate-limit/challenge
+# Sofascore). Ces catégories ne sont pas exploitées aujourd'hui par le
+# scoring "match serré"/martingale. À retirer si on veut les réintégrer.
+TENNIS_EXCLUDE_TOURNAMENT_KEYWORDS = ("utr", "doubles")
+
 SPORTS_CONFIG = {
     "tennis": {
         "mode": "live_featured",
@@ -139,9 +146,33 @@ def fetch_json(driver: webdriver.Chrome, url: str, retries: int = 3, with_status
             if result and result.get("ok"):
                 return (result["data"], last_status) if with_status else result["data"]
             print(f"  ⚠️  fetch() KO (tentative {attempt}/{retries}): {result}", file=sys.stderr)
-            time.sleep(2)
+            if last_status == 404:
+                # Un 404 est définitif — la ressource n'existe pas, retenter ne
+                # changera rien. On sort immédiatement au lieu d'attendre.
+                break
+            is_challenge = (
+                last_status == 403
+                and isinstance(result, dict)
+                and (result.get("data") or {}).get("error", {}).get("reason") == "challenge"
+            )
+            if is_challenge:
+                # Rate-limit/anti-bot côté Sofascore (distinct du ban IP initial) :
+                # retenter tout de suite ne sert à rien, on attend nettement plus
+                # longtemps pour laisser la fenêtre de blocage se refermer.
+                time.sleep(15)
+            else:
+                time.sleep(2)
         except WebDriverException as e:
             print(f"  ⚠️  WebDriverException (tentative {attempt}/{retries}): {e}", file=sys.stderr)
+            if "invalid session id" in str(e).lower() or "session deleted" in str(e).lower():
+                # Le navigateur a crashé (session Chrome morte) : retenter ne
+                # sert à rien, tout appel suivant échouera pareil jusqu'à la
+                # fin du script (déjà vu deux fois en prod : le run continue
+                # à boucler pendant des heures sans plus rien récupérer).
+                # On sort immédiatement avec un code dédié pour que
+                # cache_tennis.sh redémarre automatiquement une session fraîche.
+                print("  💥 Session Chrome morte (crash navigateur) — arrêt immédiat pour relance automatique", file=sys.stderr)
+                sys.exit(42)
             time.sleep(2)
     return (None, last_status) if with_status else None
 
@@ -183,6 +214,7 @@ def fetch_tennis_scheduled_events(driver: webdriver.Chrome, sched_dir, target_da
 
     # Extraire les uniqueTournament.id depuis les pages
     unique_ids = {}
+    excluded_count = 0
     for p in sorted(sched_dir.glob("page_*.json")):
         try:
             data = json.loads(p.read_text())
@@ -191,13 +223,19 @@ def fetch_tennis_scheduled_events(driver: webdriver.Chrome, sched_dir, target_da
             for entry in data.get("scheduled", []):
                 ut = entry.get("tournament", {}).get("uniqueTournament", {})
                 uid = ut.get("id")
+                name = ut.get("name", f"ID:{uid}")
                 if uid and uid not in unique_ids:
-                    unique_ids[uid] = ut.get("name", f"ID:{uid}")
+                    if any(kw in name.lower() for kw in TENNIS_EXCLUDE_TOURNAMENT_KEYWORDS):
+                        excluded_count += 1
+                        continue
+                    unique_ids[uid] = name
         except Exception:
             pass
 
     total = len(unique_ids)
     print(f"\n  🎾 Fetch events pour {total} tournois tennis du jour...")
+    if excluded_count:
+        print(f"  ⏭️  {excluded_count} tournoi(s) exclus (UTR/Doubles, filtre temporaire)")
 
     all_events = []
     seen_ids = set()
@@ -495,6 +533,17 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
         player_ids = list(event_ids.items())
         print(f"\n👤 Total joueurs à traiter (events + cache): {len(player_ids)}")
         fetch_player_details(driver, player_ids, cache_dir, current_year)
+        fetch_player_rankings(driver, player_ids, cache_dir)
+
+        # H2H + cotes uniquement pour les matchs du jour (pas tout le cache joueurs)
+        if all_events:
+            fetch_h2h_and_odds_for_events(driver, all_events, cache_dir)
+
+        # Point-by-point historique : borné aux joueurs jouant AUJOURD'HUI
+        # (event_ids), pas tout le pool de joueurs déjà en cache — volume élevé
+        # (events/last + jusqu'à 3 point-by-point par joueur).
+        if event_ids:
+            fetch_player_point_by_point_history(driver, list(event_ids.items()), cache_dir)
 
 
 # ---------------------------------------------------------------------------
@@ -533,6 +582,8 @@ def _build_player_basic(details_json: dict):
         "slug": team.get("slug") or _slugify(team.get("name") or str(team["id"])),
         "gender": team.get("gender"),
     }
+    if isinstance(team.get("ranking"), int):
+        basic["ranking"] = team["ranking"]
     country_code = (team.get("country") or {}).get("alpha2")
     if country_code:
         basic["country_code"] = country_code
@@ -565,8 +616,7 @@ def _fetch_tennis_players_with_details_from_prod() -> set:
     """Sofascore_id des joueurs tennis dont les détails statiques (naissance,
     taille, main directrice...) sont déjà en base de prod — permet de ne pas
     refaire ce fetch quand le cache local a été archivé/vidé, ces infos ne
-    changeant plus une fois connues. Ne concerne QUE les détails : les stats
-    (year-statistics) sont, elles, toujours refetchées à chaque run."""
+    changeant plus une fois connues. Ne concerne QUE les détails."""
     try:
         url = "https://api.auxotracker.p-com.studio/api/tennis/players/with-details"
         r = requests.get(url, timeout=10)
@@ -583,6 +633,56 @@ def _fetch_tennis_players_with_details_from_prod() -> set:
     return set()
 
 
+def _fetch_tennis_players_with_fresh_season_stats_from_prod(days: int = 7) -> set:
+    """Sofascore_id des joueurs tennis dont les stats de la saison en cours
+    ont été fetchées il y a moins de `days` jours en base de prod — évite de
+    refetcher year-statistics à chaque run alors que le cache local est
+    archivé/vidé après chaque sync. Les stats saison ne changent
+    significativement qu'après plusieurs matchs joués, pas besoin de les
+    refetcher tous les jours (réduit fortement le volume de requêtes en
+    direct, utile pour éviter le rate-limit/challenge Sofascore)."""
+    try:
+        url = f"https://api.auxotracker.p-com.studio/api/tennis/players/with-fresh-season-stats?days={days}"
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200 and r.json().get("success"):
+            out = set()
+            for v in r.json().get("data", []):
+                try:
+                    out.add(int(v))
+                except (TypeError, ValueError):
+                    pass
+            return out
+    except Exception as e:
+        print(f"  ⚠️  Impossible de récupérer les joueurs tennis avec stats fraîches en prod: {e}", file=sys.stderr)
+    return set()
+
+
+# Le dossier "tennis_players" (comme tout top-level dir sous sofascore_cache)
+# est archivé après chaque sync (voir send_cache_and_archive.sh), donc le
+# cache négatif 24h des stats ne survit jamais d'un run au suivant. Ce fichier
+# vit directement à la racine de sofascore_cache (pas un target d'archivage)
+# pour retenir durablement les joueurs déjà établis (détails en prod) dont on
+# sait qu'ils n'ont pas de stats — évite de les re-fetcher/404 à chaque run.
+STATS_404_BLACKLIST_PATH = STORAGE_BASE / ".tennis_stats_404_blacklist.json"
+STATS_404_BLACKLIST_TTL = 14 * 86400
+
+
+def _load_stats_404_blacklist() -> dict:
+    try:
+        if STATS_404_BLACKLIST_PATH.exists():
+            return json.loads(STATS_404_BLACKLIST_PATH.read_text())
+    except Exception:
+        pass
+    return {}
+
+
+def _save_stats_404_blacklist(blacklist: dict) -> None:
+    try:
+        STATS_404_BLACKLIST_PATH.write_text(json.dumps(blacklist))
+    except Exception as e:
+        print(f"  ⚠️  Impossible d'écrire le blacklist stats 404: {e}", file=sys.stderr)
+
+
 def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: Path, year: int):
     """Fetch and cache player details, stats, and images for all given player IDs."""
     players_dir = cache_dir / "players"
@@ -597,10 +697,17 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
 
     already_detailed_prod = _fetch_tennis_players_with_details_from_prod()
     if already_detailed_prod:
-        print(f"  ⏭️  {len(already_detailed_prod)} joueur(s) déjà détaillé(s) en prod — skip détails (stats toujours refetchées)")
+        print(f"  ⏭️  {len(already_detailed_prod)} joueur(s) déjà détaillé(s) en prod — skip détails")
+
+    fresh_stats_prod = _fetch_tennis_players_with_fresh_season_stats_from_prod(days=7)
+    if fresh_stats_prod:
+        print(f"  ⏭️  {len(fresh_stats_prod)} joueur(s) avec stats saison < 7 jours en prod — skip stats")
+
+    stats_404_blacklist = _load_stats_404_blacklist()
 
     for i, (pid, name) in enumerate(player_ids, 1):
         print(f"  [{i}/{total}] {name} (ID: {pid})")
+        made_request = False
 
         # --- Details ---
         details_file = players_dir / f"player_details_{pid}.json"
@@ -622,6 +729,7 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
             print(f"    ⏭️  Détails déjà en prod — skip")
         else:
             url = f"https://www.sofascore.com/api/v1/team/{pid}"
+            made_request = True
             data = fetch_json(driver, url)
             if data and "error" not in data:
                 details_file.write_text(json.dumps(data, ensure_ascii=False))
@@ -656,7 +764,22 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
         # --- Statistics ---
         stats_file = stats_dir / f"player_statistics_{pid}.json"
         need_stats_fetch = True
-        if stats_file.exists():
+
+        blacklist_entry = stats_404_blacklist.get(str(pid))
+        if (
+            blacklist_entry
+            and pid in already_detailed_prod
+            and time.time() - blacklist_entry < STATS_404_BLACKLIST_TTL
+        ):
+            age_days = (time.time() - blacklist_entry) / 86400
+            print(f"    ⏭️  Stats 404 confirmé (joueur établi, blacklist âge: {age_days:.1f}j) — skip")
+            need_stats_fetch = False
+
+        if need_stats_fetch and pid in fresh_stats_prod:
+            print(f"    ⏭️  Stats saison < 7 jours en prod — skip")
+            need_stats_fetch = False
+
+        if need_stats_fetch and stats_file.exists():
             try:
                 existing = json.loads(stats_file.read_text())
                 if existing.get("_negative_cache"):
@@ -676,8 +799,10 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
 
         if need_stats_fetch:
             url = f"https://www.sofascore.com/api/v1/team/{pid}/year-statistics/{year}"
+            made_request = True
             data, http_status = fetch_json(driver, url, with_status=True)
             if data and "error" not in data and not data.get("_negative_cache"):
+                data["_fetched_year"] = year
                 stats_file.write_text(json.dumps(data, ensure_ascii=False))
                 print(f"    ✅ Stats {year} écrites")
             else:
@@ -692,6 +817,23 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
                     "_expires_at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() + 86400)),
                 }, ensure_ascii=False))
                 print(f"    ⚠️  Stats non disponibles (statut: {http_status}, cache négatif écrit)")
+                if http_status == 404 and pid in already_detailed_prod:
+                    stats_404_blacklist[str(pid)] = time.time()
+                    _save_stats_404_blacklist(stats_404_blacklist)
+
+        # --- Statistics année précédente (plus de données pour le score) ---
+        # Cache PERMANENT : une saison passée ne change plus une fois terminée,
+        # pas besoin de TTL ni de cache négatif comme pour l'année en cours.
+        prev_year = year - 1
+        stats_prev_file = stats_dir / f"player_statistics_prevyear_{pid}.json"
+        if not stats_prev_file.exists():
+            url = f"https://www.sofascore.com/api/v1/team/{pid}/year-statistics/{prev_year}"
+            made_request = True
+            data = fetch_json(driver, url)
+            if data and "error" not in data:
+                data["_fetched_year"] = prev_year
+                stats_prev_file.write_text(json.dumps(data, ensure_ascii=False))
+                print(f"    ✅ Stats {prev_year} (année précédente) écrites")
 
         # --- Image ---
         logo_file = logos_dir / f"{pid}.png"
@@ -710,6 +852,7 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
                     pass
 
             img_url = f"https://api.sofascore.com/api/v1/team/{pid}/image"
+            made_request = True
             script = """
                 const [url, callback] = arguments;
                 fetch(url, {credentials: 'include'})
@@ -742,7 +885,138 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
             except Exception as e:
                 print(f"    ⚠️  Erreur image: {e}", file=sys.stderr)
 
+        if made_request:
+            time.sleep(0.3)
+
+
+def fetch_player_rankings(driver: webdriver.Chrome, player_ids: list, cache_dir: Path):
+    """Fetch team/{id}/rankings (ATP/WTA + UTR + livetennis) pour chaque joueur.
+
+    Cache local avec TTL 7 jours (le classement ne change qu'une fois par
+    semaine côté ATP/WTA) — évite de re-fetcher à chaque run."""
+    rankings_dir = cache_dir / "players" / "rankings"
+    rankings_dir.mkdir(parents=True, exist_ok=True)
+
+    total = len(player_ids)
+    print(f"\n🏅 Fetch rankings/UTR: {total} joueur(s)")
+    fetched = 0
+    for i, (pid, name) in enumerate(player_ids, 1):
+        out_file = rankings_dir / f"rankings_{pid}.json"
+        if out_file.exists():
+            try:
+                age = time.time() - out_file.stat().st_mtime
+                if age < 7 * 86400:
+                    continue
+            except Exception:
+                pass
+
+        url = f"https://www.sofascore.com/api/v1/team/{pid}/rankings"
+        data = fetch_json(driver, url)
+        if data and "rankings" in data:
+            out_file.write_text(json.dumps(data, ensure_ascii=False))
+            fetched += 1
         time.sleep(0.3)
+        if i % 50 == 0:
+            print(f"  [{i}/{total}] traités... ({fetched} nouveaux)")
+    print(f"  📊 Rankings fetchés: {fetched}/{total}")
+
+
+def fetch_player_point_by_point_history(driver: webdriver.Chrome, player_ids: list, cache_dir: Path, max_recent: int = 3):
+    """Fetch event/{id}/point-by-point pour les derniers matchs TERMINÉS de chaque
+    joueur (via team/{id}/events/last/0) — sert à calculer empiriquement la
+    fréquence réelle d'atteindre 15-15/30-30/40-40 dans le 1er set, plutôt
+    qu'un modèle théorique. Cache PERMANENT (un match passé ne change plus) :
+    au fil des jours, de moins en moins de nouveaux fetches sont nécessaires."""
+    pbp_dir = cache_dir / "players" / "point_by_point"
+    pbp_processed_dir = pbp_dir / "processed"
+    pbp_dir.mkdir(parents=True, exist_ok=True)
+
+    total = len(player_ids)
+    print(f"\n🎯 Fetch historique point-by-point: {total} joueur(s) (max {max_recent} matchs récents/joueur)")
+    fetched, skipped_cached = 0, 0
+
+    for i, (pid, name) in enumerate(player_ids, 1):
+        url = f"https://www.sofascore.com/api/v1/team/{pid}/events/last/0"
+        data = fetch_json(driver, url)
+        if not data or "events" not in data:
+            continue
+
+        new_for_player = 0
+        for event in data["events"]:
+            if new_for_player >= max_recent:
+                break
+            if (event.get("status", {}).get("type") != "finished"):
+                continue
+            tournament_name = (event.get("tournament") or {}).get("name", "").lower()
+            if "doubles" in tournament_name:
+                continue
+
+            event_id = event.get("id")
+            if not event_id:
+                continue
+
+            pbp_file = pbp_dir / f"pbp_{event_id}.json"
+            pbp_processed_file = pbp_processed_dir / f"pbp_{event_id}.json"
+            if pbp_file.exists() or pbp_processed_file.exists():
+                skipped_cached += 1
+                continue
+
+            pbp_url = f"https://www.sofascore.com/api/v1/event/{event_id}/point-by-point"
+            pbp_data = fetch_json(driver, pbp_url)
+            if pbp_data and "pointByPoint" in pbp_data:
+                pbp_data["_home_team_id"] = (event.get("homeTeam") or {}).get("id")
+                pbp_data["_away_team_id"] = (event.get("awayTeam") or {}).get("id")
+                pbp_file.write_text(json.dumps(pbp_data, ensure_ascii=False))
+                fetched += 1
+                new_for_player += 1
+            time.sleep(0.3)
+
+        if i % 50 == 0:
+            print(f"  [{i}/{total}] traités... ({fetched} nouveaux, {skipped_cached} déjà en cache)")
+        time.sleep(0.2)
+
+    print(f"  📊 Point-by-point nouveaux: {fetched} | déjà en cache (skip): {skipped_cached}")
+
+
+def fetch_h2h_and_odds_for_events(driver: webdriver.Chrome, events: list, cache_dir: Path):
+    """Fetch H2H détaillé (event/{customId}/h2h/events) et cotes (event/{id}/odds/1/all)
+    pour chaque match du jour. Volume borné par le nombre de matchs (pas de joueurs)."""
+    h2h_dir = cache_dir / "tournaments" / "h2h"
+    odds_dir = cache_dir / "tournaments" / "odds"
+    h2h_dir.mkdir(parents=True, exist_ok=True)
+    odds_dir.mkdir(parents=True, exist_ok=True)
+
+    total = len(events)
+    print(f"\n🤝 Fetch H2H + cotes: {total} match(s) du jour")
+    h2h_ok, odds_ok = 0, 0
+    for i, event in enumerate(events, 1):
+        event_id = event.get("id")
+        custom_id = event.get("customId")
+        if not event_id:
+            continue
+
+        h2h_file = h2h_dir / f"h2h_{event_id}.json"
+        if not h2h_file.exists() and custom_id:
+            url = f"https://www.sofascore.com/api/v1/event/{custom_id}/h2h/events"
+            data = fetch_json(driver, url)
+            if data and "events" in data:
+                h2h_file.write_text(json.dumps(data, ensure_ascii=False))
+                h2h_ok += 1
+            time.sleep(0.3)
+
+        odds_file = odds_dir / f"odds_{event_id}.json"
+        if not odds_file.exists():
+            url = f"https://www.sofascore.com/api/v1/event/{event_id}/odds/1/all"
+            data = fetch_json(driver, url)
+            if data and "markets" in data:
+                odds_file.write_text(json.dumps(data, ensure_ascii=False))
+                odds_ok += 1
+            time.sleep(0.3)
+
+        if i % 50 == 0:
+            print(f"  [{i}/{total}] traités...")
+
+    print(f"  📊 H2H écrits: {h2h_ok} | Cotes écrites: {odds_ok} (sur {total} matchs)")
 
 
 # ---------------------------------------------------------------------------

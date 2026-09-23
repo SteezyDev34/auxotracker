@@ -94,10 +94,10 @@ done
 echo "$(date) : 📤 Exécution de la commande de synchronisation" 2>&1 | tee -a "$LOG"
 if [[ -n "${SYNC_CMD:-}" ]]; then
     echo "$(date) : Utilisation de SYNC_CMD='$SYNC_CMD'" 2>&1 | tee -a "$LOG"
-    eval "$SYNC_CMD" 2>&1 | tee -a "$LOG"
+    eval "$SYNC_CMD" 2>&1 | tee -a "$LOG" || true
     SYNC_EXIT=${PIPESTATUS[0]:-${?}}
 else
-    ljdsync 2>&1 | tee -a "$LOG"
+    ljdsync 2>&1 | tee -a "$LOG" || true
     SYNC_EXIT=${PIPESTATUS[0]:-${?}}
 fi
 

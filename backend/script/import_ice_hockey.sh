@@ -37,8 +37,8 @@ trap 'rm -rf "$LOCK"' EXIT
 # Par défaut : forcer + importer les équipes + télécharger les logos
 ICE_HOCKEY_IMPORT_OPTS="${ICE_HOCKEY_IMPORT_OPTS:---force --import-teams --download-logos}"
 
-echo "$(date) : Exécution artisan ice-hockey:import-from-cache $ICE_HOCKEY_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
-$PHP_CMD artisan ice-hockey:import-from-cache $ICE_HOCKEY_IMPORT_OPTS 2>&1 | tee -a "$LOG"
+echo "$(date) : Exécution artisan sport:import-from-cache ice-hockey $ICE_HOCKEY_IMPORT_OPTS" 2>&1 | tee -a "$LOG"
+$PHP_CMD artisan sport:import-from-cache ice-hockey $ICE_HOCKEY_IMPORT_OPTS 2>&1 | tee -a "$LOG"
 if [[ $? -eq 0 ]]; then
     echo "$(date) : ✅ Ice Hockey import terminé" 2>&1 | tee -a "$LOG"
 else
