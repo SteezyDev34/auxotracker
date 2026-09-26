@@ -34,7 +34,7 @@ const STAT_HELP = {
     },
     patterns: {
         title: '30-0 / G:40-0 / G:40-15 / G:40-30',
-        text: "Probas de \"patterns\" de jeu (moyenne des 2 joueurs) : mener 30-0 (2-0), jeu terminé 40-0/40-15/40-30 (sans deuce). Cotes de référence : 30-0 = 2.20, jeu 40-0/40-15/40-30 = 3.00 chacun. Vert = edge positif.",
+        text: "Probas de \"patterns\" de jeu (moyenne des 2 joueurs) : mener 30-0 (2-0), jeu terminé 40-0/40-15/40-30 (sans deuce). Cotes de référence : 30-0 = 2.00, jeu 40-0/40-15/40-30 = 3.00 chacun. Vert = edge positif.",
     },
     leads: {
         title: '🥇Nom 15-0: X%',
@@ -208,7 +208,7 @@ function isValueBet(p, match) {
 }
 
 // Probas de "patterns" de jeu — désormais avec edge (cotes de référence :
-// 30-0=2.20, jeu 40-0/40-15/40-30=3.00 chacun).
+// 30-0=2.00, jeu 40-0/40-15/40-30=3.00 chacun).
 function gamePatternProbabilities(match) {
     const probs = [
         { key: '30-0', value: match.prob_30love_set1, edge: match.edge_30love, title: "Proba qu'un des deux joueurs mène 30-0 (2 points à 0) à un moment du jeu" },

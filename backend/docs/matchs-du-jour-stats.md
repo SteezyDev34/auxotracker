@@ -52,7 +52,7 @@ Cotes de référence utilisées (`ComputeTennisTightnessScores::MARKET_ODDS`) :
 | 15A | 1.85 |
 | 30A | 2.40 |
 | 40A | 3.00 |
-| 30-0 (30love) | 2.20 |
+| 30-0 (30love) | 2.00 |
 | Jeu 40-0 | 3.00 |
 | Jeu 40-15 | 3.00 |
 | Jeu 40-30 | 3.00 |

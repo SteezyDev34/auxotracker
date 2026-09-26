@@ -1,7 +1,7 @@
 # Guide de Déploiement O2Switch - AuxoTracker Frontend
 
 ## 🌐 Informations du serveur
-- **Frontend**: https://auxotracker.p-com.studio//
+- **Frontend**: https://auxotracker.astcavex.fr//
 - **API Backend**: http://datas.sc2vagr6376.universe.wf/
 - **Hébergeur**: O2Switch
 
@@ -55,7 +55,7 @@ cp -r dist/* /home/sc2vagr6376/www/
 chmod -R 755 /home/sc2vagr6376/www/
 
 # 5. Vérifier le déploiement
-curl -I https://auxotracker.p-com.studio/
+curl -I https://auxotracker.astcavex.fr/
 ```
 
 ## ⚙️ Configuration spécifique O2Switch
@@ -81,7 +81,7 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
 
 # Configuration CORS
-Header always set Access-Control-Allow-Origin "https://auxotracker.p-com.studio/"
+Header always set Access-Control-Allow-Origin "https://auxotracker.astcavex.fr/"
 Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
 
@@ -150,10 +150,10 @@ echo "deny from all" > /home/sc2vagr6376/auxotracker/.htaccess
 ### 1. Test de l'application
 ```bash
 # Test de base
-curl -I https://auxotracker.p-com.studio/
+curl -I https://auxotracker.astcavex.fr/
 
 # Test avec User-Agent
-curl -H "User-Agent: Mozilla/5.0" https://auxotracker.p-com.studio/
+curl -H "User-Agent: Mozilla/5.0" https://auxotracker.astcavex.fr/
 ```
 
 ### 2. Test de l'API
@@ -162,7 +162,7 @@ curl -H "User-Agent: Mozilla/5.0" https://auxotracker.p-com.studio/
 curl -I http://datas.sc2vagr6376.universe.wf/api
 
 # Test CORS
-curl -H "Origin: https://auxotracker.p-com.studio/" \
+curl -H "Origin: https://auxotracker.astcavex.fr/" \
      -H "Access-Control-Request-Method: GET" \
      -H "Access-Control-Request-Headers: X-Requested-With" \
      -X OPTIONS \
@@ -191,7 +191,7 @@ curl -H "Origin: https://auxotracker.p-com.studio/" \
 ls -la /home/sc2vagr6376/www/
 
 # Tester la configuration Apache
-curl -v https://auxotracker.p-com.studio/
+curl -v https://auxotracker.astcavex.fr/
 
 # Vérifier les logs d'erreur
 tail -f /home/sc2vagr6376/logs/error.log

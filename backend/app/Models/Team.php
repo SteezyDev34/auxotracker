@@ -113,7 +113,7 @@ class Team extends Model
         // Sinon, si un sportId est fourni, interroger l'API Auxotracker pour une correspondance distante
         if ($sportId) {
             try {
-                $base = env('AUXOTRACKER_API_URL', 'https://api.auxotracker.p-com.studio');
+                $base = env('AUXOTRACKER_API_URL', 'https://api.auxotracker.astcavex.fr');
                 $path = rtrim($base, '/') . '/api/sports/' . intval($sportId) . '/teams/search';
                 $resp = Http::timeout(3)->get($path, ['search' => $value]);
 

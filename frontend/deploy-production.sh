@@ -2,7 +2,7 @@
 
 # Script de déploiement automatisé - AuxoTracker Frontend O2Switch
 # Application: Vue.js SPA
-# Frontend: https://auxotracker.p-com.studio//
+# Frontend: https://auxotracker.astcavex.fr//
 # API: http://datas.sc2vagr6376.universe.wf/
 # Hébergeur: O2Switch
 # Méthode: Build local + rsync
@@ -191,7 +191,7 @@ health_check() {
     
     # Test de l'application frontend O2Switch
     log "🌐 Test du frontend..."
-    if curl -f -s -I "https://auxotracker.p-com.studio/" > /dev/null; then
+    if curl -f -s -I "https://auxotracker.astcavex.fr/" > /dev/null; then
         log "✅ Application frontend accessible"
     else
         log "❌ Erreur: Application frontend non accessible"
@@ -210,7 +210,7 @@ health_check() {
     
     # Test de la page d'accueil avec contenu
     log "📄 Test du contenu de la page..."
-    if curl -s "https://auxotracker.p-com.studio/" | grep -q "AuxoTracker" 2>/dev/null; then
+    if curl -s "https://auxotracker.astcavex.fr/" | grep -q "AuxoTracker" 2>/dev/null; then
         log "✅ Contenu de la page vérifié"
     else
         log "⚠️  Contenu de la page non trouvé (peut être normal)"
@@ -259,7 +259,7 @@ main() {
     cleanup
     
     log "🎉 Déploiement terminé avec succès!"
-    log "📱 Application accessible sur: https://auxotracker.p-com.studio/"
+    log "📱 Application accessible sur: https://auxotracker.astcavex.fr/"
     log "🔗 API disponible sur: http://datas.sc2vagr6376.universe.wf"
     log "📊 Log de déploiement: $LOG_FILE"
 

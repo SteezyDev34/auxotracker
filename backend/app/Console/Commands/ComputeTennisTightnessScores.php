@@ -199,7 +199,7 @@ class ComputeTennisTightnessScores extends Command
      */
     private const MARKET_ODDS = [
         '15a' => 1.85, '30a' => 2.40, '40a' => 3.00,
-        '30love' => 2.20, 'g40_0' => 3.00, 'g40_15' => 3.00, 'g40_30' => 3.00,
+        '30love' => 2.00, 'g40_0' => 3.00, 'g40_15' => 3.00, 'g40_30' => 3.00,
         'leads' => 1.40, 'lost_serve' => 2.00,
     ];
 

@@ -337,7 +337,7 @@ def _fetch_teams_with_logo_from_prod(sport_slug: str) -> set:
     le cache local a été archivé/vidé entre deux runs. Ne concerne QUE les
     logos (effectifs et stats sont, eux, toujours refetchés à chaque run)."""
     try:
-        url = f"https://api.auxotracker.p-com.studio/api/sports/{sport_slug}/teams/with-logo"
+        url = f"https://api.auxotracker.astcavex.fr/api/sports/{sport_slug}/teams/with-logo"
         r = requests.get(url, timeout=10)
         if r.status_code == 200 and r.json().get("success"):
             # sofascore_id est stocké en `string` côté DB (migration teams) —
@@ -618,7 +618,7 @@ def _fetch_tennis_players_with_details_from_prod() -> set:
     refaire ce fetch quand le cache local a été archivé/vidé, ces infos ne
     changeant plus une fois connues. Ne concerne QUE les détails."""
     try:
-        url = "https://api.auxotracker.p-com.studio/api/tennis/players/with-details"
+        url = "https://api.auxotracker.astcavex.fr/api/tennis/players/with-details"
         r = requests.get(url, timeout=10)
         if r.status_code == 200 and r.json().get("success"):
             out = set()
@@ -642,7 +642,7 @@ def _fetch_tennis_players_with_fresh_season_stats_from_prod(days: int = 7) -> se
     refetcher tous les jours (réduit fortement le volume de requêtes en
     direct, utile pour éviter le rate-limit/challenge Sofascore)."""
     try:
-        url = f"https://api.auxotracker.p-com.studio/api/tennis/players/with-fresh-season-stats?days={days}"
+        url = f"https://api.auxotracker.astcavex.fr/api/tennis/players/with-fresh-season-stats?days={days}"
         r = requests.get(url, timeout=10)
         if r.status_code == 200 and r.json().get("success"):
             out = set()
