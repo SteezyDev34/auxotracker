@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TennisPlayerGameTensionStat extends Model
+class TennisPlayerGameTensionStatByTier extends Model
 {
-    protected $table = 'tennis_player_game_tension_stats';
+    protected $table = 'tennis_player_game_tension_stats_by_tier';
 
     protected $fillable = [
         'team_id',
+        'opponent_tier',
         'sample_matches',
         'sample_games_set1',
         'count_reach_15a',
@@ -39,12 +40,23 @@ class TennisPlayerGameTensionStat extends Model
         'updated_from_cache_at' => 'datetime',
     ];
 
-    /** Seuil minimum de jeux échantillonnés pour considérer la fréquence empirique fiable. */
-    public const MIN_SAMPLE_GAMES = 15;
-
-    public function isReliable(): bool
+    /**
+     * Tranches de classement ATP/WTA (singles ranking) utilisées pour
+     * regrouper les adversaires par "style"/niveau. Un classement absent
+     * (joueur non classé / donnée manquante) tombe dans "inconnu".
+     */
+    public static function tierForRanking(?int $ranking): string
     {
-        return $this->sample_games_set1 >= self::MIN_SAMPLE_GAMES;
+        if ($ranking === null) {
+            return 'inconnu';
+        }
+        if ($ranking <= 50) {
+            return 'top50';
+        }
+        if ($ranking <= 150) {
+            return '50-150';
+        }
+        return '150+';
     }
 
     public function rate15a(): ?float
@@ -67,11 +79,6 @@ class TennisPlayerGameTensionStat extends Model
         return $this->sample_games_set1 ? $this->count_reach_30love / $this->sample_games_set1 : null;
     }
 
-    /**
-     * Fréquence historique réelle que ce marché apparaisse AU MOINS UNE FOIS
-     * dans le 1er set d'un match de ce joueur (pas par jeu isolé) — dénominateur
-     * = nombre de MATCHS échantillonnés, pas de jeux.
-     */
     public function rateMatchReach15a(): ?float
     {
         return $this->sample_matches ? $this->count_matches_reach_15a / $this->sample_matches : null;
@@ -132,21 +139,8 @@ class TennisPlayerGameTensionStat extends Model
         return $this->sample_games_set1 ? $this->count_game_40_30 / $this->sample_games_set1 : null;
     }
 
-    /** Dénominateur spécifique : jeux servis par CE joueur (pas tous les jeux). */
     public function rateServerLossToLove(): ?float
     {
         return $this->sample_service_games_set1 ? $this->count_server_loss_to_love / $this->sample_service_games_set1 : null;
-    }
-
-    /** Proba que CE joueur (spécifiquement) gagne le tout premier point du jeu (mène 15-0). */
-    public function rateLedFirstPoint(): ?float
-    {
-        return $this->sample_games_set1 ? $this->count_led_15_0 / $this->sample_games_set1 : null;
-    }
-
-    /** Proba que CE joueur perde le 1er point QUAND IL SERT (dénominateur = ses jeux de service uniquement). */
-    public function rateLostFirstPointOnServe(): ?float
-    {
-        return $this->sample_service_games_set1 ? $this->count_lost_first_point_on_serve / $this->sample_service_games_set1 : null;
     }
 }

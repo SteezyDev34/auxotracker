@@ -57,6 +57,21 @@ class TennisPlayerTensionStatController extends Controller
                 'leads_15_0' => round(($stat->rateLedFirstPoint() ?? 0) * 100, 2),
                 'lost_first_point_on_serve' => round(($stat->rateLostFirstPointOnServe() ?? 0) * 100, 2),
             ],
+            // Fréquence "au moins une fois dans les 10 premiers jeux du set"
+            // (pas par jeu isolé) — pour une martingale jouée sur plusieurs
+            // jeux jusqu'à ce que l'événement arrive. Voir
+            // ImportTennisPlayersFromCache::MATCH_FILTER_MAX_GAMES.
+            'stats_in_set' => [
+                'reach_15a' => round(($stat->rateMatchReach15a() ?? 0) * 100, 2),
+                'reach_30a' => round(($stat->rateMatchReach30a() ?? 0) * 100, 2),
+                'reach_40a' => round(($stat->rateMatchReach40a() ?? 0) * 100, 2),
+                'reach_30love' => round(($stat->rateMatchReach30Love() ?? 0) * 100, 2),
+                'game_40_0' => round(($stat->rateMatchReachG40_0() ?? 0) * 100, 2),
+                'game_40_15' => round(($stat->rateMatchReachG40_15() ?? 0) * 100, 2),
+                'game_40_30' => round(($stat->rateMatchReachG40_30() ?? 0) * 100, 2),
+                'leads_15_0' => round(($stat->rateMatchLed15_0() ?? 0) * 100, 2),
+                'lost_first_point_on_serve' => round(($stat->rateMatchLostFirstPointOnServe() ?? 0) * 100, 2),
+            ],
             'updated_from_cache_at' => $stat->updated_from_cache_at,
         ]);
     }

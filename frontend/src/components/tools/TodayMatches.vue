@@ -191,6 +191,41 @@ function set1Probabilities(match) {
     return probs;
 }
 
+// Fréquence historique réelle que l'événement arrive AU MOINS UNE FOIS dans
+// le 1er set (pas par jeu isolé) — pour une stratégie type martingale jouée
+// sur tout le set jusqu'à ce que ça tombe. Vert si au-dessus du seuil, basé
+// sur l'historique point-by-point des 2 joueurs (voir prob_XXX_in_set côté API).
+const IN_SET_GREEN_THRESHOLD = 85;
+function inSetProbabilities(match) {
+    const probs = [
+        { key: '15A (set)', value: match.prob_15a_in_set },
+        { key: '30A (set)', value: match.prob_30a_in_set },
+        { key: '40A (set)', value: match.prob_40a_in_set },
+        { key: '30-0 (set)', value: match.prob_30love_in_set },
+        { key: 'G:40-0 (set)', value: match.prob_game_40_0_in_set },
+        { key: 'G:40-15 (set)', value: match.prob_game_40_15_in_set },
+        { key: 'G:40-30 (set)', value: match.prob_game_40_30_in_set },
+    ].filter((p) => p.value !== null && p.value !== undefined);
+    return probs;
+}
+
+// Marchés asymétriques par joueur, version "au moins une fois dans le set".
+function inSetLeadsProbabilities(match) {
+    const probs = [
+        { name: match.team1_name, value: match.prob_team1_leads_15_0_in_set },
+        { name: match.team2_name, value: match.prob_team2_leads_15_0_in_set },
+    ].filter((p) => p.value !== null && p.value !== undefined && p.name);
+    return probs;
+}
+
+function inSetLostServeProbabilities(match) {
+    const probs = [
+        { name: match.team1_name, value: match.prob_lost_serve1_in_set },
+        { name: match.team2_name, value: match.prob_lost_serve2_in_set },
+    ].filter((p) => p.value !== null && p.value !== undefined && p.name);
+    return probs;
+}
+
 // Seuil minimum d'edge pour compter comme "value bet" affiché en vert : un
 // simple edge > 0 capte trop de faux positifs statistiques quand la proba
 // moyenne du marché est juste collée au seuil de rentabilité de la cote de
@@ -494,6 +529,32 @@ onMounted(load);
                                            tightnessLevel(tightnessScore(match)) === 'medium' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' :
                                            'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400']">
                                 🔥 {{ tightnessScore(match) }}/100
+                            </span>
+                        </div>
+
+                        <!-- Probas "au moins une fois dans le set" (historique réel, tous marchés) — vert si au-dessus du seuil -->
+                        <div v-if="inSetProbabilities(match).length || inSetLeadsProbabilities(match).length || inSetLostServeProbabilities(match).length"
+                             class="shrink-0 flex flex-wrap gap-1 max-w-[220px] justify-end">
+                            <span v-for="p in inSetProbabilities(match)" :key="p.key"
+                                  :class="['text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap',
+                                           p.value >= IN_SET_GREEN_THRESHOLD ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                                           'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300']"
+                                  :title="`Fréquence historique réelle que ${p.key.replace(' (set)', '')} arrive au moins une fois dans le 1er set : ${p.value}%`">
+                                {{ p.value >= IN_SET_GREEN_THRESHOLD ? '✅ ' : '' }}{{ p.key }} {{ Math.round(p.value) }}%
+                            </span>
+                            <span v-for="p in inSetLeadsProbabilities(match)" :key="'leads-set-' + p.name"
+                                  :class="['text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap',
+                                           p.value >= IN_SET_GREEN_THRESHOLD ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                                           'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300']"
+                                  :title="`Fréquence historique réelle que ${p.name} mène 15-0 au moins une fois dans le set : ${p.value}%`">
+                                {{ p.value >= IN_SET_GREEN_THRESHOLD ? '✅ ' : '🥇' }}{{ p.name }} 15-0 (set) {{ Math.round(p.value) }}%
+                            </span>
+                            <span v-for="p in inSetLostServeProbabilities(match)" :key="'lostserve-set-' + p.name"
+                                  :class="['text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap',
+                                           p.value >= IN_SET_GREEN_THRESHOLD ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                                           'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300']"
+                                  :title="`Fréquence historique réelle que ${p.name} perde le 1er point sur son service au moins une fois dans le set : ${p.value}%`">
+                                {{ p.value >= IN_SET_GREEN_THRESHOLD ? '✅ ' : '🎾' }}{{ p.name }} perd 1er pt srv (set) {{ Math.round(p.value) }}%
                             </span>
                         </div>
 

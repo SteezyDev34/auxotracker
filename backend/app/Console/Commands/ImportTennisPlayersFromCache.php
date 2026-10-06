@@ -16,6 +16,7 @@ use App\Models\TennisPlayerSeasonStat;
 use App\Models\TennisH2hMatch;
 use App\Models\TennisMatchOdds;
 use App\Models\TennisPlayerGameTensionStat;
+use App\Models\TennisPlayerGameTensionStatByTier;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -26,6 +27,17 @@ class ImportTennisPlayersFromCache extends Command
     // absentes) — la lecture de cache reste spécifique au tennis (voir
     // processEventCacheFiles ci-dessous, format différent des autres sports).
     use ImportsMatchesFromCache;
+
+    /**
+     * Nombre de jeux du 1er set pris en compte pour l'indicateur "au moins une
+     * fois" (count_matches_reach_*) — borné à la capacité réelle d'une
+     * martingale plutôt qu'à tout le set (qui peut aller jusqu'à 12-13 jeux),
+     * ce qui sature l'indicateur vers 100% pour la quasi-totalité des matchs
+     * et lui fait perdre tout pouvoir de filtrage. Doit rester identique à
+     * BacktestTennisScores::MARTINGALE_WINDOW_GAMES pour comparer les mêmes
+     * choses.
+     */
+    public const MATCH_FILTER_MAX_GAMES = 10;
 
     /**
      * Service de téléchargement des logos
@@ -227,6 +239,15 @@ class ImportTennisPlayersFromCache extends Command
         $homeTeam   = $event['homeTeam'] ?? null;
         $awayTeam   = $event['awayTeam'] ?? null;
         $statusType = $event['status']['type'] ?? null; // 'notstarted' | 'inprogress' | 'finished'
+
+        // TEMPORAIRE (demande utilisateur, 2026-10-01) : matchs de double
+        // ignorés (team.type 2 = paire) — même filtre que import-from-schedule.
+        foreach ([$homeTeam, $awayTeam] as $team) {
+            if (($team['type'] ?? null) === 2 || str_contains($team['name'] ?? '', '/')) {
+                $this->stats['matches_skipped']++;
+                return;
+            }
+        }
 
         if (empty($startTs)) {
             $this->line("   [match] Pas de startTimestamp pour event_id={$eventId} — ignoré");
@@ -1259,6 +1280,30 @@ class ImportTennisPlayersFromCache extends Command
 
         // team_id (BDD) => ['matches'=>n, 'games' => n, '15a'=>n, '30a'=>n, '40a'=>n]
         $agg = [];
+        // sofascore_id => tier_adversaire => mêmes compteurs que $agg — pour
+        // le blend bayésien (stat globale + stat vs ce tier d'adversaire).
+        $aggByTier = [];
+        // Cache local des rankings déjà lus (évite une requête par fichier).
+        $rankingCache = [];
+        $rankingFor = function (?int $sofascoreId) use (&$rankingCache): ?int {
+            if (!$sofascoreId) {
+                return null;
+            }
+            if (!array_key_exists($sofascoreId, $rankingCache)) {
+                $rankingCache[$sofascoreId] = Team::where('sofascore_id', $sofascoreId)->value('ranking');
+            }
+            return $rankingCache[$sofascoreId];
+        };
+        $emptyCounts = fn () => [
+            'matches' => 0, 'games' => 0, '15a' => 0, '30a' => 0, '40a' => 0,
+            '30love' => 0, 'g40_0' => 0, 'g40_15' => 0, 'g40_30' => 0,
+            'service_games' => 0, 'server_loss_to_love' => 0, 'led_15_0' => 0,
+            'lost_first_point_on_serve' => 0,
+            // "au moins une fois dans le set" (pas par jeu) — indicateur simplifié.
+            'match_15a' => 0, 'match_30a' => 0, 'match_40a' => 0, 'match_30love' => 0,
+            'match_g40_0' => 0, 'match_g40_15' => 0, 'match_g40_30' => 0,
+            'match_led_15_0' => 0, 'match_lost_first_point_on_serve' => 0,
+        ];
 
         foreach ($files as $file) {
             try {
@@ -1283,24 +1328,42 @@ class ImportTennisPlayersFromCache extends Command
                     continue;
                 }
 
+                // Tier de l'adversaire vu par chaque joueur (constant pour tout le fichier).
+                $tierForHome = TennisPlayerGameTensionStatByTier::tierForRanking($rankingFor($awayId));
+                $tierForAway = TennisPlayerGameTensionStatByTier::tierForRanking($rankingFor($homeId));
+                $tierOf = [$homeId => $tierForHome, $awayId => $tierForAway];
+
                 foreach ([$homeId, $awayId] as $sofascoreId) {
                     if (!$sofascoreId) {
                         continue;
                     }
-                    $agg[$sofascoreId] ??= [
-                        'matches' => 0, 'games' => 0, '15a' => 0, '30a' => 0, '40a' => 0,
-                        '30love' => 0, 'g40_0' => 0, 'g40_15' => 0, 'g40_30' => 0,
-                        'service_games' => 0, 'server_loss_to_love' => 0, 'led_15_0' => 0,
-                        'lost_first_point_on_serve' => 0,
-                    ];
+                    $agg[$sofascoreId] ??= $emptyCounts();
                     $agg[$sofascoreId]['matches']++;
+
+                    $tier = $tierOf[$sofascoreId];
+                    $aggByTier[$sofascoreId][$tier] ??= $emptyCounts();
+                    $aggByTier[$sofascoreId][$tier]['matches']++;
                 }
+
+                $matchReached15 = false;
+                $matchReached30 = false;
+                $matchReached40 = false;
+                $matchReached30Love = false;
+                $matchReachedBucket = ['g40_0' => false, 'g40_15' => false, 'g40_30' => false];
+                $matchLed15_0 = []; // sofascoreId => true
+                $matchLostFirstServe = []; // sofascoreId => true
+                // Indicateur "au moins une fois" borné aux N premiers jeux du set
+                // (capacité réelle d'une martingale, pas tout le set qui peut
+                // aller jusqu'à 12-13 jeux) — voir self::MATCH_FILTER_MAX_GAMES.
+                $gameIndex = 0;
 
                 foreach ($set1['games'] as $game) {
                     $points = $game['points'] ?? [];
                     if (empty($points)) {
                         continue;
                     }
+                    $gameIndex++;
+                    $withinMartingaleWindow = $gameIndex <= self::MATCH_FILTER_MAX_GAMES;
                     $reached15 = false;
                     $reached30 = false;
                     $reached40 = false;
@@ -1318,6 +1381,13 @@ class ImportTennisPlayersFromCache extends Command
                         } elseif (($h === '30' && $a === '0') || ($h === '0' && $a === '30')) {
                             $reached30Love = true;
                         }
+                    }
+
+                    if ($withinMartingaleWindow) {
+                        if ($reached15) { $matchReached15 = true; }
+                        if ($reached30) { $matchReached30 = true; }
+                        if ($reached40) { $matchReached40 = true; }
+                        if ($reached30Love) { $matchReached30Love = true; }
                     }
 
                     // Répartition du jeu terminé (40-0/40-15/40-30), déduite du
@@ -1359,9 +1429,26 @@ class ImportTennisPlayersFromCache extends Command
                         if ($bucket) {
                             $agg[$sofascoreId][$bucket]++;
                         }
+
+                        $tier = $tierOf[$sofascoreId];
+                        $aggByTier[$sofascoreId][$tier]['games']++;
+                        $aggByTier[$sofascoreId][$tier]['15a'] += $reached15 ? 1 : 0;
+                        $aggByTier[$sofascoreId][$tier]['30a'] += $reached30 ? 1 : 0;
+                        $aggByTier[$sofascoreId][$tier]['40a'] += $reached40 ? 1 : 0;
+                        $aggByTier[$sofascoreId][$tier]['30love'] += $reached30Love ? 1 : 0;
+                        if ($bucket) {
+                            $aggByTier[$sofascoreId][$tier][$bucket]++;
+                        }
+                    }
+                    if ($bucket && $withinMartingaleWindow) {
+                        $matchReachedBucket[$bucket] = true;
                     }
                     if ($leaderId) {
                         $agg[$leaderId]['led_15_0']++;
+                        $aggByTier[$leaderId][$tierOf[$leaderId]]['led_15_0']++;
+                        if ($withinMartingaleWindow) {
+                            $matchLed15_0[$leaderId] = true;
+                        }
                     }
 
                     // Stats spécifiques au serveur (dénominateur = jeux servis
@@ -1370,19 +1457,41 @@ class ImportTennisPlayersFromCache extends Command
                         $serverId = $serving === 1 ? $homeId : $awayId;
                         if ($serverId) {
                             $agg[$serverId]['service_games']++;
+                            $aggByTier[$serverId][$tierOf[$serverId]]['service_games']++;
                             // Le serveur perd à zéro si le camp à "0" au dernier
                             // point est bien le sien (pas le camp adverse).
                             $serverIsHome = $serving === 1;
                             if ($bucket === 'g40_0' && $loserIsHome === $serverIsHome) {
                                 $agg[$serverId]['server_loss_to_love']++;
+                                $aggByTier[$serverId][$tierOf[$serverId]]['server_loss_to_love']++;
                             }
                             // Perd le 1er point sur SON service (0-15 pour lui) —
                             // distinct de "leaderId" qui mélange service+retour.
                             if ($leaderId && $leaderId !== $serverId) {
                                 $agg[$serverId]['lost_first_point_on_serve']++;
+                                $aggByTier[$serverId][$tierOf[$serverId]]['lost_first_point_on_serve']++;
+                                if ($withinMartingaleWindow) {
+                                    $matchLostFirstServe[$serverId] = true;
+                                }
                             }
                         }
                     }
+                }
+
+                foreach ([$homeId, $awayId] as $sofascoreId) {
+                    if (!$sofascoreId) {
+                        continue;
+                    }
+                    $tier = $tierOf[$sofascoreId];
+                    if ($matchReached15) { $agg[$sofascoreId]['match_15a']++; $aggByTier[$sofascoreId][$tier]['match_15a']++; }
+                    if ($matchReached30) { $agg[$sofascoreId]['match_30a']++; $aggByTier[$sofascoreId][$tier]['match_30a']++; }
+                    if ($matchReached40) { $agg[$sofascoreId]['match_40a']++; $aggByTier[$sofascoreId][$tier]['match_40a']++; }
+                    if ($matchReached30Love) { $agg[$sofascoreId]['match_30love']++; $aggByTier[$sofascoreId][$tier]['match_30love']++; }
+                    if ($matchReachedBucket['g40_0']) { $agg[$sofascoreId]['match_g40_0']++; $aggByTier[$sofascoreId][$tier]['match_g40_0']++; }
+                    if ($matchReachedBucket['g40_15']) { $agg[$sofascoreId]['match_g40_15']++; $aggByTier[$sofascoreId][$tier]['match_g40_15']++; }
+                    if ($matchReachedBucket['g40_30']) { $agg[$sofascoreId]['match_g40_30']++; $aggByTier[$sofascoreId][$tier]['match_g40_30']++; }
+                    if (!empty($matchLed15_0[$sofascoreId])) { $agg[$sofascoreId]['match_led_15_0']++; $aggByTier[$sofascoreId][$tier]['match_led_15_0']++; }
+                    if (!empty($matchLostFirstServe[$sofascoreId])) { $agg[$sofascoreId]['match_lost_first_point_on_serve']++; $aggByTier[$sofascoreId][$tier]['match_lost_first_point_on_serve']++; }
                 }
 
                 if (!$skipArchive) {
@@ -1414,19 +1523,67 @@ class ImportTennisPlayersFromCache extends Command
             $existing->count_reach_30a = ($existing->count_reach_30a ?? 0) + $counts['30a'];
             $existing->count_reach_40a = ($existing->count_reach_40a ?? 0) + $counts['40a'];
             $existing->count_reach_30love = ($existing->count_reach_30love ?? 0) + $counts['30love'];
+            $existing->count_matches_reach_15a = ($existing->count_matches_reach_15a ?? 0) + $counts['match_15a'];
+            $existing->count_matches_reach_30a = ($existing->count_matches_reach_30a ?? 0) + $counts['match_30a'];
+            $existing->count_matches_reach_40a = ($existing->count_matches_reach_40a ?? 0) + $counts['match_40a'];
+            $existing->count_matches_reach_30love = ($existing->count_matches_reach_30love ?? 0) + $counts['match_30love'];
             $existing->count_game_40_0 = ($existing->count_game_40_0 ?? 0) + $counts['g40_0'];
             $existing->count_game_40_15 = ($existing->count_game_40_15 ?? 0) + $counts['g40_15'];
             $existing->count_game_40_30 = ($existing->count_game_40_30 ?? 0) + $counts['g40_30'];
+            $existing->count_matches_reach_g40_0 = ($existing->count_matches_reach_g40_0 ?? 0) + $counts['match_g40_0'];
+            $existing->count_matches_reach_g40_15 = ($existing->count_matches_reach_g40_15 ?? 0) + $counts['match_g40_15'];
+            $existing->count_matches_reach_g40_30 = ($existing->count_matches_reach_g40_30 ?? 0) + $counts['match_g40_30'];
             $existing->sample_service_games_set1 = ($existing->sample_service_games_set1 ?? 0) + $counts['service_games'];
             $existing->count_server_loss_to_love = ($existing->count_server_loss_to_love ?? 0) + $counts['server_loss_to_love'];
             $existing->count_led_15_0 = ($existing->count_led_15_0 ?? 0) + $counts['led_15_0'];
             $existing->count_lost_first_point_on_serve = ($existing->count_lost_first_point_on_serve ?? 0) + $counts['lost_first_point_on_serve'];
+            $existing->count_matches_led_15_0 = ($existing->count_matches_led_15_0 ?? 0) + $counts['match_led_15_0'];
+            $existing->count_matches_lost_first_point_on_serve = ($existing->count_matches_lost_first_point_on_serve ?? 0) + $counts['match_lost_first_point_on_serve'];
             $existing->updated_from_cache_at = now();
             $existing->save();
             $this->stats['tension_stats_upserted']++;
         }
 
-        $this->line("✅ Fichiers point-by-point traités: {$this->stats['tension_files_processed']} | joueurs mis à jour: {$this->stats['tension_stats_upserted']}");
+        $tierRowsUpserted = 0;
+        foreach ($aggByTier as $sofascoreId => $tiers) {
+            $player = Team::where('sofascore_id', $sofascoreId)->first();
+            if (!$player) {
+                continue;
+            }
+            foreach ($tiers as $tier => $counts) {
+                $existing = TennisPlayerGameTensionStatByTier::firstOrNew([
+                    'team_id' => $player->id,
+                    'opponent_tier' => $tier,
+                ]);
+                $existing->sample_matches = ($existing->sample_matches ?? 0) + $counts['matches'];
+                $existing->sample_games_set1 = ($existing->sample_games_set1 ?? 0) + $counts['games'];
+                $existing->count_reach_15a = ($existing->count_reach_15a ?? 0) + $counts['15a'];
+                $existing->count_reach_30a = ($existing->count_reach_30a ?? 0) + $counts['30a'];
+                $existing->count_reach_40a = ($existing->count_reach_40a ?? 0) + $counts['40a'];
+                $existing->count_reach_30love = ($existing->count_reach_30love ?? 0) + $counts['30love'];
+                $existing->count_matches_reach_15a = ($existing->count_matches_reach_15a ?? 0) + $counts['match_15a'];
+                $existing->count_matches_reach_30a = ($existing->count_matches_reach_30a ?? 0) + $counts['match_30a'];
+                $existing->count_matches_reach_40a = ($existing->count_matches_reach_40a ?? 0) + $counts['match_40a'];
+                $existing->count_matches_reach_30love = ($existing->count_matches_reach_30love ?? 0) + $counts['match_30love'];
+                $existing->count_game_40_0 = ($existing->count_game_40_0 ?? 0) + $counts['g40_0'];
+                $existing->count_game_40_15 = ($existing->count_game_40_15 ?? 0) + $counts['g40_15'];
+                $existing->count_game_40_30 = ($existing->count_game_40_30 ?? 0) + $counts['g40_30'];
+                $existing->count_matches_reach_g40_0 = ($existing->count_matches_reach_g40_0 ?? 0) + $counts['match_g40_0'];
+                $existing->count_matches_reach_g40_15 = ($existing->count_matches_reach_g40_15 ?? 0) + $counts['match_g40_15'];
+                $existing->count_matches_reach_g40_30 = ($existing->count_matches_reach_g40_30 ?? 0) + $counts['match_g40_30'];
+                $existing->sample_service_games_set1 = ($existing->sample_service_games_set1 ?? 0) + $counts['service_games'];
+                $existing->count_server_loss_to_love = ($existing->count_server_loss_to_love ?? 0) + $counts['server_loss_to_love'];
+                $existing->count_led_15_0 = ($existing->count_led_15_0 ?? 0) + $counts['led_15_0'];
+                $existing->count_lost_first_point_on_serve = ($existing->count_lost_first_point_on_serve ?? 0) + $counts['lost_first_point_on_serve'];
+                $existing->count_matches_led_15_0 = ($existing->count_matches_led_15_0 ?? 0) + $counts['match_led_15_0'];
+                $existing->count_matches_lost_first_point_on_serve = ($existing->count_matches_lost_first_point_on_serve ?? 0) + $counts['match_lost_first_point_on_serve'];
+                $existing->updated_from_cache_at = now();
+                $existing->save();
+                $tierRowsUpserted++;
+            }
+        }
+
+        $this->line("✅ Fichiers point-by-point traités: {$this->stats['tension_files_processed']} | joueurs mis à jour: {$this->stats['tension_stats_upserted']} | lignes par tier mises à jour: {$tierRowsUpserted}");
     }
 
     /**

@@ -18,7 +18,9 @@ import base64
 import hashlib
 import json
 import os
+import random
 import re
+import subprocess
 import sys
 import time
 import unicodedata
@@ -30,6 +32,15 @@ import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import WebDriverException, TimeoutException
+
+try:
+    # Import paresseux/optionnel : le module dépend de `websockets`, absent de
+    # l'environnement Python système utilisé en prod pour le mode Selenium
+    # (défaut). Ne pas planter tout le script pour ceux qui n'utilisent pas
+    # --transport extension.
+    from sofascore_extension_bridge import ExtensionBridge
+except ImportError:
+    ExtensionBridge = None
 
 # ---------------------------------------------------------------------------
 # Config
@@ -43,6 +54,18 @@ STORAGE_BASE = Path(__file__).parent.parent / "storage" / "app" / "sofascore_cac
 # Sofascore). Ces catégories ne sont pas exploitées aujourd'hui par le
 # scoring "match serré"/martingale. À retirer si on veut les réintégrer.
 TENNIS_EXCLUDE_TOURNAMENT_KEYWORDS = ("utr", "doubles")
+
+
+def is_tennis_doubles_event(event: dict) -> bool:
+    """TEMPORAIRE (demande utilisateur, 2026-10-01) : match de double, quel
+    que soit le nom du tournoi (des doubles passent sous des uniqueTournament
+    de simple, ex. "Colombus, USA Men Singles"). Sofascore marque les paires
+    avec team.type == 2 (1 = joueur seul)."""
+    for side in ("homeTeam", "awayTeam"):
+        team = event.get(side) or {}
+        if team.get("type") == 2 or "/" in (team.get("name") or ""):
+            return True
+    return False
 
 SPORTS_CONFIG = {
     "tennis": {
@@ -116,14 +139,20 @@ def build_driver() -> webdriver.Chrome:
     return driver
 
 
-def fetch_json(driver: webdriver.Chrome, url: str, retries: int = 3, with_status: bool = False):
+def fetch_json(driver, url: str, retries: int = 3, with_status: bool = False):
     """Execute a fetch() inside the Sofascore page context and return parsed JSON.
 
     Si with_status=True, retourne un tuple (data, http_status) où http_status
     est le vrai code HTTP de la réponse (404, 429, ...) quand il a pu être
     obtenu, ou None si l'échec est survenu avant d'avoir une réponse (timeout,
     exception réseau) — pour distinguer un vrai 404 d'un raté transitoire.
+
+    `driver` est soit un webdriver.Chrome (Selenium), soit un ExtensionBridge
+    (--transport extension) — même signature d'appel dans les deux cas.
     """
+    if (ExtensionBridge is not None and isinstance(driver, ExtensionBridge)):
+        return driver.fetch_json(url, retries=retries, with_status=with_status)
+
     script = """
         const [url, callback] = arguments;
         fetch(url, {
@@ -261,9 +290,14 @@ def fetch_tennis_scheduled_events(driver: webdriver.Chrome, sched_dir, target_da
         url = f"https://www.sofascore.com/api/v1/unique-tournament/{uid}/scheduled-events/{target_date}"
         data = fetch_json(driver, url)
 
+        # scheduled-events/{date} renvoie aussi des matchs des jours voisins
+        # (ex. 168 matchs terminés du 30/09 dans la réponse du 01/10, constaté
+        # le 2026-10-01) — même filtre de journée que la branche cache.
         today_events = []
         if data and "error" not in data:
             for e in data.get("events", []):
+                if not (day_start <= e.get("startTimestamp", 0) <= day_end):
+                    continue
                 if e.get("id") not in seen_ids:
                     seen_ids.add(e["id"])
                     today_events.append(e)
@@ -274,7 +308,7 @@ def fetch_tennis_scheduled_events(driver: webdriver.Chrome, sched_dir, target_da
             print(f"  [{i}/{total}] {name} — {len(today_events)} matchs")
         else:
             cache_file.write_text(json.dumps({"_negative_cache": True, "fetched_at": datetime.now().isoformat()}, ensure_ascii=False))
-        time.sleep(0.2)
+        time.sleep(random.uniform(0.7, 1.4))
 
     print(f"  📊 Total matchs tennis du jour: {len(all_events)}")
     return all_events
@@ -284,11 +318,18 @@ def fetch_tennis_scheduled_events(driver: webdriver.Chrome, sched_dir, target_da
 # Tennis (live + featured)
 # ---------------------------------------------------------------------------
 
-def _browser_fetch_image(driver: webdriver.Chrome, url: str):
+def _browser_fetch_image(driver, url: str):
     """Fetch une image via fetch() dans le contexte du navigateur (credentials:
     include) et retourne les octets décodés, ou None en cas d'échec. Contourne
     le blocage HTTP direct (403 confirmé) qui touche aussi bien l'API JSON que
-    les images sur ce serveur."""
+    les images sur ce serveur.
+
+    `driver` est soit un webdriver.Chrome (Selenium), soit un ExtensionBridge."""
+    if os.environ.get("SKIP_LOGOS") == "1":
+        return None
+    if (ExtensionBridge is not None and isinstance(driver, ExtensionBridge)):
+        return driver.fetch_binary(url)
+
     script = """
         const [url, callback] = arguments;
         fetch(url, {credentials: 'include'})
@@ -391,7 +432,7 @@ def fetch_team_logos(driver: webdriver.Chrome, cache_dir: Path, team_ids: dict, 
         if content:
             logo_file.write_bytes(content)
             downloaded += 1
-        time.sleep(0.1)
+        time.sleep(random.uniform(1.0, 1.8))
 
     if skipped_prod:
         print(f"  📊 Logos ignorés (déjà en prod): {skipped_prod}")
@@ -416,21 +457,6 @@ def fetch_tennis_tournament_logos(driver: webdriver.Chrome, unique_ids: dict) ->
     total = len(unique_ids)
     print(f"\n  📸 Fetch logos pour {total} tournois tennis...")
 
-    script = """
-        const [url, callback] = arguments;
-        fetch(url, {credentials: 'include'})
-        .then(r => {
-            if (!r.ok) return callback({ok: false, status: r.status});
-            return r.arrayBuffer().then(buf => {
-                const bytes = new Uint8Array(buf);
-                let binary = '';
-                for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-                callback({ok: true, data: btoa(binary)});
-            });
-        })
-        .catch(err => callback({ok: false, error: err.toString()}));
-    """
-
     downloaded = 0
     for i, (uid, name) in enumerate(unique_ids.items(), 1):
         logo_file = logos_dir / f"{uid}-light.png"
@@ -439,14 +465,14 @@ def fetch_tennis_tournament_logos(driver: webdriver.Chrome, unique_ids: dict) ->
 
         img_url = f"https://api.sofascore.com/api/v1/unique-tournament/{uid}/image"
         try:
-            result = driver.execute_async_script(script, img_url)
-            if result and result.get("ok") and result.get("data"):
-                logo_file.write_bytes(base64.b64decode(result["data"]))
+            content = _browser_fetch_image(driver, img_url)
+            if content:
+                logo_file.write_bytes(content)
                 downloaded += 1
                 print(f"  [{i}/{total}] {name} — logo téléchargé")
         except Exception as e:
             print(f"  [{i}/{total}] {name} — erreur logo: {e}", file=sys.stderr)
-        time.sleep(0.1)
+        time.sleep(random.uniform(1.0, 1.8))
 
     print(f"  📊 Logos tournois téléchargés: {downloaded}/{total}")
 
@@ -478,9 +504,14 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
         page += 1
 
     # 1bis. Logos des tournois (fetch navigateur — endpoint image bloqué en HTTP direct)
+    # SKIP_LOGOS=1 : contournement temporaire — le fetch d'images (domaine
+    # api.sofascore.com, différent de www.sofascore.com) bloque en silence via
+    # le tunnel extension en ce moment (2026-09-29), en cours de diagnostic.
     unique_tournament_ids = extract_unique_tournament_ids(sched_dir)
-    if unique_tournament_ids:
+    if unique_tournament_ids and os.environ.get("SKIP_LOGOS") != "1":
         fetch_tennis_tournament_logos(driver, unique_tournament_ids)
+    elif unique_tournament_ids:
+        print("  ⏭️  Logos tournois ignorés (SKIP_LOGOS=1)")
 
     # 2. Events par tournoi (scheduled pour aujourd'hui) → source_scheduled_{date}.json
     scheduled_events = fetch_tennis_scheduled_events(driver, sched_dir, target_date)
@@ -510,40 +541,112 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
         out_path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         print(f"  💾 Écrit: {out_path}")
 
+    # Traite les matchs du jour dans l'ordre de leur heure de démarrage : les
+    # joueurs/H2H/cotes/point-by-point des matchs qui commencent le plus tôt
+    # sont fetchés en premier, donc déjà prêts pour les premiers cycles de
+    # sync prod (voir maybe_run_prod_sync) au lieu d'attendre l'ordre brut
+    # renvoyé par l'API (par tournoi, pas par heure).
+    seen_event_ids = set()
+    deduped_events = []
+    doubles_count = 0
+    for e in all_events:
+        if is_tennis_doubles_event(e):
+            doubles_count += 1
+            continue
+        eid = e.get("id")
+        if eid is not None and eid in seen_event_ids:
+            continue
+        if eid is not None:
+            seen_event_ids.add(eid)
+        deduped_events.append(e)
+    deduped_events.sort(key=lambda e: e.get("startTimestamp", 0))
+    all_events = deduped_events
+    if doubles_count:
+        print(f"  ⏭️  {doubles_count} match(s) de double exclus (filtre temporaire)")
+
     # Fetch player details for all players in the events + all already-cached players
     if fetch_players:
         cache_dir = STORAGE_BASE / "tennis_players"
         current_year = int(target_date[:4])
 
-        # IDs from today's events
-        event_ids = dict(extract_player_ids_from_events(all_events)) if all_events else {}
+        # Écrire tout de suite les fichiers event_*.json (lecture seule du
+        # cache, aucun appel Sofascore) : sans ça, ils ne sont créés que par
+        # le tennis:import-from-schedule de fin de cache_tennis.sh, et les
+        # imports par lot (local + prod) n'ont aucun match du jour à créer
+        # pendant tout le run (constaté le 2026-10-01 : 1 seul match en prod).
+        print("  📅 Mise en cache des matchs du jour (import-from-schedule --offline)...")
+        _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
+              "tennis:import-from-schedule", "--offline"], timeout=600)
 
-        # IDs from existing player_basic_*.json files (already imported players)
+        # Traitement par LOT de MATCH_BATCH_SIZE matchs, dans l'ordre de
+        # démarrage (all_events est déjà trié plus haut) : pour chaque lot,
+        # on fetch les joueurs concernés (détails, stats, classement,
+        # H2H/cotes, point-by-point) puis on importe en local + calcule les
+        # probas + envoie en prod, avant de passer au lot suivant. Le temps
+        # que ça prend (~2min30 d'import + calcul + sync) EST le délai voulu
+        # entre deux paquets de requêtes Sofascore — pas un sleep()
+        # artificiel. Un lot de 10 (plutôt qu'un seul match) ramène le total
+        # à quelques heures au lieu d'un cycle par match qui, mesuré, donnait
+        # ~34h pour un run complet (2026-09-30) — demandé explicitement par
+        # l'utilisateur pour garder l'esprit "ordre de démarrage + envoi
+        # progressif" sans que le coût fixe de l'import/sync domine le run.
+        MATCH_BATCH_SIZE = 10
+        processed_player_ids = set()
+        for i, event in enumerate(all_events, 1):
+            home = event.get("homeTeam") or {}
+            away = event.get("awayTeam") or {}
+            match_player_ids = []
+            for team in (home, away):
+                pid = team.get("id")
+                if pid:
+                    match_player_ids.append((pid, team.get("name", f"ID:{pid}")))
+            if not match_player_ids:
+                continue
+
+            match_label = f"{home.get('name', '?')} vs {away.get('name', '?')}"
+            print(f"\n🎾 Match {i}/{len(all_events)}: {match_label}")
+
+            fetch_player_details(driver, match_player_ids, cache_dir, current_year)
+            fetch_player_rankings(driver, match_player_ids, cache_dir)
+            fetch_h2h_and_odds_for_events(driver, [event], cache_dir)
+            fetch_player_point_by_point_history(driver, match_player_ids, cache_dir)
+            processed_player_ids.update(pid for pid, _ in match_player_ids)
+
+            # Import local + calcul probas + sync prod tous les
+            # MATCH_BATCH_SIZE matchs (force=True : pas d'attente
+            # d'intervalle, seul le compteur de matchs traités décide).
+            # archive=False : le fetch tourne encore, on ne doit pas vider
+            # les dossiers de cache sous ses pieds (voir maybe_run_prod_sync)
+            # — seul le flush final archive.
+            if i % MATCH_BATCH_SIZE == 0:
+                maybe_run_local_import(force=True)
+
+        # Joueurs déjà en cache (jours précédents) mais pas liés à un match
+        # du jour : moins urgent (pas de match imminent), traités en bloc
+        # après la boucle par match, avec l'ancien rythme par intervalle.
         players_dir = cache_dir / "players"
+        extra_ids = {}
         for f in players_dir.glob("player_basic_*.json"):
             try:
                 d = json.loads(f.read_text())
                 pid = d.get("sofascore_id")
                 name = d.get("name", f"ID:{pid}")
-                if pid and pid not in event_ids:
-                    event_ids[pid] = name
+                if pid and pid not in processed_player_ids:
+                    extra_ids[pid] = name
             except Exception:
                 pass
+        if extra_ids:
+            extra_list = list(extra_ids.items())
+            print(f"\n👤 Joueurs additionnels (cache, hors matchs du jour): {len(extra_list)}")
+            fetch_player_details(driver, extra_list, cache_dir, current_year)
+            fetch_player_rankings(driver, extra_list, cache_dir)
+            maybe_run_local_import()
 
-        player_ids = list(event_ids.items())
-        print(f"\n👤 Total joueurs à traiter (events + cache): {len(player_ids)}")
-        fetch_player_details(driver, player_ids, cache_dir, current_year)
-        fetch_player_rankings(driver, player_ids, cache_dir)
-
-        # H2H + cotes uniquement pour les matchs du jour (pas tout le cache joueurs)
-        if all_events:
-            fetch_h2h_and_odds_for_events(driver, all_events, cache_dir)
-
-        # Point-by-point historique : borné aux joueurs jouant AUJOURD'HUI
-        # (event_ids), pas tout le pool de joueurs déjà en cache — volume élevé
-        # (events/last + jusqu'à 3 point-by-point par joueur).
-        if event_ids:
-            fetch_player_point_by_point_history(driver, list(event_ids.items()), cache_dir)
+    # Flush final : importer/synchroniser/archiver le dernier lot partiel,
+    # même s'il n'a pas atteint le seuil normal (sinon perdu jusqu'au
+    # prochain run). C'est le SEUL point du run qui archive réellement.
+    maybe_run_local_import(force=True)
+    maybe_run_prod_sync(force=True, archive=True)
 
 
 # ---------------------------------------------------------------------------
@@ -730,7 +833,7 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
         else:
             url = f"https://www.sofascore.com/api/v1/team/{pid}"
             made_request = True
-            data = fetch_json(driver, url)
+            data, http_status = fetch_json(driver, url, with_status=True)
             if data and "error" not in data:
                 details_file.write_text(json.dumps(data, ensure_ascii=False))
                 meta_file.write_text(json.dumps({
@@ -740,7 +843,13 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
                     "player_name": data.get("team", {}).get("name", name),
                 }, ensure_ascii=False))
                 print(f"    ✅ Détails écrits")
-            else:
+            elif http_status == 404:
+                # Vraie absence confirmée — seul cas qui justifie un cache
+                # négatif de 24h (voir même logique pour les stats/last_events :
+                # un 403 est un blocage temporaire, pas une absence de donnée,
+                # et ne doit jamais être mis en cache négatif — sinon un
+                # blocage anti-bot passager marque à tort des joueurs réels
+                # comme indisponibles pendant 24h, constaté le 2026-09-30).
                 meta_file.write_text(json.dumps({
                     "timestamp": int(time.time()),
                     "url": url,
@@ -748,7 +857,9 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
                     "player_name": name,
                     "negative_cache": True,
                 }, ensure_ascii=False))
-                print(f"    ⚠️  Détails non disponibles (cache négatif)")
+                print(f"    ⚠️  Détails non disponibles (404 confirmé, cache négatif)")
+            else:
+                print(f"    ⚠️  Détails non disponibles (statut: {http_status}, pas de cache négatif — retenté au prochain passage)")
 
         # --- Basic (fichier plat pour l'import PHP, dérivé des détails) ---
         if details_file.exists():
@@ -853,25 +964,10 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
 
             img_url = f"https://api.sofascore.com/api/v1/team/{pid}/image"
             made_request = True
-            script = """
-                const [url, callback] = arguments;
-                fetch(url, {credentials: 'include'})
-                .then(r => {
-                    if (!r.ok) return callback({ok: false, status: r.status});
-                    return r.arrayBuffer().then(buf => {
-                        const bytes = new Uint8Array(buf);
-                        let binary = '';
-                        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-                        callback({ok: true, data: btoa(binary), type: r.headers.get('content-type')});
-                    });
-                })
-                .catch(err => callback({ok: false, error: err.toString()}));
-            """
             try:
-                result = driver.execute_async_script(script, img_url)
-                if result and result.get("ok") and result.get("data"):
-                    import base64
-                    logo_file.write_bytes(base64.b64decode(result["data"]))
+                content = _browser_fetch_image(driver, img_url)
+                if content:
+                    logo_file.write_bytes(content)
                     print(f"    ✅ Image téléchargée")
                 else:
                     img_meta_file.write_text(json.dumps({
@@ -886,7 +982,13 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
                 print(f"    ⚠️  Erreur image: {e}", file=sys.stderr)
 
         if made_request:
-            time.sleep(0.3)
+            time.sleep(random.uniform(0.9, 1.8))
+            # Pas d'appel à maybe_run_local_import() ici : le déclenchement se
+            # fait désormais explicitement dans la boucle par lot de matchs
+            # de fetch_tennis (voir MATCH_BATCH_SIZE) — un appel ici en plus
+            # créait un import déclenché en plein milieu du fetch d'un match,
+            # avec un sync prod parfois sauté silencieusement (force=False
+            # ici vs force=True dans la boucle), constaté le 2026-09-30.
 
 
 def fetch_player_rankings(driver: webdriver.Chrome, player_ids: list, cache_dir: Path):
@@ -915,7 +1017,8 @@ def fetch_player_rankings(driver: webdriver.Chrome, player_ids: list, cache_dir:
         if data and "rankings" in data:
             out_file.write_text(json.dumps(data, ensure_ascii=False))
             fetched += 1
-        time.sleep(0.3)
+        time.sleep(random.uniform(0.9, 1.8))
+        # Pas d'appel à maybe_run_local_import() ici — voir fetch_player_details.
         if i % 50 == 0:
             print(f"  [{i}/{total}] traités... ({fetched} nouveaux)")
     print(f"  📊 Rankings fetchés: {fetched}/{total}")
@@ -931,16 +1034,62 @@ def fetch_player_point_by_point_history(driver: webdriver.Chrome, player_ids: li
     pbp_processed_dir = pbp_dir / "processed"
     pbp_dir.mkdir(parents=True, exist_ok=True)
 
+    # Cache de team/{id}/events/last/0 — jamais mis en cache jusqu'ici, alors
+    # que ce même endpoint est rappelé pour TOUS les joueurs à CHAQUE run (les
+    # derniers matchs d'un joueur ne changent qu'une fois par jour au plus,
+    # quand il joue). Ce fetch, non caché, est celui qui génère le plus gros
+    # volume de vraies requêtes live du pipeline — la cause principale du
+    # rate-limit atteint pendant cette étape (constaté le 2026-09-29).
+    last_events_dir = cache_dir / "players" / "last_events"
+    last_events_dir.mkdir(parents=True, exist_ok=True)
+    LAST_EVENTS_CACHE_TTL = 20 * 3600  # 20h
+
     total = len(player_ids)
     print(f"\n🎯 Fetch historique point-by-point: {total} joueur(s) (max {max_recent} matchs récents/joueur)")
     fetched, skipped_cached = 0, 0
 
-    for i, (pid, name) in enumerate(player_ids, 1):
-        url = f"https://www.sofascore.com/api/v1/team/{pid}/events/last/0"
-        data = fetch_json(driver, url)
-        if not data or "events" not in data:
-            continue
+    # Backoff adaptatif : ce endpoint (team/{id}/events/last/0), appelé en
+    # boucle rapide pour ~centaines/milliers de joueurs avec un intervalle
+    # quasi fixe, est repéré par l'anti-bot comme un pattern de scraping même
+    # via un vrai navigateur — contrairement aux autres étapes (moins
+    # répétitives) qui passent sans souci. Un 403 isolé ne déclenche qu'une
+    # pause courte (retries internes de fetch_json), mais des 403 consécutifs
+    # signalent qu'on a franchi le seuil de rate-limit : on marque alors une
+    # vraie pause pour laisser la fenêtre se refermer, au lieu d'enchaîner à
+    # la même cadence qui ne fait qu'aggraver le blocage.
+    consecutive_403 = 0
+    LONG_PAUSE_AFTER = 3
+    LONG_PAUSE_SECONDS = 90
+    # Joueurs dont le fetch a échoué en 403 (bloqué temporairement, PAS une
+    # vraie absence de données) — on ne les met PAS en cache négatif (sinon on
+    # les traiterait comme "confirmé sans events" pendant 20h), on les
+    # retentera une fois à la fin, après une pause plus longue.
+    retry_queue_403 = []
 
+    def _fetch_last_events_once(pid):
+        nonlocal consecutive_403
+        url = f"https://www.sofascore.com/api/v1/team/{pid}/events/last/0"
+        data, http_status = fetch_json(driver, url, with_status=True)
+
+        if http_status == 403:
+            consecutive_403 += 1
+            if consecutive_403 >= LONG_PAUSE_AFTER:
+                print(f"  ⏸️  {consecutive_403} x 403 consécutifs — pause de {LONG_PAUSE_SECONDS}s pour laisser le rate-limit se refermer...", file=sys.stderr)
+                time.sleep(LONG_PAUSE_SECONDS)
+                consecutive_403 = 0
+        else:
+            consecutive_403 = 0
+
+        if data and "events" in data:
+            (last_events_dir / f"last_events_{pid}.json").write_text(json.dumps(data, ensure_ascii=False))
+        elif http_status != 403:
+            (last_events_dir / f"last_events_{pid}.json").write_text(json.dumps({"_negative_cache": True, "_http_status": http_status}, ensure_ascii=False))
+        return data, http_status
+
+    def _process_player_events(data):
+        """Traite les events['events'] d'un joueur : fetch le point-by-point
+        des derniers matchs terminés (hors doubles), jusqu'à max_recent."""
+        nonlocal fetched, skipped_cached, consecutive_403
         new_for_player = 0
         for event in data["events"]:
             if new_for_player >= max_recent:
@@ -962,18 +1111,69 @@ def fetch_player_point_by_point_history(driver: webdriver.Chrome, player_ids: li
                 continue
 
             pbp_url = f"https://www.sofascore.com/api/v1/event/{event_id}/point-by-point"
-            pbp_data = fetch_json(driver, pbp_url)
+            pbp_data, pbp_status = fetch_json(driver, pbp_url, with_status=True)
+            if pbp_status == 403:
+                consecutive_403 += 1
+                if consecutive_403 >= LONG_PAUSE_AFTER:
+                    print(f"  ⏸️  {consecutive_403} x 403 consécutifs — pause de {LONG_PAUSE_SECONDS}s pour laisser le rate-limit se refermer...", file=sys.stderr)
+                    time.sleep(LONG_PAUSE_SECONDS)
+                    consecutive_403 = 0
+            else:
+                consecutive_403 = 0
             if pbp_data and "pointByPoint" in pbp_data:
                 pbp_data["_home_team_id"] = (event.get("homeTeam") or {}).get("id")
                 pbp_data["_away_team_id"] = (event.get("awayTeam") or {}).get("id")
                 pbp_file.write_text(json.dumps(pbp_data, ensure_ascii=False))
                 fetched += 1
                 new_for_player += 1
-            time.sleep(0.3)
+            time.sleep(random.uniform(1.2, 2.2))
+
+    for i, (pid, name) in enumerate(player_ids, 1):
+        last_events_file = last_events_dir / f"last_events_{pid}.json"
+        data = None
+
+        if last_events_file.exists():
+            try:
+                age = time.time() - last_events_file.stat().st_mtime
+                if age < LAST_EVENTS_CACHE_TTL:
+                    cached = json.loads(last_events_file.read_text())
+                    if not cached.get("_negative_cache"):
+                        data = cached
+                    skipped_cached += 1
+            except Exception:
+                pass
+
+        if data is None:
+            data, http_status = _fetch_last_events_once(pid)
+            if http_status == 403:
+                retry_queue_403.append((pid, name))
+
+        if not data or "events" not in data:
+            time.sleep(random.uniform(1.2, 2.2))
+            continue
+
+        _process_player_events(data)
 
         if i % 50 == 0:
             print(f"  [{i}/{total}] traités... ({fetched} nouveaux, {skipped_cached} déjà en cache)")
-        time.sleep(0.2)
+        time.sleep(random.uniform(1.0, 1.8))
+        # Pas d'appel à maybe_run_local_import() ici — voir fetch_player_details.
+
+    # Retry final : les joueurs dont le fetch team/{id}/events/last/0 a
+    # échoué en 403 (bloqué temporairement, pas mis en cache négatif) sont
+    # retentés une seule fois après une pause plus longue — le rate-limit
+    # s'est souvent refermé entre-temps, sans perdre ces données pour autant.
+    if retry_queue_403:
+        print(f"\n🔁 Retry final pour {len(retry_queue_403)} joueur(s) bloqués en 403 (pause de 3 min avant de retenter)...")
+        time.sleep(180)
+        retried_ok = 0
+        for pid, name in retry_queue_403:
+            data, http_status = _fetch_last_events_once(pid)
+            if data and "events" in data:
+                retried_ok += 1
+                _process_player_events(data)
+            time.sleep(random.uniform(1.2, 2.2))
+        print(f"  📊 Retry 403: {retried_ok}/{len(retry_queue_403)} récupérés avec succès")
 
     print(f"  📊 Point-by-point nouveaux: {fetched} | déjà en cache (skip): {skipped_cached}")
 
@@ -1002,7 +1202,7 @@ def fetch_h2h_and_odds_for_events(driver: webdriver.Chrome, events: list, cache_
             if data and "events" in data:
                 h2h_file.write_text(json.dumps(data, ensure_ascii=False))
                 h2h_ok += 1
-            time.sleep(0.3)
+            time.sleep(random.uniform(0.9, 1.8))
 
         odds_file = odds_dir / f"odds_{event_id}.json"
         if not odds_file.exists():
@@ -1011,8 +1211,9 @@ def fetch_h2h_and_odds_for_events(driver: webdriver.Chrome, events: list, cache_
             if data and "markets" in data:
                 odds_file.write_text(json.dumps(data, ensure_ascii=False))
                 odds_ok += 1
-            time.sleep(0.3)
+            time.sleep(random.uniform(0.9, 1.8))
 
+        # Pas d'appel à maybe_run_local_import() ici — voir fetch_player_details.
         if i % 50 == 0:
             print(f"  [{i}/{total}] traités...")
 
@@ -1090,7 +1291,7 @@ def fetch_sport_standings(driver: webdriver.Chrome, cache_dir: Path, unique_ids:
                 neg = {"_negative_cache": True, "error": str(data), "fetched_at": datetime.now().isoformat()}
                 featured_file.write_text(json.dumps(neg, ensure_ascii=False))
                 print(f"  [{i}/{total}] {name} — featured-events KO (cache négatif)")
-            time.sleep(0.3)
+            time.sleep(random.uniform(0.9, 1.8))
 
         if season_id is None:
             continue
@@ -1118,7 +1319,7 @@ def fetch_sport_standings(driver: webdriver.Chrome, cache_dir: Path, unique_ids:
             neg = {"_negative_cache": True, "error": str(data), "fetched_at": datetime.now().isoformat()}
             standings_file.write_text(json.dumps(neg, ensure_ascii=False))
             print(f"  [{i}/{total}] {name} — standings KO (cache négatif)")
-        time.sleep(0.3)
+        time.sleep(random.uniform(0.9, 1.8))
 
     print(f"  📊 Standings mis en cache: {standings_count}/{total}")
 
@@ -1174,7 +1375,7 @@ def fetch_generic_scheduled_events(driver: webdriver.Chrome, cache_dir: Path, un
         else:
             cache_file.write_text(json.dumps({"_negative_cache": True, "fetched_at": datetime.now().isoformat()}, ensure_ascii=False))
 
-        time.sleep(0.2)
+        time.sleep(random.uniform(0.7, 1.4))
 
     print(f"  📊 Total matchs {sport_label} du jour: {total_events}")
     return total_events
@@ -1241,7 +1442,7 @@ def fetch_team_players(driver: webdriver.Chrome, cache_dir: Path, team_ids: dict
         else:
             neg = {"_negative_cache": True, "fetched_at": datetime.now().isoformat()}
             cache_file.write_text(json.dumps(neg, ensure_ascii=False))
-        time.sleep(0.2)
+        time.sleep(random.uniform(0.7, 1.4))
 
     print(f"  📊 Effectifs équipes mis en cache: {fetched}/{total}")
 
@@ -1291,7 +1492,7 @@ def fetch_player_images(driver: webdriver.Chrome, cache_dir: Path, player_ids: d
         if content:
             img_file.write_bytes(content)
             downloaded += 1
-        time.sleep(0.1)
+        time.sleep(random.uniform(1.0, 1.8))
 
     print(f"  📊 Images joueurs téléchargées: {downloaded}/{total}")
 
@@ -1335,7 +1536,7 @@ def fetch_sport_scheduled(driver: webdriver.Chrome, sport: str, target_date: str
         if not has_next:
             break
         page += 1
-        time.sleep(0.5)
+        time.sleep(random.uniform(1.2, 2.2))
 
     print(f"  📊 Total: {total_tournaments} tournois sur {page} page(s)")
 
@@ -1365,12 +1566,107 @@ def fetch_sport_scheduled(driver: webdriver.Chrome, sport: str, target_date: str
 # Main
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Interleaving import/sync — au lieu de tout fetcher puis tout importer/
+# synchroniser en une seule fois à la fin (rafale de requêtes Sofascore sans
+# interruption, repérable par l'anti-bot), on déclenche l'import PHP local et
+# la synchronisation prod PAR LOTS pendant le fetch. Le temps de calcul local
+# (import PHP) et le temps réseau (rsync/SSH vers prod) créent un délai
+# "utile" entre les paquets de requêtes Sofascore, au lieu d'un sleep() pur.
+# ---------------------------------------------------------------------------
+
+PROJECT_DIR = Path(__file__).parent.parent
+# Basé sur le TEMPS écoulé (pas un compteur d'éléments traités) : la commande
+# d'import PHP retraite tout le cache à chaque appel (~2min30 mesuré), donc un
+# seuil par volume devient vite trop fréquent/coûteux quand le fetch avance
+# vite (cache hits) ou trop rare quand il ralentit (vrais fetch + 403). Les
+# matchs sont désormais fetchés dans l'ordre de leur heure de départ (voir
+# tri dans fetch_tennis), donc même un intervalle fixe profite déjà aux
+# matchs qui commencent le plus tôt.
+LOCAL_IMPORT_INTERVAL_SECONDS = 3 * 60    # ~3 min — proche du temps de l'import lui-même (~2min30),
+                                           # pas d'attente artificielle en plus (demandé par l'utilisateur)
+PROD_SYNC_INTERVAL_SECONDS = 9 * 60       # ~9 min (≈ tous les 3 imports locaux) — limite le nb de connexions SSH
+
+# Initialisé au moment du chargement du module (proche du démarrage réel du
+# run) plutôt qu'à 0 — un compteur à 0 déclencherait le tout premier appel
+# immédiatement (temps écoulé depuis l'epoch = énorme), ce qui a provoqué un
+# archivage prématuré (voir maybe_run_prod_sync) alors que le fetch venait à
+# peine de commencer.
+_interleave_counter = {"last_local_import_at": time.time(), "last_prod_sync_at": time.time()}
+
+
+def _run(cmd: list, cwd=None, timeout=180, env=None) -> bool:
+    try:
+        run_env = {**os.environ, **env} if env else None
+        result = subprocess.run(cmd, cwd=cwd or PROJECT_DIR, capture_output=True, text=True, timeout=timeout, env=run_env)
+        if result.returncode != 0:
+            print(f"  ⚠️  Commande échouée ({' '.join(cmd)}): {result.stderr[-500:]}", file=sys.stderr)
+            return False
+        return True
+    except subprocess.TimeoutExpired:
+        print(f"  ⚠️  Timeout sur commande: {' '.join(cmd)}", file=sys.stderr)
+        return False
+    except Exception as e:
+        print(f"  ⚠️  Erreur commande: {e}", file=sys.stderr)
+        return False
+
+
+def maybe_run_local_import(force: bool = False):
+    """Toutes les LOCAL_IMPORT_INTERVAL_SECONDS écoulées, importe en base
+    locale ce qui a déjà été fetché (le cache existant est réutilisé par les
+    prochains passages, rien n'est perdu ni refait). Basé sur le temps
+    écoulé plutôt qu'un compteur d'éléments : coût fixe par appel (~2min30),
+    indépendant du volume traité entre deux appels."""
+    now = time.time()
+    if not force and (now - _interleave_counter["last_local_import_at"]) < LOCAL_IMPORT_INTERVAL_SECONDS:
+        return
+    _interleave_counter["last_local_import_at"] = now
+    print("  🔄 Import PHP local incrémental (lot)...")
+    _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
+          "tennis:import-from-cache", "--force", "--skip-archive"], timeout=300)
+    # Calcul des probabilités (léger, ~20s mesuré) — sans ça les matchs sont
+    # importés mais pas "exploitables" (pas de stats/proba tant que cette
+    # commande séparée n'a pas tourné).
+    print("  🎯 Calcul des probabilités (lot)...")
+    _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
+          "tennis:compute-tightness-scores", "--force"], timeout=120)
+    maybe_run_prod_sync(force=force)
+
+
+def maybe_run_prod_sync(force: bool = False, archive: bool = False):
+    """Synchronise le cache vers prod et relance l'import + calcul de probas
+    là-bas. Appelé après chaque match (force=True) depuis maybe_run_local_import,
+    donc en pratique quasi jamais gaté par PROD_SYNC_INTERVAL_SECONDS (ce
+    seuil ne sert plus que pour le pool de joueurs additionnels hors matchs
+    du jour, traité en bloc à la fin de fetch_tennis).
+    `archive` contrôle l'archivage (déplacement des dossiers de cache après
+    envoi) — voir send_cache_and_archive.sh : archiver PENDANT que le fetch
+    tourne encore viderait le dossier de travail sous ses pieds et le ferait
+    planter (FileNotFoundError constaté le 2026-09-30). Seul le flush final
+    de fetch_tennis passe archive=True."""
+    now = time.time()
+    if not force and (now - _interleave_counter["last_prod_sync_at"]) < PROD_SYNC_INTERVAL_SECONDS:
+        return
+    _interleave_counter["last_prod_sync_at"] = now
+    archive_env = None if archive else {"SKIP_ARCHIVE": "1"}
+    label = "final (avec archivage)" if archive else "match par match (sans archivage)"
+    print(f"  ☁️  Sync + import prod {label}...")
+    if _run(["bash", "script/send_cache_and_archive.sh"], timeout=300, env=archive_env):
+        _run(["ssh", "sc2vagr6376@bouteille.o2switch.net",
+              "cd ~/api.auxotracker && php artisan tennis:import-from-cache --force "
+              "&& php artisan tennis:compute-tightness-scores --force"], timeout=300)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch Sofascore cache via Chrome headless")
     parser.add_argument("--sport", default="tennis",
                         help="Sport à fetcher (tennis, football, basketball, all…)")
     parser.add_argument("--date", default=date.today().strftime("%Y-%m-%d"),
                         help="Date au format YYYY-MM-DD (défaut: aujourd'hui)")
+    parser.add_argument("--transport", choices=["selenium", "extension"], default="selenium",
+                        help="selenium (défaut, Chrome headless) ou extension "
+                             "(pont WebSocket vers l'extension Chrome — nécessite "
+                             "Chrome ouvert avec chrome_extension_sofascore chargée)")
     args = parser.parse_args()
 
     target_date = args.date
@@ -1381,12 +1677,18 @@ def main():
             print(f"❌ Sport inconnu: {sp}. Disponibles: {', '.join(SPORTS_CONFIG)}", file=sys.stderr)
             sys.exit(1)
 
-    print(f"🚀 fetch_sofascore_cache.py — sport(s): {sports_to_fetch}, date: {target_date}")
+    print(f"🚀 fetch_sofascore_cache.py — sport(s): {sports_to_fetch}, date: {target_date}, transport: {args.transport}")
 
-    driver = build_driver()
-    try:
+    if args.transport == "extension":
+        driver = ExtensionBridge()
+        print("⏳ En attente de connexion de l'extension Chrome (ouvrez Chrome avec "
+              "chrome_extension_sofascore chargée)...")
+        driver.wait_for_extension(timeout=120)
+    else:
+        driver = build_driver()
         warm_session(driver)
 
+    try:
         for sport in sports_to_fetch:
             cfg = SPORTS_CONFIG[sport]
             if cfg["mode"] == "live_featured":
@@ -1395,7 +1697,10 @@ def main():
                 fetch_sport_scheduled(driver, sport, target_date)
 
     finally:
-        driver.quit()
+        if (ExtensionBridge is not None and isinstance(driver, ExtensionBridge)):
+            pass  # rien à fermer : le WS reste ouvert le temps du process
+        else:
+            driver.quit()
 
     print("\n✅ Fetch terminé.")
 

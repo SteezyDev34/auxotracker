@@ -51,8 +51,8 @@ if [ "${TENNIS_FORCE:-}" = "1" ]; then TEN_PARAMS="--force"; fi
 [ -n "${TENNIS_DELAY:-}" ] && TEN_PARAMS="$TEN_PARAMS --delay=${TENNIS_DELAY}"
 [ -n "${TENNIS_DATE_OFFSET:-}" ] && TEN_PARAMS="$TEN_PARAMS --date-offset=${TENNIS_DATE_OFFSET}"
 
-# Phase 0 : fetch des données Sofascore via Chrome headless (contourne le ban IP/TLS)
-echo "$(date) : Fetch Sofascore cache via Chrome headless..." 2>&1 | tee -a "$LOG"
+# Phase 0 : fetch des données Sofascore (contourne le ban IP/TLS)
+echo "$(date) : Fetch Sofascore cache via $TENNIS_TRANSPORT..." 2>&1 | tee -a "$LOG"
 FETCH_DATE="${TENNIS_DATE_OFFSET:+$(date -v+${TENNIS_DATE_OFFSET}d +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)}"
 FETCH_DATE="${FETCH_DATE:-$(date +%Y-%m-%d)}"
 
@@ -64,8 +64,12 @@ FETCH_DATE="${FETCH_DATE:-$(date +%Y-%m-%d)}"
 CRASH_RETRIES=0
 MAX_CRASH_RETRIES=2
 while true; do
-    /usr/bin/python3 -u "$SCRIPT_DIR/fetch_sofascore_cache.py" --sport tennis --date "$FETCH_DATE" 2>&1 | tee -a "$LOG" || true
-    FETCH_EXIT=${PIPESTATUS[0]:-${?}}
+    # Avec pipefail, le statut du pipeline est celui de python (tee réussit) :
+    # le "|| FETCH_EXIT=$?" le capture sans déclencher set -e. L'ancien
+    # "|| true" puis ${PIPESTATUS[0]} lisait le statut de `true` (toujours 0) :
+    # un fetch en échec (ex. extension non connectée) passait pour réussi.
+    FETCH_EXIT=0
+    /usr/bin/python3 -u "$SCRIPT_DIR/fetch_sofascore_cache.py" --sport tennis --date "$FETCH_DATE" --transport "${TENNIS_TRANSPORT:-extension}" 2>&1 | tee -a "$LOG" || FETCH_EXIT=$?
     if [[ "$FETCH_EXIT" -eq 42 && "$CRASH_RETRIES" -lt "$MAX_CRASH_RETRIES" ]]; then
         CRASH_RETRIES=$((CRASH_RETRIES + 1))
         echo "$(date) : 💥 Chrome a crashé — relance automatique (tentative $CRASH_RETRIES/$MAX_CRASH_RETRIES)" 2>&1 | tee -a "$LOG"
@@ -77,7 +81,11 @@ while true; do
 done
 
 if [[ "$FETCH_EXIT" -ne 0 ]]; then
-    echo "$(date) : ⚠️  Fetch Chrome échoué, tentative sans --offline" 2>&1 | tee -a "$LOG"
+    # Sortie propre : enchaîner import-from-schedule sans --offline lancerait des
+    # appels Sofascore directs depuis PHP (bloqués, caches négatifs) et pourrait
+    # écrire le marker "Phase 1 faite" à tort. Le cache déjà écrit est conservé.
+    echo "$(date) : ❌ Fetch échoué (code $FETCH_EXIT) — arrêt sans import ni marker. Relancer après correction (extension connectée, etc.)." 2>&1 | tee -a "$LOG"
+    exit "$FETCH_EXIT"
 else
     # Le fetch Python a réussi : on passe en mode --offline et on retire --force
     # (en --offline --force, PHP ignorerait les caches Python et créerait des caches négatifs)

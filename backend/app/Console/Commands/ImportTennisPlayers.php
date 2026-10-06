@@ -858,6 +858,15 @@ class ImportTennisPlayers extends Command
             $homeTeam = $event['homeTeam'] ?? null;
             $awayTeam = $event['awayTeam'] ?? null;
 
+            // TEMPORAIRE (demande utilisateur, 2026-10-01) : matchs de double
+            // exclus (pas de fichier event_*.json → pas de match créé en BDD),
+            // y compris sous un tournoi de simple. Sofascore : team.type 2 = paire.
+            foreach ([$homeTeam, $awayTeam] as $team) {
+                if (($team['type'] ?? null) === 2 || str_contains($team['name'] ?? '', '/')) {
+                    return;
+                }
+            }
+
             // Détecter si c'est une compétition en double
             $isDoubles = $this->isDoublesCompetition($event);
 

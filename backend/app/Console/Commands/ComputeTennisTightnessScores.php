@@ -10,6 +10,7 @@ use App\Models\TennisH2hMatch;
 use App\Models\TennisMatchOdds;
 use App\Models\TennisMatchTightnessScore;
 use App\Models\TennisPlayerGameTensionStat;
+use App\Models\TennisPlayerGameTensionStatByTier;
 use App\Models\Sport;
 use Illuminate\Support\Facades\Log;
 
@@ -25,18 +26,26 @@ use Illuminate\Support\Facades\Log;
 class ComputeTennisTightnessScores extends Command
 {
     protected $signature = 'tennis:compute-tightness-scores
-                            {--days=1 : Nombre de jours à venir à traiter (à partir d\'aujourd\'hui)}
+                            {--days=1 : Nombre de jours à venir à traiter (à partir d\'aujourd\'hui) — ignoré si --from-date est fourni}
+                            {--from-date= : Date de début (YYYY-MM-DD) — permet de recalculer rétroactivement des matchs passés}
+                            {--to-date= : Date de fin (YYYY-MM-DD, défaut: from-date) — utilisé seulement avec --from-date}
                             {--force : Recalculer même si un score existe déjà}';
 
-    protected $description = "Calcule un score 'match serré' (0-100) pour les matchs de tennis à venir";
+    protected $description = "Calcule un score 'match serré' (0-100) pour les matchs de tennis à venir (ou passés avec --from-date, pour comparer avant/après un changement de modèle)";
 
     public function handle()
     {
         $days = (int) $this->option('days');
         $force = (bool) $this->option('force');
+        $fromDate = $this->option('from-date');
 
-        $startDate = now()->toDateString();
-        $endDate = now()->addDays(max(0, $days - 1))->toDateString();
+        if ($fromDate) {
+            $startDate = $fromDate;
+            $endDate = $this->option('to-date') ?: $fromDate;
+        } else {
+            $startDate = now()->toDateString();
+            $endDate = now()->addDays(max(0, $days - 1))->toDateString();
+        }
 
         $tennisSportId = Sport::where('slug', 'tennis')->orWhere('name', 'Tennis')->value('id');
         if (!$tennisSportId) {
@@ -77,6 +86,17 @@ class ComputeTennisTightnessScores extends Command
                     'edge_40a' => $result['edge_40a'],
                     'sample_size' => $result['sample_size'],
                     'prob_30love_set1' => $result['prob_30love_set1'],
+                    'prob_15a_in_set' => $result['prob_15a_in_set'],
+                    'prob_30a_in_set' => $result['prob_30a_in_set'],
+                    'prob_40a_in_set' => $result['prob_40a_in_set'],
+                    'prob_30love_in_set' => $result['prob_30love_in_set'],
+                    'prob_game_40_0_in_set' => $result['prob_game_40_0_in_set'],
+                    'prob_game_40_15_in_set' => $result['prob_game_40_15_in_set'],
+                    'prob_game_40_30_in_set' => $result['prob_game_40_30_in_set'],
+                    'prob_team1_leads_15_0_in_set' => $result['prob_team1_leads_15_0_in_set'],
+                    'prob_team2_leads_15_0_in_set' => $result['prob_team2_leads_15_0_in_set'],
+                    'prob_lost_serve1_in_set' => $result['prob_lost_serve1_in_set'],
+                    'prob_lost_serve2_in_set' => $result['prob_lost_serve2_in_set'],
                     'prob_game_40_0' => $result['prob_game_40_0'],
                     'prob_game_40_15' => $result['prob_game_40_15'],
                     'prob_game_40_30' => $result['prob_game_40_30'],
@@ -174,6 +194,17 @@ class ComputeTennisTightnessScores extends Command
             'edge_40a' => $this->computeEdge($set1Probs['prob_40a'], self::MARKET_ODDS['40a']),
             'sample_size' => $set1Probs['sample_size'] ?? null,
             'prob_30love_set1' => $set1Probs['prob_30love'] ?? null,
+            'prob_15a_in_set' => $set1Probs['prob_15a_in_set'] ?? null,
+            'prob_30a_in_set' => $set1Probs['prob_30a_in_set'] ?? null,
+            'prob_40a_in_set' => $set1Probs['prob_40a_in_set'] ?? null,
+            'prob_30love_in_set' => $set1Probs['prob_30love_in_set'] ?? null,
+            'prob_game_40_0_in_set' => $set1Probs['prob_game_40_0_in_set'] ?? null,
+            'prob_game_40_15_in_set' => $set1Probs['prob_game_40_15_in_set'] ?? null,
+            'prob_game_40_30_in_set' => $set1Probs['prob_game_40_30_in_set'] ?? null,
+            'prob_team1_leads_15_0_in_set' => $set1Probs['prob_team1_leads_15_0_in_set'] ?? null,
+            'prob_team2_leads_15_0_in_set' => $set1Probs['prob_team2_leads_15_0_in_set'] ?? null,
+            'prob_lost_serve1_in_set' => $set1Probs['prob_lost_serve1_in_set'] ?? null,
+            'prob_lost_serve2_in_set' => $set1Probs['prob_lost_serve2_in_set'] ?? null,
             'prob_game_40_0' => $set1Probs['prob_g40_0'] ?? null,
             'prob_game_40_15' => $set1Probs['prob_g40_15'] ?? null,
             'prob_game_40_30' => $set1Probs['prob_g40_30'] ?? null,
@@ -240,21 +271,64 @@ class ComputeTennisTightnessScores extends Command
         $tensionB = TennisPlayerGameTensionStat::where('team_id', $teamB->id)->first();
 
         if ($tensionA && $tensionA->isReliable() && $tensionB && $tensionB->isReliable()) {
-            $result = $this->set1ProbabilitiesFromEmpirical($tensionA, $tensionB);
+            // Blend bayésien (shrinkage) : taux global du joueur pondéré avec
+            // son taux spécifique face au TIER de classement de CET adversaire
+            // précis — évite de traiter un match contre un top 10 comme un
+            // match contre un joueur 400e alors que le joueur a un taux global
+            // agrégeant tous ses adversaires confondus.
+            $tierOfB = TennisPlayerGameTensionStatByTier::tierForRanking($teamB->ranking);
+            $tierOfA = TennisPlayerGameTensionStatByTier::tierForRanking($teamA->ranking);
+            $tierStatA = TennisPlayerGameTensionStatByTier::where('team_id', $teamA->id)
+                ->where('opponent_tier', $tierOfB)->first();
+            $tierStatB = TennisPlayerGameTensionStatByTier::where('team_id', $teamB->id)
+                ->where('opponent_tier', $tierOfA)->first();
+
+            $result = $this->set1ProbabilitiesFromEmpirical($tensionA, $tensionB, $tierStatA, $tierStatB);
             // Maillon faible : la fiabilité du couple est celle du joueur le
             // moins échantillonné, pas la moyenne.
             $result['sample_size'] = min($tensionA->sample_games_set1, $tensionB->sample_games_set1);
             // Asymétrique par nature (qui mène 15-0, pas une moyenne fusionnée)
             // — pas de repli théorique propre, seulement empirique.
-            $rateA = $tensionA->rateLedFirstPoint();
-            $rateB = $tensionB->rateLedFirstPoint();
+            $rateA = $this->blendWithTier($tensionA->rateLedFirstPoint(), $tierStatA, 'sample_games_set1', fn ($t) => $t->count_led_15_0 / max(1, $t->sample_games_set1));
+            $rateB = $this->blendWithTier($tensionB->rateLedFirstPoint(), $tierStatB, 'sample_games_set1', fn ($t) => $t->count_led_15_0 / max(1, $t->sample_games_set1));
             $result['prob_team1_leads_15_0'] = $rateA !== null ? round($rateA * 100, 2) : null;
             $result['prob_team2_leads_15_0'] = $rateB !== null ? round($rateB * 100, 2) : null;
             // Idem, spécifique au service de CHAQUE joueur (pas de repli théorique).
-            $rateLostA = $tensionA->rateLostFirstPointOnServe();
-            $rateLostB = $tensionB->rateLostFirstPointOnServe();
+            $rateLostA = $this->blendWithTier($tensionA->rateLostFirstPointOnServe(), $tierStatA, 'sample_service_games_set1', fn ($t) => $t->sample_service_games_set1 ? $t->count_lost_first_point_on_serve / $t->sample_service_games_set1 : null);
+            $rateLostB = $this->blendWithTier($tensionB->rateLostFirstPointOnServe(), $tierStatB, 'sample_service_games_set1', fn ($t) => $t->sample_service_games_set1 ? $t->count_lost_first_point_on_serve / $t->sample_service_games_set1 : null);
             $result['prob_team1_lost_serve'] = $rateLostA !== null ? round($rateLostA * 100, 2) : null;
             $result['prob_team2_lost_serve'] = $rateLostB !== null ? round($rateLostB * 100, 2) : null;
+
+            // Indicateur simplifié : fréquence historique réelle que l'événement
+            // arrive AU MOINS UNE FOIS dans le set (pas par jeu isolé) — dénominateur
+            // = nombre de matchs, pas de jeux. C'est ce que l'UI doit comparer à un
+            // seuil (ex: 85%) pour le vert, pas les probas "par jeu" ci-dessus.
+            $inSetMap = [
+                'prob_15a_in_set' => 'rateMatchReach15a',
+                'prob_30a_in_set' => 'rateMatchReach30a',
+                'prob_40a_in_set' => 'rateMatchReach40a',
+                'prob_30love_in_set' => 'rateMatchReach30Love',
+                'prob_game_40_0_in_set' => 'rateMatchReachG40_0',
+                'prob_game_40_15_in_set' => 'rateMatchReachG40_15',
+                'prob_game_40_30_in_set' => 'rateMatchReachG40_30',
+            ];
+            foreach ($inSetMap as $resultKey => $method) {
+                $rA = $this->blendWithTier($tensionA->$method(), $tierStatA, 'sample_matches', fn ($t) => $t->$method());
+                $rB = $this->blendWithTier($tensionB->$method(), $tierStatB, 'sample_matches', fn ($t) => $t->$method());
+                $result[$resultKey] = ($rA === null || $rB === null) ? null : round((($rA + $rB) / 2) * 100, 2);
+            }
+
+            // Marchés asymétriques "au moins une fois dans le set" (par joueur).
+            $rLeads1 = $this->blendWithTier($tensionA->rateMatchLed15_0(), $tierStatA, 'sample_matches', fn ($t) => $t->rateMatchLed15_0());
+            $rLeads2 = $this->blendWithTier($tensionB->rateMatchLed15_0(), $tierStatB, 'sample_matches', fn ($t) => $t->rateMatchLed15_0());
+            $result['prob_team1_leads_15_0_in_set'] = $rLeads1 !== null ? round($rLeads1 * 100, 2) : null;
+            $result['prob_team2_leads_15_0_in_set'] = $rLeads2 !== null ? round($rLeads2 * 100, 2) : null;
+
+            $rLost1 = $this->blendWithTier($tensionA->rateMatchLostFirstPointOnServe(), $tierStatA, 'sample_matches', fn ($t) => $t->rateMatchLostFirstPointOnServe());
+            $rLost2 = $this->blendWithTier($tensionB->rateMatchLostFirstPointOnServe(), $tierStatB, 'sample_matches', fn ($t) => $t->rateMatchLostFirstPointOnServe());
+            $result['prob_lost_serve1_in_set'] = $rLost1 !== null ? round($rLost1 * 100, 2) : null;
+            $result['prob_lost_serve2_in_set'] = $rLost2 !== null ? round($rLost2 * 100, 2) : null;
+
             return $result;
         }
 
@@ -262,28 +336,101 @@ class ComputeTennisTightnessScores extends Command
         $result['sample_size'] = ($statA && $statB)
             ? min($statA->matches_count ?? 0, $statB->matches_count ?? 0)
             : null;
+        // Pas d'historique point-by-point fiable pour ce couple : pas de repli
+        // théorique propre pour "au moins une fois dans le set" (nécessiterait
+        // de simuler un set entier, pas juste un jeu isolé).
+        $result['prob_15a_in_set'] = null;
+        $result['prob_30a_in_set'] = null;
+        $result['prob_40a_in_set'] = null;
+        $result['prob_30love_in_set'] = null;
+        $result['prob_game_40_0_in_set'] = null;
+        $result['prob_game_40_15_in_set'] = null;
+        $result['prob_game_40_30_in_set'] = null;
+        $result['prob_team1_leads_15_0_in_set'] = null;
+        $result['prob_team2_leads_15_0_in_set'] = null;
+        $result['prob_lost_serve1_in_set'] = null;
+        $result['prob_lost_serve2_in_set'] = null;
         return $result;
     }
 
     /**
-     * Fréquence réelle observée dans l'historique point-by-point des 2 joueurs :
-     * moyenne simple de leurs taux par jeu respectifs (pas de compoundage).
+     * Poids (en nombre équivalent de jeux) donné à la moyenne globale du
+     * joueur face au taux spécifique observé contre CE tier d'adversaire —
+     * plus petit = on fait confiance plus vite à l'échantillon par tier.
+     * K=5 : un tier avec seulement 5 jeux observés pèse déjà autant que la
+     * moyenne globale du joueur dans le résultat final.
      */
-    private function set1ProbabilitiesFromEmpirical(TennisPlayerGameTensionStat $a, TennisPlayerGameTensionStat $b): array
+    private const TIER_BLEND_K = 5;
+
+    /**
+     * Blend bayésien (shrinkage) entre le taux global d'un joueur et son taux
+     * spécifique face au tier de CET adversaire : plus l'échantillon par tier
+     * est grand, plus il pèse dans le résultat final.
+     *
+     *   taux_ajusté = (global × K + tier × n_tier) / (K + n_tier)
+     */
+    private function blendWithTier(?float $globalRate, ?TennisPlayerGameTensionStatByTier $tierStat, string $sampleField, callable $tierRateFn): ?float
     {
+        if ($globalRate === null) {
+            return null;
+        }
+        if (!$tierStat) {
+            return $globalRate;
+        }
+        $tierRate = $tierRateFn($tierStat);
+        $n = $tierStat->{$sampleField};
+        if ($tierRate === null || !$n) {
+            return $globalRate;
+        }
+        $k = self::TIER_BLEND_K;
+        return (($globalRate * $k) + ($tierRate * $n)) / ($k + $n);
+    }
+
+    /**
+     * Fréquence réelle observée dans l'historique point-by-point des 2 joueurs :
+     * moyenne simple de leurs taux par jeu respectifs (pas de compoundage),
+     * chaque taux étant d'abord blendé (shrinkage) avec la stat spécifique du
+     * joueur face au tier de classement de son adversaire du jour.
+     */
+    private function set1ProbabilitiesFromEmpirical(
+        TennisPlayerGameTensionStat $a,
+        TennisPlayerGameTensionStat $b,
+        ?TennisPlayerGameTensionStatByTier $tierA = null,
+        ?TennisPlayerGameTensionStatByTier $tierB = null
+    ): array {
+        $blend = fn (?float $rate, ?TennisPlayerGameTensionStatByTier $tierStat, callable $tierRateFn) =>
+            $this->blendWithTier($rate, $tierStat, 'sample_games_set1', $tierRateFn);
+
         $avg = fn (?float $rateA, ?float $rateB) => ($rateA === null || $rateB === null)
             ? null
             : round((($rateA + $rateB) / 2) * 100, 2);
 
+        $a15 = $blend($a->rate15a(), $tierA, fn ($t) => $t->rate15a());
+        $b15 = $blend($b->rate15a(), $tierB, fn ($t) => $t->rate15a());
+        $a30 = $blend($a->rate30a(), $tierA, fn ($t) => $t->rate30a());
+        $b30 = $blend($b->rate30a(), $tierB, fn ($t) => $t->rate30a());
+        $a40 = $blend($a->rate40a(), $tierA, fn ($t) => $t->rate40a());
+        $b40 = $blend($b->rate40a(), $tierB, fn ($t) => $t->rate40a());
+        $a30l = $blend($a->rate30Love(), $tierA, fn ($t) => $t->rate30Love());
+        $b30l = $blend($b->rate30Love(), $tierB, fn ($t) => $t->rate30Love());
+        $ag0 = $blend($a->rateGame40_0(), $tierA, fn ($t) => $t->rateGame40_0());
+        $bg0 = $blend($b->rateGame40_0(), $tierB, fn ($t) => $t->rateGame40_0());
+        $ag15 = $blend($a->rateGame40_15(), $tierA, fn ($t) => $t->rateGame40_15());
+        $bg15 = $blend($b->rateGame40_15(), $tierB, fn ($t) => $t->rateGame40_15());
+        $ag30 = $blend($a->rateGame40_30(), $tierA, fn ($t) => $t->rateGame40_30());
+        $bg30 = $blend($b->rateGame40_30(), $tierB, fn ($t) => $t->rateGame40_30());
+        $aServerLoss = $this->blendWithTier($a->rateServerLossToLove(), $tierA, 'sample_service_games_set1', fn ($t) => $t->rateServerLossToLove());
+        $bServerLoss = $this->blendWithTier($b->rateServerLossToLove(), $tierB, 'sample_service_games_set1', fn ($t) => $t->rateServerLossToLove());
+
         return [
-            'prob_15a' => $avg($a->rate15a(), $b->rate15a()),
-            'prob_30a' => $avg($a->rate30a(), $b->rate30a()),
-            'prob_40a' => $avg($a->rate40a(), $b->rate40a()),
-            'prob_30love' => $avg($a->rate30Love(), $b->rate30Love()),
-            'prob_g40_0' => $avg($a->rateGame40_0(), $b->rateGame40_0()),
-            'prob_g40_15' => $avg($a->rateGame40_15(), $b->rateGame40_15()),
-            'prob_g40_30' => $avg($a->rateGame40_30(), $b->rateGame40_30()),
-            'prob_server_loss_to_love' => $avg($a->rateServerLossToLove(), $b->rateServerLossToLove()),
+            'prob_15a' => $avg($a15, $b15),
+            'prob_30a' => $avg($a30, $b30),
+            'prob_40a' => $avg($a40, $b40),
+            'prob_30love' => $avg($a30l, $b30l),
+            'prob_g40_0' => $avg($ag0, $bg0),
+            'prob_g40_15' => $avg($ag15, $bg15),
+            'prob_g40_30' => $avg($ag30, $bg30),
+            'prob_server_loss_to_love' => $avg($aServerLoss, $bServerLoss),
             'source' => 'empirique',
         ];
     }

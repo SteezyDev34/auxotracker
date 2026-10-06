@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Sofascore Fetch Bridge",
+  "version": "1.0.0",
+  "description": "Bridge Chrome Extension ↔ Python : récupère les endpoints JSON Sofascore depuis une vraie session navigateur (pas de Chrome headless automatisé, donc pas de challenge anti-bot).",
+
+  "permissions": ["alarms", "tabs", "scripting"],
+  "host_permissions": ["*://*.sofascore.com/*"],
+
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://www.sofascore.com/*"],
+      "js": ["content_fetch.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Sofascore Fetch Bridge"
+  }
+}

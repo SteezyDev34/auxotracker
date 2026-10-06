@@ -122,26 +122,36 @@ fi
 date +%s > "$CACHE_ROOT/.synced_at" 2>/dev/null || true
 echo "$(date) : ✅ Synchronisation réussie — marqueur .synced_at créé" 2>&1 | tee -a "$LOG"
 
-TS="$(date +%Y-%m-%d_%H-%M-%S)"
-for t in "${TARGETS[@]}"; do
-    SRC="$CACHE_ROOT/$t"
-    if [[ ! -d "$SRC" ]]; then
-        echo "$(date) : ⚠️ Target introuvable, skip: $SRC" 2>&1 | tee -a "$LOG"
-        continue
-    fi
+# SKIP_ARCHIVE=1 : n'archive PAS (ne déplace pas les dossiers de cache) — utile
+# pour un sync intermédiaire déclenché PENDANT qu'un fetch tourne encore et
+# écrit dans ces mêmes dossiers (archiver = mv des enfants immédiats, ce qui
+# viderait le dossier de travail sous les pieds du fetch en cours et le ferait
+# planter — FileNotFoundError constaté le 2026-09-30). L'archivage final ne
+# doit se faire qu'une fois le fetch complètement terminé.
+if [[ "${SKIP_ARCHIVE:-}" == "1" ]]; then
+    echo "$(date) : ⏭️  Archivage ignoré (SKIP_ARCHIVE=1, sync intermédiaire)" 2>&1 | tee -a "$LOG"
+else
+    TS="$(date +%Y-%m-%d_%H-%M-%S)"
+    for t in "${TARGETS[@]}"; do
+        SRC="$CACHE_ROOT/$t"
+        if [[ ! -d "$SRC" ]]; then
+            echo "$(date) : ⚠️ Target introuvable, skip: $SRC" 2>&1 | tee -a "$LOG"
+            continue
+        fi
 
-    ARCHIVE_DIR="$CACHE_ROOT/archives/$t/$TS"
-    mkdir -p "$ARCHIVE_DIR"
-    echo "$(date) : 🗄️ Archivage de $SRC → $ARCHIVE_DIR" 2>&1 | tee -a "$LOG"
+        ARCHIVE_DIR="$CACHE_ROOT/archives/$t/$TS"
+        mkdir -p "$ARCHIVE_DIR"
+        echo "$(date) : 🗄️ Archivage de $SRC → $ARCHIVE_DIR" 2>&1 | tee -a "$LOG"
 
-    # Déplacer les enfants immédiats (fichiers et répertoires) sauf archives/processed
-    find "$SRC" -mindepth 1 -maxdepth 1 ! -name 'archives' ! -name 'processed*' -print0 | \
-    while IFS= read -r -d '' item; do
-        mv -f "$item" "$ARCHIVE_DIR/" 2>&1 | tee -a "$LOG" || true
+        # Déplacer les enfants immédiats (fichiers et répertoires) sauf archives/processed
+        find "$SRC" -mindepth 1 -maxdepth 1 ! -name 'archives' ! -name 'processed*' -print0 | \
+        while IFS= read -r -d '' item; do
+            mv -f "$item" "$ARCHIVE_DIR/" 2>&1 | tee -a "$LOG" || true
+        done
+
+        echo "$(date) : ✅ Archivage $t terminé (destination: $ARCHIVE_DIR)" 2>&1 | tee -a "$LOG"
     done
-
-    echo "$(date) : ✅ Archivage $t terminé (destination: $ARCHIVE_DIR)" 2>&1 | tee -a "$LOG"
-done
+fi
 
 echo "$(date) : 🎉 Envoi + archivage terminés" 2>&1 | tee -a "$LOG"
 exit 0

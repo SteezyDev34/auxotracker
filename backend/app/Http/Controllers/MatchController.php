@@ -94,6 +94,10 @@ class MatchController extends Controller
                 'tts.edge_leads1', 'tts.edge_leads2',
                 'tts.prob_lost_serve1', 'tts.prob_lost_serve2',
                 'tts.edge_lost_serve1', 'tts.edge_lost_serve2',
+                'tts.prob_15a_in_set', 'tts.prob_30a_in_set', 'tts.prob_40a_in_set', 'tts.prob_30love_in_set',
+                'tts.prob_game_40_0_in_set', 'tts.prob_game_40_15_in_set', 'tts.prob_game_40_30_in_set',
+                'tts.prob_team1_leads_15_0_in_set', 'tts.prob_team2_leads_15_0_in_set',
+                'tts.prob_lost_serve1_in_set', 'tts.prob_lost_serve2_in_set',
             ]);
 
         $sortMap = [
