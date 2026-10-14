@@ -13,6 +13,7 @@ use App\Models\Country;
 use App\Services\TeamLogoService;
 use App\Services\LeagueLogoService;
 use App\Models\TennisPlayerSeasonStat;
+use App\Models\TennisPlayerStatsNotFound;
 use App\Models\TennisH2hMatch;
 use App\Models\TennisMatchOdds;
 use App\Models\TennisPlayerGameTensionStat;
@@ -1071,7 +1072,25 @@ class ImportTennisPlayersFromCache extends Command
                 $sofascoreId = (int) $m[1];
 
                 $data = json_decode(file_get_contents($file), true);
-                if (!empty($data['_negative_cache']) || empty($data['statistics'])) {
+
+                if (!empty($data['_negative_cache'])) {
+                    // 404 confirmé (absence réelle de stats) : on le persiste
+                    // en base pour que le script de fetch, même lancé depuis
+                    // une autre machine, sache ne pas re-tenter ce joueur
+                    // (filet de sécurité si le POST direct au moment du fetch
+                    // a échoué — voir reportTennisPlayerStatsNotFound).
+                    if (($data['_http_status'] ?? null) === 404 && !str_contains(basename($file), 'prevyear')) {
+                        $player = Team::where('sofascore_id', $sofascoreId)->first();
+                        if ($player) {
+                            TennisPlayerStatsNotFound::updateOrCreate(
+                                ['team_id' => $player->id, 'season_year' => $data['_fetched_year'] ?? (int) date('Y')],
+                                ['confirmed_at' => now()]
+                            );
+                        }
+                    }
+                    continue;
+                }
+                if (empty($data['statistics'])) {
                     continue;
                 }
 

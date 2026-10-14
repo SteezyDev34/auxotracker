@@ -91,6 +91,8 @@ Route::get('/sports/{sportId}/teams/search', [SportController::class, 'searchTea
 Route::get('/sports/{sportId}/teams/with-logo', [SportController::class, 'getTeamsWithLogoBySport']);
 Route::get('/tennis/players/with-details', [SportController::class, 'getTennisPlayersWithDetails']);
 Route::get('/tennis/players/with-fresh-season-stats', [SportController::class, 'getTennisPlayersWithFreshSeasonStats']);
+Route::get('/tennis/players/with-stats-not-found', [SportController::class, 'getTennisPlayersWithStatsNotFound']);
+Route::post('/tennis/players/{sofascoreId}/stats-not-found', [SportController::class, 'reportTennisPlayerStatsNotFound']);
 Route::get('/leagues/{leagueId}/teams', [SportController::class, 'getTeams']);
 
 // Routes pour la gestion des logos d'équipes

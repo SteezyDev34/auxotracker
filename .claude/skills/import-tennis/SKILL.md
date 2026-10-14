@@ -5,7 +5,9 @@ description: Cycle complet d'import Tennis 🎾 — Phase 1 cache (local), sync 
 
 # Import Tennis 🎾 — Cycle complet
 
-Lance le cycle complet : fetch Sofascore (2 tunnels possibles) → import-from-schedule (local) → sync prod → import-from-cache (local + prod).
+Lance le cycle complet : fetch Sofascore (2 tunnels possibles) → sync prod → import-from-cache (prod).
+
+**L'import local (Phase 2 locale, `import_tennis.sh`) est SKIP par défaut** depuis le 2026-10-14 : Docker local est cassé sur cette machine (macOS 12.7.6 Monterey, incompatible avec la dernière version de Docker Desktop installable via `brew install --cask docker`, qui exige macOS Sonoma minimum — cf. tentative de réinstallation du 2026-10-14). Ça n'empêche pas le cycle d'aboutir : le sync + l'import prod (étapes 2 à 4 ci-dessous) ne dépendent pas de Docker local, seule la BDD locale (utile pour le dev/test en local) ne sera pas peuplée tant que Docker n'est pas réparé. Si Docker est réparé un jour, voir la section "Réactiver l'import local" en bas pour revenir au cycle complet.
 
 ## Instructions
 
@@ -27,34 +29,38 @@ TENNIS_FORCE=1 TENNIS_TRANSPORT=extension bash script/cache_tennis.sh 2>&1 | tai
 # ou : TENNIS_TRANSPORT=selenium bash script/cache_tennis.sh
 ```
 
-### 2. Phase 2 locale : import-from-cache (avant le sync qui archive)
-```bash
-cd "/Volumes/WORKSPACE/NEW BET TRACKER/backend"
-bash script/import_tennis.sh
-```
-
-### 3. Sync + archive vers prod
+### 2. Sync + archive vers prod
 ```bash
 cd "/Volumes/WORKSPACE/NEW BET TRACKER/backend"
 bash script/send_cache_and_archive.sh 2>&1 | tail -5
 ```
 
-### 4. Phase 2 prod : import-from-cache sur o2switch
+### 3. Phase 2 prod : import-from-cache sur o2switch
 ```bash
 ssh sc2vagr6376@bouteille.o2switch.net "cd ~/api.auxotracker && php artisan tennis:import-from-cache --force --download-images --download-logos 2>&1 | tail -15"
 ```
 
-### 5. Recompute des scores "match serré" (local déjà fait par import_tennis.sh — refaire ici pour prod)
+### 4. Recompute des scores "match serré" sur prod
 ```bash
 ssh sc2vagr6376@bouteille.o2switch.net "cd ~/api.auxotracker && php artisan tennis:compute-tightness-scores --days=14 --force 2>&1 | tail -10"
 ```
 
-### 6. Report
-Show a summary: leagues, matches, players created/updated (local and prod), tightness scores computed (local and prod).
+### 5. Report
+Show a summary: leagues, matches, players created/updated (prod), tightness scores computed (prod). Préciser que la BDD locale n'a pas été mise à jour (import local skip, Docker cassé).
 
 **Important**: 
 - Toujours demander/confirmer le tunnel (étape 0) avant de lancer l'étape 1 — ne pas supposer `extension` par défaut sans vérifier que Chrome est prêt.
-- L'import local (étape 2) doit tourner AVANT le sync (étape 3), car le sync archive les fichiers cache.
 - Ces scripts lisent uniquement depuis le cache — aucun appel à l'API Sofascore directement (contrainte prod).
-- Le calcul des scores "match serré" (`tennis:compute-tightness-scores`) est indépendant de l'import : `import_tennis.sh` le fait automatiquement en local (étape 2), mais côté prod il faut le relancer explicitement (étape 5) après l'import.
-- Le code PHP de prod (o2switch) n'est PAS redéployé par ce skill — seuls les fichiers de cache sont synchronisés (étape 3). Si des changements de code/migrations ont été faits en local (ex: nouvelles colonnes), ils ne sont pas automatiquement présents sur prod tant qu'un déploiement de code (`deploy-o2switch.sh`/`deploy-production.sh` + `php artisan migrate --force` sur prod) n'a pas été fait séparément.
+- Le calcul des scores "match serré" (`tennis:compute-tightness-scores`) est indépendant de l'import : il faut le relancer explicitement après l'import (étape 4), pour prod uniquement tant que l'import local est skip.
+- Le code PHP de prod (o2switch) n'est PAS redéployé par ce skill — seuls les fichiers de cache sont synchronisés (étape 2). Si des changements de code/migrations ont été faits en local (ex: nouvelles colonnes), ils ne sont pas automatiquement présents sur prod tant qu'un déploiement de code (`deploy-o2switch.sh`/`deploy-production.sh` + `php artisan migrate --force` sur prod) n'a pas été fait séparément.
+
+## Réactiver l'import local (une fois Docker réparé)
+
+Remettre l'étape suivante entre l'étape 1 (fetch) et l'étape 2 (sync), car le sync archive les fichiers cache :
+
+```bash
+cd "/Volumes/WORKSPACE/NEW BET TRACKER/backend"
+bash script/import_tennis.sh
+```
+
+Ça recalcule aussi les scores "match serré" en local automatiquement (pas besoin de relancer l'étape 4 pour le local, uniquement pour prod).

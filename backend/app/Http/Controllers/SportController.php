@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sport;
 use App\Models\League;
 use App\Models\Team;
+use App\Models\TennisPlayerStatsNotFound;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
@@ -435,6 +436,72 @@ class SportController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des joueurs tennis avec stats fraîches',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Sofascore_id des joueurs de tennis dont l'absence de stats année en
+     * cours a été confirmée (404 Sofascore) il y a moins de $days jours —
+     * permet au script de fetch (fetch_sofascore_cache.py), même lancé sur
+     * une autre machine, de ne pas re-tenter ce fetch inutilement.
+     */
+    public function getTennisPlayersWithStatsNotFound(Request $request): JsonResponse
+    {
+        try {
+            $days = (int) $request->get('days', 183);
+            $year = (int) $request->get('year', now()->year);
+
+            $ids = Team::whereNotNull('teams.sofascore_id')
+                ->join('tennis_player_stats_not_found', 'tennis_player_stats_not_found.team_id', '=', 'teams.id')
+                ->where('tennis_player_stats_not_found.season_year', $year)
+                ->where('tennis_player_stats_not_found.confirmed_at', '>=', now()->subDays($days))
+                ->distinct()
+                ->pluck('teams.sofascore_id');
+
+            return response()->json([
+                'success' => true,
+                'data' => $ids,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des joueurs tennis sans stats confirmées',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Enregistre qu'un 404 Sofascore sur year-statistics a été confirmé pour
+     * ce joueur/année — appelé directement par fetch_sofascore_cache.py pour
+     * que toutes les machines en bénéficient immédiatement (pas besoin
+     * d'attendre le cycle sync+import).
+     */
+    public function reportTennisPlayerStatsNotFound(Request $request, int $sofascoreId): JsonResponse
+    {
+        try {
+            $year = (int) $request->get('year', now()->year);
+
+            $player = Team::where('sofascore_id', $sofascoreId)->first();
+            if (!$player) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Joueur introuvable en base pour ce sofascore_id',
+                ], 404);
+            }
+
+            TennisPlayerStatsNotFound::updateOrCreate(
+                ['team_id' => $player->id, 'season_year' => $year],
+                ['confirmed_at' => now()]
+            );
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => "Erreur lors de l'enregistrement du 404 stats joueur",
                 'error' => $e->getMessage()
             ], 500);
         }

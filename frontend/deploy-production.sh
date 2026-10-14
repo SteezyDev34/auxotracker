@@ -2,12 +2,27 @@
 
 # Script de déploiement automatisé - AuxoTracker Frontend O2Switch
 # Application: Vue.js SPA
-# Frontend: https://auxotracker.astcavex.fr//
-# API: http://datas.sc2vagr6376.universe.wf/
+# Frontend: https://auxotracker.fr//
+# API: https://api.auxotracker.fr/
 # Hébergeur: O2Switch
 # Méthode: Build local + rsync
 
 set -e  # Arrêter le script en cas d'erreur
+
+# Forcer la version Node attendue (.nvmrc) : le `node` par défaut sur cette
+# machine peut résoudre vers une très vieille version (ex: v10, via un shim
+# nvm par défaut mal configuré) incompatible avec Vite 5 — provoque un échec
+# silencieux du build ("Unexpected token {") sans rapport avec le code source
+# (constaté le 2026-10-14).
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    # shellcheck disable=SC1091
+    source "$NVM_DIR/nvm.sh"
+    if [ -f ".nvmrc" ]; then
+        nvm use "$(cat .nvmrc)" > /dev/null 2>&1 || nvm install "$(cat .nvmrc)"
+    fi
+fi
+echo "🟢 Node utilisé pour le build: $(node -v)"
 
 # Chargement de la configuration rsync
 if [ -f ".dploycnf" ]; then
@@ -191,7 +206,7 @@ health_check() {
     
     # Test de l'application frontend O2Switch
     log "🌐 Test du frontend..."
-    if curl -f -s -I "https://auxotracker.astcavex.fr/" > /dev/null; then
+    if curl -f -s -I "https://auxotracker.fr/" > /dev/null; then
         log "✅ Application frontend accessible"
     else
         log "❌ Erreur: Application frontend non accessible"
@@ -201,7 +216,7 @@ health_check() {
     
     # Test de l'API O2Switch
     log "🔌 Test de l'API..."
-    if curl -f -s -I "http://datas.sc2vagr6376.universe.wf/api" > /dev/null; then
+    if curl -f -s -I "https://api.auxotracker.fr/api" > /dev/null; then
         log "✅ API accessible"
     else
         log "⚠️  API non accessible (vérifier le backend)"
@@ -210,7 +225,7 @@ health_check() {
     
     # Test de la page d'accueil avec contenu
     log "📄 Test du contenu de la page..."
-    if curl -s "https://auxotracker.astcavex.fr/" | grep -q "AuxoTracker" 2>/dev/null; then
+    if curl -s "https://auxotracker.fr/" | grep -q "AuxoTracker" 2>/dev/null; then
         log "✅ Contenu de la page vérifié"
     else
         log "⚠️  Contenu de la page non trouvé (peut être normal)"
@@ -259,8 +274,8 @@ main() {
     cleanup
     
     log "🎉 Déploiement terminé avec succès!"
-    log "📱 Application accessible sur: https://auxotracker.astcavex.fr/"
-    log "🔗 API disponible sur: http://datas.sc2vagr6376.universe.wf"
+    log "📱 Application accessible sur: https://auxotracker.fr/"
+    log "🔗 API disponible sur: https://api.auxotracker.fr"
     log "📊 Log de déploiement: $LOG_FILE"
 
      log "⚙️ Configuration de l'environnement de development..."

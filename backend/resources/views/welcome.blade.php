@@ -7,11 +7,11 @@
         <title>{{ config('app.name', 'AuxoTracker') }} - Redirection</title>
 
         <!-- Redirection automatique vers la landing page -->
-        @if(env('LANDING_PAGE_URL'))
-        <meta http-equiv="refresh" content="0; url={{ env('LANDING_PAGE_URL') }}">
+        @if(config('app.landing_page_url'))
+        <meta http-equiv="refresh" content="0; url={{ config('app.landing_page_url') }}">
         <script type="text/javascript">
             // Redirection JavaScript en cas d'échec de la meta refresh
-            window.location.href = "{{ env('LANDING_PAGE_URL') }}";
+            window.location.href = "{{ config('app.landing_page_url') }}";
         </script>
         @endif
 
@@ -93,7 +93,7 @@
     <body>
         <div class="container">
             <div class="logo">AuxoTracker</div>
-            @if(!env('LANDING_PAGE_URL'))
+            @if(!config('app.landing_page_url'))
             <div class="message">Configuration de redirection manquante</div>
             <p style="opacity: 0.8; font-size: 1rem;">
                 Veuillez configurer la variable LANDING_PAGE_URL dans votre fichier .env
@@ -102,12 +102,12 @@
         </div>
 
         <!-- Script de redirection avec délai de sécurité -->
-        @if(env('LANDING_PAGE_URL'))
+        @if(config('app.landing_page_url'))
         <script>
             // Redirection avec délai de sécurité de 3 secondes
             setTimeout(function() {
-                if (window.location.href.indexOf("{{ env('LANDING_PAGE_URL') }}") === -1) {
-                    window.location.href = "{{ env('LANDING_PAGE_URL') }}";
+                if (window.location.href.indexOf("{{ config('app.landing_page_url') }}") === -1) {
+                    window.location.href = "{{ config('app.landing_page_url') }}";
                 }
             }, 3000);
         </script>

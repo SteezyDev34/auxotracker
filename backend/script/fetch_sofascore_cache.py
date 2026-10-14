@@ -174,11 +174,12 @@ def fetch_json(driver, url: str, retries: int = 3, with_status: bool = False):
                 last_status = result.get("status")
             if result and result.get("ok"):
                 return (result["data"], last_status) if with_status else result["data"]
-            print(f"  ⚠️  fetch() KO (tentative {attempt}/{retries}): {result}", file=sys.stderr)
             if last_status == 404:
                 # Un 404 est définitif — la ressource n'existe pas, retenter ne
                 # changera rien. On sort immédiatement au lieu d'attendre.
+                print(f"  ⚠️  fetch() KO status=404 (définitif, pas de retry): {result}", file=sys.stderr)
                 break
+            print(f"  ⚠️  fetch() KO (tentative {attempt}/{retries}): {result}", file=sys.stderr)
             is_challenge = (
                 last_status == 403
                 and isinstance(result, dict)
@@ -378,7 +379,7 @@ def _fetch_teams_with_logo_from_prod(sport_slug: str) -> set:
     le cache local a été archivé/vidé entre deux runs. Ne concerne QUE les
     logos (effectifs et stats sont, eux, toujours refetchés à chaque run)."""
     try:
-        url = f"https://api.auxotracker.astcavex.fr/api/sports/{sport_slug}/teams/with-logo"
+        url = f"https://api.auxotracker.fr/api/sports/{sport_slug}/teams/with-logo"
         r = requests.get(url, timeout=10)
         if r.status_code == 200 and r.json().get("success"):
             # sofascore_id est stocké en `string` côté DB (migration teams) —
@@ -721,7 +722,7 @@ def _fetch_tennis_players_with_details_from_prod() -> set:
     refaire ce fetch quand le cache local a été archivé/vidé, ces infos ne
     changeant plus une fois connues. Ne concerne QUE les détails."""
     try:
-        url = "https://api.auxotracker.astcavex.fr/api/tennis/players/with-details"
+        url = "https://api.auxotracker.fr/api/tennis/players/with-details"
         r = requests.get(url, timeout=10)
         if r.status_code == 200 and r.json().get("success"):
             out = set()
@@ -745,7 +746,7 @@ def _fetch_tennis_players_with_fresh_season_stats_from_prod(days: int = 7) -> se
     refetcher tous les jours (réduit fortement le volume de requêtes en
     direct, utile pour éviter le rate-limit/challenge Sofascore)."""
     try:
-        url = f"https://api.auxotracker.astcavex.fr/api/tennis/players/with-fresh-season-stats?days={days}"
+        url = f"https://api.auxotracker.fr/api/tennis/players/with-fresh-season-stats?days={days}"
         r = requests.get(url, timeout=10)
         if r.status_code == 200 and r.json().get("success"):
             out = set()
@@ -767,7 +768,7 @@ def _fetch_tennis_players_with_fresh_season_stats_from_prod(days: int = 7) -> se
 # pour retenir durablement les joueurs déjà établis (détails en prod) dont on
 # sait qu'ils n'ont pas de stats — évite de les re-fetcher/404 à chaque run.
 STATS_404_BLACKLIST_PATH = STORAGE_BASE / ".tennis_stats_404_blacklist.json"
-STATS_404_BLACKLIST_TTL = 14 * 86400
+STATS_404_BLACKLIST_TTL = 183 * 86400  # ~6 mois
 
 
 def _load_stats_404_blacklist() -> dict:
@@ -784,6 +785,40 @@ def _save_stats_404_blacklist(blacklist: dict) -> None:
         STATS_404_BLACKLIST_PATH.write_text(json.dumps(blacklist))
     except Exception as e:
         print(f"  ⚠️  Impossible d'écrire le blacklist stats 404: {e}", file=sys.stderr)
+
+
+def _fetch_tennis_players_with_stats_not_found_from_prod(year: int, days: int = 183) -> set:
+    """Sofascore_id des joueurs tennis dont l'absence de stats year-statistics
+    a été confirmée (404) il y a moins de `days` jours, EN PROD — partagé
+    entre toutes les machines (contrairement au blacklist local qui ne vit
+    que sur l'ordi où le fetch a tourné). Évite de re-tenter un 404 déjà
+    découvert ailleurs."""
+    try:
+        url = "https://api.auxotracker.fr/api/tennis/players/with-stats-not-found"
+        r = requests.get(url, params={"year": year, "days": days}, timeout=10)
+        if r.status_code == 200 and r.json().get("success"):
+            out = set()
+            for v in r.json().get("data", []):
+                try:
+                    out.add(int(v))
+                except (TypeError, ValueError):
+                    pass
+            return out
+    except Exception as e:
+        print(f"  ⚠️  Impossible de récupérer les joueurs tennis sans stats confirmées en prod: {e}", file=sys.stderr)
+    return set()
+
+
+def _report_tennis_player_stats_not_found_to_prod(pid: int, year: int) -> None:
+    """Signale immédiatement à prod qu'un 404 year-statistics a été confirmé
+    pour ce joueur/année, pour que les autres machines en bénéficient sans
+    attendre le prochain cycle sync+import. Best-effort : une erreur ici ne
+    doit jamais faire échouer le fetch."""
+    try:
+        url = f"https://api.auxotracker.fr/api/tennis/players/{pid}/stats-not-found"
+        requests.post(url, data={"year": year}, timeout=10)
+    except Exception as e:
+        print(f"  ⚠️  Impossible de signaler le 404 stats joueur {pid} en prod: {e}", file=sys.stderr)
 
 
 def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: Path, year: int):
@@ -805,6 +840,10 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
     fresh_stats_prod = _fetch_tennis_players_with_fresh_season_stats_from_prod(days=7)
     if fresh_stats_prod:
         print(f"  ⏭️  {len(fresh_stats_prod)} joueur(s) avec stats saison < 7 jours en prod — skip stats")
+
+    stats_not_found_prod = _fetch_tennis_players_with_stats_not_found_from_prod(year, days=STATS_404_BLACKLIST_TTL // 86400)
+    if stats_not_found_prod:
+        print(f"  ⏭️  {len(stats_not_found_prod)} joueur(s) avec 404 stats confirmé en prod (partagé) — skip stats")
 
     stats_404_blacklist = _load_stats_404_blacklist()
 
@@ -876,9 +915,14 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
         stats_file = stats_dir / f"player_statistics_{pid}.json"
         need_stats_fetch = True
 
+        if pid in stats_not_found_prod:
+            print(f"    ⏭️  Stats 404 confirmé en prod (partagé entre machines) — skip")
+            need_stats_fetch = False
+
         blacklist_entry = stats_404_blacklist.get(str(pid))
         if (
-            blacklist_entry
+            need_stats_fetch
+            and blacklist_entry
             and pid in already_detailed_prod
             and time.time() - blacklist_entry < STATS_404_BLACKLIST_TTL
         ):
@@ -894,13 +938,13 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
             try:
                 existing = json.loads(stats_file.read_text())
                 if existing.get("_negative_cache"):
-                    # Un vrai 404 (donnée confirmée absente) reste en cache 24h.
+                    # Un vrai 404 (donnée confirmée absente) reste en cache ~6 mois.
                     # Un échec ambigu (statut inconnu/transitoire) est retenté
-                    # immédiatement plutôt que bloqué toute la journée.
+                    # immédiatement plutôt que bloqué tout ce temps.
                     if existing.get("_http_status") == 404:
                         cached_at = existing.get("_cached_at", 0)
-                        if time.time() - cached_at < 86400:
-                            print(f"    ⏭️  Stats cache négatif (404 confirmé, âge: {(time.time()-cached_at)/3600:.1f}h)")
+                        if time.time() - cached_at < STATS_404_BLACKLIST_TTL:
+                            print(f"    ⏭️  Stats cache négatif (404 confirmé, âge: {(time.time()-cached_at)/86400:.1f}j)")
                             need_stats_fetch = False
                 else:
                     print(f"    ⏭️  Stats déjà en cache")
@@ -917,7 +961,7 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
                 stats_file.write_text(json.dumps(data, ensure_ascii=False))
                 print(f"    ✅ Stats {year} écrites")
             else:
-                # Écrire un negative cache — TTL de 24h uniquement si le
+                # Écrire un negative cache — TTL ~6 mois uniquement si le
                 # statut confirme une vraie absence (404), sinon retenté au
                 # prochain passage (voir vérification ci-dessus).
                 stats_file.write_text(json.dumps({
@@ -925,12 +969,13 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
                     "_url": url,
                     "_http_status": http_status,
                     "_cached_at": int(time.time()),
-                    "_expires_at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() + 86400)),
+                    "_expires_at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() + STATS_404_BLACKLIST_TTL)),
                 }, ensure_ascii=False))
                 print(f"    ⚠️  Stats non disponibles (statut: {http_status}, cache négatif écrit)")
                 if http_status == 404 and pid in already_detailed_prod:
                     stats_404_blacklist[str(pid)] = time.time()
                     _save_stats_404_blacklist(stats_404_blacklist)
+                    _report_tennis_player_stats_not_found_to_prod(pid, year)
 
         # --- Statistics année précédente (plus de données pour le score) ---
         # Cache PERMANENT : une saison passée ne change plus une fois terminée,
@@ -1126,6 +1171,15 @@ def fetch_player_point_by_point_history(driver: webdriver.Chrome, player_ids: li
                 pbp_file.write_text(json.dumps(pbp_data, ensure_ascii=False))
                 fetched += 1
                 new_for_player += 1
+            elif pbp_status == 404:
+                # Match terminé sans point-by-point dispo sur Sofascore : fait
+                # acquis et permanent (un match passé ne change plus), cache
+                # négatif sans TTL pour ne jamais re-fetcher ce match.
+                pbp_file.write_text(json.dumps({
+                    "_negative_cache": True,
+                    "_http_status": 404,
+                    "_cached_at": int(time.time()),
+                }, ensure_ascii=False))
             time.sleep(random.uniform(1.2, 2.2))
 
     for i, (pid, name) in enumerate(player_ids, 1):
@@ -1611,6 +1665,26 @@ def _run(cmd: list, cwd=None, timeout=180, env=None) -> bool:
         return False
 
 
+_docker_status = {"checked": False, "available": True}
+
+
+def _docker_available() -> bool:
+    """Vérifie une seule fois par run si Docker local répond (mémoïsé) —
+    évite de retenter/d'afficher l'erreur brute à chaque lot alors que
+    Docker est cassé pour toute la durée du run (cf. skip import local
+    décidé le 2026-10-14, Docker Desktop incompatible avec macOS Monterey)."""
+    if not _docker_status["checked"]:
+        _docker_status["checked"] = True
+        try:
+            result = subprocess.run(["docker", "info"], capture_output=True, timeout=5)
+            _docker_status["available"] = result.returncode == 0
+        except Exception:
+            _docker_status["available"] = False
+        if not _docker_status["available"]:
+            print("  ⏭️  Docker local indisponible — import/calcul local skip pour tout le run, sync prod uniquement", file=sys.stderr)
+    return _docker_status["available"]
+
+
 def maybe_run_local_import(force: bool = False):
     """Toutes les LOCAL_IMPORT_INTERVAL_SECONDS écoulées, importe en base
     locale ce qui a déjà été fetché (le cache existant est réutilisé par les
@@ -1621,15 +1695,16 @@ def maybe_run_local_import(force: bool = False):
     if not force and (now - _interleave_counter["last_local_import_at"]) < LOCAL_IMPORT_INTERVAL_SECONDS:
         return
     _interleave_counter["last_local_import_at"] = now
-    print("  🔄 Import PHP local incrémental (lot)...")
-    _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
-          "tennis:import-from-cache", "--force", "--skip-archive"], timeout=300)
-    # Calcul des probabilités (léger, ~20s mesuré) — sans ça les matchs sont
-    # importés mais pas "exploitables" (pas de stats/proba tant que cette
-    # commande séparée n'a pas tourné).
-    print("  🎯 Calcul des probabilités (lot)...")
-    _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
-          "tennis:compute-tightness-scores", "--force"], timeout=120)
+    if _docker_available():
+        print("  🔄 Import PHP local incrémental (lot)...")
+        _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
+              "tennis:import-from-cache", "--force", "--skip-archive"], timeout=300)
+        # Calcul des probabilités (léger, ~20s mesuré) — sans ça les matchs sont
+        # importés mais pas "exploitables" (pas de stats/proba tant que cette
+        # commande séparée n'a pas tourné).
+        print("  🎯 Calcul des probabilités (lot)...")
+        _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
+              "tennis:compute-tightness-scores", "--force"], timeout=120)
     maybe_run_prod_sync(force=force)
 
 

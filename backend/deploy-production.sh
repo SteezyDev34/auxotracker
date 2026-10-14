@@ -36,4 +36,4 @@ chmod -R 755 storage
 chmod -R 755 bootstrap/cache
 
 echo "✅ Déploiement terminé avec succès!"
-echo "🌐 API disponible à: https://auxotracker.astcavex.fr/"
+echo "🌐 API disponible à: https://auxotracker.fr/"

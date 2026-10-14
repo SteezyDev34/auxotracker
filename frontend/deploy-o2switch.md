@@ -1,8 +1,8 @@
 # Guide de Déploiement O2Switch - AuxoTracker Frontend
 
 ## 🌐 Informations du serveur
-- **Frontend**: https://auxotracker.astcavex.fr//
-- **API Backend**: http://datas.sc2vagr6376.universe.wf/
+- **Frontend**: https://auxotracker.fr//
+- **API Backend**: https://api.auxotracker.fr/
 - **Hébergeur**: O2Switch
 
 ## 📋 Prérequis O2Switch
@@ -55,15 +55,15 @@ cp -r dist/* /home/sc2vagr6376/www/
 chmod -R 755 /home/sc2vagr6376/www/
 
 # 5. Vérifier le déploiement
-curl -I https://auxotracker.astcavex.fr/
+curl -I https://auxotracker.fr/
 ```
 
 ## ⚙️ Configuration spécifique O2Switch
 
 ### Variables d'environnement (.env)
 ```env
-VITE_API_URL=http://datas.sc2vagr6376.universe.wf/api
-VITE_API_BASE_URL=http://datas.sc2vagr6376.universe.wf
+VITE_API_URL=https://api.auxotracker.fr/api
+VITE_API_BASE_URL=https://api.auxotracker.fr
 ```
 
 ### Configuration Apache (.htaccess)
@@ -81,7 +81,7 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
 
 # Configuration CORS
-Header always set Access-Control-Allow-Origin "https://auxotracker.astcavex.fr/"
+Header always set Access-Control-Allow-Origin "https://auxotracker.fr/"
 Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
 
@@ -127,7 +127,7 @@ df -h /home/sc2vagr6376/
 tail -f /home/sc2vagr6376/logs/access.log
 
 # Tester la connectivité API
-curl -I http://datas.sc2vagr6376.universe.wf/api
+curl -I https://api.auxotracker.fr/api
 ```
 
 ## 🔒 Sécurité
@@ -150,23 +150,23 @@ echo "deny from all" > /home/sc2vagr6376/auxotracker/.htaccess
 ### 1. Test de l'application
 ```bash
 # Test de base
-curl -I https://auxotracker.astcavex.fr/
+curl -I https://auxotracker.fr/
 
 # Test avec User-Agent
-curl -H "User-Agent: Mozilla/5.0" https://auxotracker.astcavex.fr/
+curl -H "User-Agent: Mozilla/5.0" https://auxotracker.fr/
 ```
 
 ### 2. Test de l'API
 ```bash
 # Test de connectivité API
-curl -I http://datas.sc2vagr6376.universe.wf/api
+curl -I https://api.auxotracker.fr/api
 
 # Test CORS
-curl -H "Origin: https://auxotracker.astcavex.fr/" \
+curl -H "Origin: https://auxotracker.fr/" \
      -H "Access-Control-Request-Method: GET" \
      -H "Access-Control-Request-Headers: X-Requested-With" \
      -X OPTIONS \
-     http://datas.sc2vagr6376.universe.wf/api
+     https://api.auxotracker.fr/api
 ```
 
 ## 🆘 Dépannage
@@ -191,7 +191,7 @@ curl -H "Origin: https://auxotracker.astcavex.fr/" \
 ls -la /home/sc2vagr6376/www/
 
 # Tester la configuration Apache
-curl -v https://auxotracker.astcavex.fr/
+curl -v https://auxotracker.fr/
 
 # Vérifier les logs d'erreur
 tail -f /home/sc2vagr6376/logs/error.log

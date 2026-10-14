@@ -145,9 +145,10 @@ class ExtensionBridge:
                 data = result["data_json"]
                 return (data, last_status) if with_status else data
 
-            print(f"  ⚠️  [extension] fetch KO (tentative {attempt}/{retries}) status={last_status}: {url}")
             if last_status == 404:
-                break  # définitif, inutile de retenter
+                print(f"  ⚠️  [extension] fetch KO status=404 (définitif, pas de retry): {url}")
+                break
+            print(f"  ⚠️  [extension] fetch KO (tentative {attempt}/{retries}) status={last_status}: {url}")
             if last_status == 403:
                 time.sleep(15)  # challenge/rate-limit anti-bot
             else:

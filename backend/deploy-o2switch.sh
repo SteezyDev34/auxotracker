@@ -31,12 +31,12 @@ rsync $OPTIONS \
 
 if [ $? -eq 0 ]; then
     echo "✅ Déploiement terminé avec succès!"
-    echo "🌐 API disponible sur: https://auxotracker.astcavex.fr//"
+    echo "🌐 API disponible sur: https://auxotracker.fr//"
     echo ""
     echo "📝 Changements déployés:"
     echo "   - Configuration CORS mise à jour"
     echo "   - Headers CORS ajoutés dans .htaccess"
-    echo "   - Support pour https://auxotracker.astcavex.fr/"
+    echo "   - Support pour https://auxotracker.fr/"
 else
     echo "❌ Erreur lors du déploiement"
     exit 1

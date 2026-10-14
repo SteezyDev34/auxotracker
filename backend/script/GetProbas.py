@@ -1018,8 +1018,8 @@ def get_players_sofascore_id(playerName1, playerName2):
     print(f"Joueurs: {playerName1} vs {playerName2}")
 
     print("Recherche des IDs des joueurs via API...")
-    url1 = f"http://datas.sc2vagr6376.universe.wf/api/sports/2/teams/search?search={playerName1.replace(' ', '+')}"
-    url2 = f"http://datas.sc2vagr6376.universe.wf/api/sports/2/teams/search?search={playerName2.replace(' ', '+')}"
+    url1 = f"https://api.auxotracker.fr/api/sports/2/teams/search?search={playerName1.replace(' ', '+')}"
+    url2 = f"https://api.auxotracker.fr/api/sports/2/teams/search?search={playerName2.replace(' ', '+')}"
     try:
         print(f"Requête API pour {playerName1}: {url1}")
         print(f"Requête API pour {playerName2}: {url2}")

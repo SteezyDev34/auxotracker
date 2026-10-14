@@ -20,6 +20,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Landing Page URL
+    |--------------------------------------------------------------------------
+    |
+    | URL de redirection de la page d'accueil (resources/views/welcome.blade.php).
+    | Doit passer par config() plutôt qu'env() direct dans la vue : un env()
+    | hors fichier config/*.php renvoie null une fois `config:cache` lancé
+    | (le .env n'est plus lu au runtime) — cf. incident du 2026-10-14.
+    |
+    */
+
+    'landing_page_url' => env('LANDING_PAGE_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
