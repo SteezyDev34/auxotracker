@@ -542,11 +542,18 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
         out_path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         print(f"  💾 Écrit: {out_path}")
 
-    # Traite les matchs du jour dans l'ordre de leur heure de démarrage : les
-    # joueurs/H2H/cotes/point-by-point des matchs qui commencent le plus tôt
-    # sont fetchés en premier, donc déjà prêts pour les premiers cycles de
-    # sync prod (voir maybe_run_prod_sync) au lieu d'attendre l'ordre brut
-    # renvoyé par l'API (par tournoi, pas par heure).
+    # Traite les matchs du jour par urgence : en cours > à venir (le plus tôt
+    # d'abord) > déjà terminés. Un tri par simple startTimestamp ascendant
+    # (ancienne version) plaçait les matchs déjà terminés en tête dès que le
+    # fetch tournait tard dans la journée (leur timestamp passé est le plus
+    # petit), retardant d'autant les matchs en cours/imminents qui ont
+    # vraiment besoin de données fraîches (constaté le 2026-10-15 : beaucoup
+    # de matchs finis au moment du lancement du fetch).
+    def _match_priority(e: dict) -> tuple:
+        status = (e.get("status") or {}).get("type")
+        rank = 0 if status == "inprogress" else (2 if status == "finished" else 1)
+        return (rank, e.get("startTimestamp", 0))
+
     seen_event_ids = set()
     deduped_events = []
     doubles_count = 0
@@ -560,7 +567,7 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
         if eid is not None:
             seen_event_ids.add(eid)
         deduped_events.append(e)
-    deduped_events.sort(key=lambda e: e.get("startTimestamp", 0))
+    deduped_events.sort(key=_match_priority)
     all_events = deduped_events
     if doubles_count:
         print(f"  ⏭️  {doubles_count} match(s) de double exclus (filtre temporaire)")
@@ -979,17 +986,27 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
 
         # --- Statistics année précédente (plus de données pour le score) ---
         # Cache PERMANENT : une saison passée ne change plus une fois terminée,
-        # pas besoin de TTL ni de cache négatif comme pour l'année en cours.
+        # pas besoin de TTL comme pour l'année en cours — mais un 404 doit
+        # quand même être marqué (fichier négatif, sans TTL) sinon rien n'est
+        # écrit et ce joueur est re-fetché/re-404 à chaque run indéfiniment
+        # (constaté le 2026-10-14).
         prev_year = year - 1
         stats_prev_file = stats_dir / f"player_statistics_prevyear_{pid}.json"
         if not stats_prev_file.exists():
             url = f"https://www.sofascore.com/api/v1/team/{pid}/year-statistics/{prev_year}"
             made_request = True
-            data = fetch_json(driver, url)
-            if data and "error" not in data:
+            data, http_status = fetch_json(driver, url, with_status=True)
+            if data and "error" not in data and not data.get("_negative_cache"):
                 data["_fetched_year"] = prev_year
                 stats_prev_file.write_text(json.dumps(data, ensure_ascii=False))
                 print(f"    ✅ Stats {prev_year} (année précédente) écrites")
+            elif http_status == 404:
+                stats_prev_file.write_text(json.dumps({
+                    "_negative_cache": True,
+                    "_http_status": 404,
+                    "_fetched_year": prev_year,
+                    "_cached_at": int(time.time()),
+                }, ensure_ascii=False))
 
         # --- Image ---
         logo_file = logos_dir / f"{pid}.png"
@@ -1727,8 +1744,19 @@ def maybe_run_prod_sync(force: bool = False, archive: bool = False):
     label = "final (avec archivage)" if archive else "match par match (sans archivage)"
     print(f"  ☁️  Sync + import prod {label}...")
     if _run(["bash", "script/send_cache_and_archive.sh"], timeout=300, env=archive_env):
+        # tennis:import-from-schedule --offline génère les fichiers
+        # tournaments/events/event_*.json (source de création des lignes
+        # `matches`) à partir du cache schedule synchronisé juste au-dessus.
+        # Normalement lancé en LOCAL via Docker avant la boucle par lots
+        # (cache_tennis.sh) — mais si Docker local est down (cf. 2026-10-14),
+        # ces fichiers event_*.json ne sont jamais générés ni synchronisés,
+        # et tennis:import-from-cache n'a alors plus rien de nouveau à partir
+        # de quoi créer des matchs. On le relance donc aussi ici côté prod
+        # (pas de dépendance Docker là-bas, lit uniquement le cache synchronisé) —
+        # idempotent, sans appel réseau (--offline).
         _run(["ssh", "sc2vagr6376@bouteille.o2switch.net",
-              "cd ~/api.auxotracker && php artisan tennis:import-from-cache --force "
+              "cd ~/api.auxotracker && php artisan tennis:import-from-schedule --offline "
+              "&& php artisan tennis:import-from-cache --force --download-images --download-logos "
               "&& php artisan tennis:compute-tightness-scores --force"], timeout=300)
 
 
