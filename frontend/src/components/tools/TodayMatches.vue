@@ -558,24 +558,24 @@ onMounted(load);
                              class="shrink-0 flex flex-wrap gap-1 max-w-[220px] justify-end">
                             <span v-for="p in inSetProbabilities(match)" :key="p.key"
                                   :class="['text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap',
-                                           (p.value >= IN_SET_GREEN_THRESHOLD && !p.gated) ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                                           (Math.round(p.value) >= IN_SET_GREEN_THRESHOLD && !p.gated) ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
                                            'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300']"
                                   :title="`Fréquence historique réelle que ${p.key.replace(' (set)', '')} arrive au moins une fois dans le 1er set : ${p.value}%`+ (p.gated ? ' (non valorisée : match pas serré, tension < 50)' : '')">
-                                {{ (p.value >= IN_SET_GREEN_THRESHOLD && !p.gated) ? '✅ ' : '' }}{{ p.key }} {{ Math.round(p.value) }}%
+                                {{ (Math.round(p.value) >= IN_SET_GREEN_THRESHOLD && !p.gated) ? '✅ ' : '' }}{{ p.key }} {{ Math.round(p.value) }}%
                             </span>
                             <span v-for="p in inSetLeadsProbabilities(match)" :key="'leads-set-' + p.name"
                                   :class="['text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap',
-                                           p.value >= IN_SET_GREEN_THRESHOLD ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                                           Math.round(p.value) >= IN_SET_GREEN_THRESHOLD ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
                                            'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300']"
                                   :title="`Fréquence historique réelle que ${p.name} mène 15-0 au moins une fois dans le set : ${p.value}%`">
-                                {{ p.value >= IN_SET_GREEN_THRESHOLD ? '✅ ' : '🥇' }}{{ p.name }} 15-0 (set) {{ Math.round(p.value) }}%
+                                {{ Math.round(p.value) >= IN_SET_GREEN_THRESHOLD ? '✅ ' : '🥇' }}{{ p.name }} 15-0 (set) {{ Math.round(p.value) }}%
                             </span>
                             <span v-for="p in inSetLostServeProbabilities(match)" :key="'lostserve-set-' + p.name"
                                   :class="['text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap',
-                                           p.value >= IN_SET_GREEN_THRESHOLD ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                                           Math.round(p.value) >= IN_SET_GREEN_THRESHOLD ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
                                            'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300']"
                                   :title="`Fréquence historique réelle que ${p.name} perde le 1er point sur son service au moins une fois dans le set : ${p.value}%`">
-                                {{ p.value >= IN_SET_GREEN_THRESHOLD ? '✅ ' : '🎾' }}{{ p.name }} perd 1er pt srv (set) {{ Math.round(p.value) }}%
+                                {{ Math.round(p.value) >= IN_SET_GREEN_THRESHOLD ? '✅ ' : '🎾' }}{{ p.name }} perd 1er pt srv (set) {{ Math.round(p.value) }}%
                             </span>
                         </div>
 
