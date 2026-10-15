@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name'); // Nom du tipster
-            $table->string('link'); // Lien vers le tipster
+            $table->string('link')->nullable(); // Lien vers le tipster (nullable, cf. migration 2025_01_27)
             $table->text('description')->nullable(); // Description optionnelle
             $table->boolean('is_active')->default(true); // Statut actif/inactif
             $table->timestamps();

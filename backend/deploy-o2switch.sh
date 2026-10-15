@@ -30,6 +30,13 @@ rsync $OPTIONS \
     "$LOGIN@$SERVER:$REMOTEDIR"
 
 if [ $? -eq 0 ]; then
+    # Filet de sécurité : s'assurer que le symlink public/storage existe
+    # toujours côté prod (idempotent — artisan ne recrée pas s'il est déjà
+    # bon). Voir incident 2026-10-14 : supprimé une fois par ce même rsync
+    # --delete, images team_logos 404 en conséquence.
+    echo "🔗 Vérification du symlink public/storage..."
+    ssh "$LOGIN@$SERVER" "cd $REMOTEDIR && php artisan storage:link" 2>&1
+
     echo "✅ Déploiement terminé avec succès!"
     echo "🌐 API disponible sur: https://auxotracker.fr//"
     echo ""

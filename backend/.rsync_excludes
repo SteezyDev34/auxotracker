@@ -11,6 +11,11 @@ vendor/
 .env*
 !.env.example
 
+# Symlink storage public (absent en local, généré sur prod via `storage:link`) —
+# ne JAMAIS le laisser au rsync --delete sinon il est supprimé côté prod et
+# toutes les images (team_logos, etc.) deviennent 404 (incident 2026-10-14).
+public/storage
+
 # Fichiers de développement et outils
 .editorconfig
 .eslintrc*

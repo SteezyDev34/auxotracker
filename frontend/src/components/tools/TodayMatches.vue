@@ -191,16 +191,29 @@ function set1Probabilities(match) {
     return probs;
 }
 
+// Seuil minimum de tightness : en dessous, un match est déséquilibré
+// (lopsided) et les probas moyennes calculées sur l'historique global ne
+// sont pas représentatives — même seuil que isValueBet() plus bas, et que
+// le backend (MatchController::today). N'invalide que 15A/30A/40A (set) :
+// un joueur avantagé reste susceptible de mener 15A/30A/40A même sur un
+// match pas serré, contrairement aux patterns 30-0/G:40-0/15/30 qui restent
+// représentatifs indépendamment de l'équilibre du match (demandé le 2026-10-15).
+const MIN_TIGHTNESS_FOR_SET_LEAD_PROBS = 50;
 // Fréquence historique réelle que l'événement arrive AU MOINS UNE FOIS dans
 // le 1er set (pas par jeu isolé) — pour une stratégie type martingale jouée
-// sur tout le set jusqu'à ce que ça tombe. Vert si au-dessus du seuil, basé
-// sur l'historique point-by-point des 2 joueurs (voir prob_XXX_in_set côté API).
-const IN_SET_GREEN_THRESHOLD = 85;
+// sur tout le set jusqu'à ce que ça tombe. Vert (et jugé "pariable") UNIQUEMENT
+// à 100% — en dessous, l'historique montre au moins un cas où ça n'est pas
+// arrivé, donc pas de certitude (seuil abaissé à 85% précédemment, remonté à
+// 100% le 2026-10-15 sur demande explicite : rien en dessous de 100% ne doit
+// être affiché vert ni considéré pariable).
+const IN_SET_GREEN_THRESHOLD = 100;
 function inSetProbabilities(match) {
+    const score = tightnessScore(match);
+    const leadProbsGated = score !== null && score < MIN_TIGHTNESS_FOR_SET_LEAD_PROBS;
     const probs = [
-        { key: '15A (set)', value: match.prob_15a_in_set },
-        { key: '30A (set)', value: match.prob_30a_in_set },
-        { key: '40A (set)', value: match.prob_40a_in_set },
+        { key: '15A (set)', value: match.prob_15a_in_set, gated: leadProbsGated },
+        { key: '30A (set)', value: match.prob_30a_in_set, gated: leadProbsGated },
+        { key: '40A (set)', value: match.prob_40a_in_set, gated: leadProbsGated },
         { key: '30-0 (set)', value: match.prob_30love_in_set },
         { key: 'G:40-0 (set)', value: match.prob_game_40_0_in_set },
         { key: 'G:40-15 (set)', value: match.prob_game_40_15_in_set },
@@ -233,11 +246,19 @@ function inSetLostServeProbabilities(match) {
 // de variance plutôt que par un vrai signal). On exige aussi un échantillon
 // fiable (sample_size >= 15) quand le contexte du match est fourni.
 const MIN_VALUE_BET_EDGE = 5;
+// Seuil minimum de tightness : les probas par pattern sont calculées sur un
+// échantillon global (tous niveaux de match confondus), pas segmenté par
+// tightness — sur un match pas serré (lopsided), ces probas moyennes ne sont
+// pas représentatives, donc pas de pari dessus (même seuil que le backend,
+// MatchController::today, demandé le 2026-10-14).
+const MIN_TIGHTNESS_FOR_BET = 50;
 function isValueBet(p, match) {
     if (p.edge === null || p.edge === undefined || p.edge <= MIN_VALUE_BET_EDGE) return false;
     if (match) {
         const rel = sampleReliability(match);
         if (rel && rel.level === 'low') return false;
+        const score = tightnessScore(match);
+        if (score !== null && score < MIN_TIGHTNESS_FOR_BET) return false;
     }
     return true;
 }
@@ -537,10 +558,10 @@ onMounted(load);
                              class="shrink-0 flex flex-wrap gap-1 max-w-[220px] justify-end">
                             <span v-for="p in inSetProbabilities(match)" :key="p.key"
                                   :class="['text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap',
-                                           p.value >= IN_SET_GREEN_THRESHOLD ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
+                                           (p.value >= IN_SET_GREEN_THRESHOLD && !p.gated) ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' :
                                            'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300']"
-                                  :title="`Fréquence historique réelle que ${p.key.replace(' (set)', '')} arrive au moins une fois dans le 1er set : ${p.value}%`">
-                                {{ p.value >= IN_SET_GREEN_THRESHOLD ? '✅ ' : '' }}{{ p.key }} {{ Math.round(p.value) }}%
+                                  :title="`Fréquence historique réelle que ${p.key.replace(' (set)', '')} arrive au moins une fois dans le 1er set : ${p.value}%`+ (p.gated ? ' (non valorisée : match pas serré, tension < 50)' : '')">
+                                {{ (p.value >= IN_SET_GREEN_THRESHOLD && !p.gated) ? '✅ ' : '' }}{{ p.key }} {{ Math.round(p.value) }}%
                             </span>
                             <span v-for="p in inSetLeadsProbabilities(match)" :key="'leads-set-' + p.name"
                                   :class="['text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap',

@@ -47,6 +47,13 @@ class TennisMatchTightnessScore extends Model
         'prob_lost_serve2_in_set',
         'edge_lost_serve1',
         'edge_lost_serve2',
+        'prob_hold',
+        'prob_break',
+        'edge_hold',
+        'edge_break',
+        'prob_hold_in_set',
+        'prob_break_in_set',
+        'prob_030',
         'computed_at',
     ];
 

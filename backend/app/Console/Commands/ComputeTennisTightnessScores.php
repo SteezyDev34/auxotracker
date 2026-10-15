@@ -113,6 +113,13 @@ class ComputeTennisTightnessScores extends Command
                     'prob_lost_serve2' => $result['prob_lost_serve2'],
                     'edge_lost_serve1' => $result['edge_lost_serve1'],
                     'edge_lost_serve2' => $result['edge_lost_serve2'],
+                    'prob_hold' => $result['prob_hold'],
+                    'prob_break' => $result['prob_break'],
+                    'edge_hold' => $result['edge_hold'],
+                    'edge_break' => $result['edge_break'],
+                    'prob_hold_in_set' => $result['prob_hold_in_set'],
+                    'prob_break_in_set' => $result['prob_break_in_set'],
+                    'prob_030' => $result['prob_030'],
                     'computed_at' => now(),
                 ]
             );
@@ -221,6 +228,14 @@ class ComputeTennisTightnessScores extends Command
             'prob_lost_serve2' => $set1Probs['prob_team2_lost_serve'] ?? null,
             'edge_lost_serve1' => $this->computeEdge($set1Probs['prob_team1_lost_serve'] ?? null, self::MARKET_ODDS['lost_serve']),
             'edge_lost_serve2' => $this->computeEdge($set1Probs['prob_team2_lost_serve'] ?? null, self::MARKET_ODDS['lost_serve']),
+            'prob_hold' => $set1Probs['prob_hold'] ?? null,
+            'prob_break' => $set1Probs['prob_break'] ?? null,
+            'edge_hold' => $this->computeEdge($set1Probs['prob_hold'] ?? null, self::MARKET_ODDS['hold']),
+            'edge_break' => $this->computeEdge($set1Probs['prob_break'] ?? null, self::MARKET_ODDS['break']),
+            'prob_hold_in_set' => $set1Probs['prob_hold_in_set'] ?? null,
+            'prob_break_in_set' => $set1Probs['prob_break_in_set'] ?? null,
+            // Pas de cote de référence confirmée pour ce marché -> pas d'edge.
+            'prob_030' => $set1Probs['prob_030'] ?? null,
         ];
     }
 
@@ -232,6 +247,12 @@ class ComputeTennisTightnessScores extends Command
         '15a' => 1.85, '30a' => 2.40, '40a' => 3.00,
         '30love' => 2.00, 'g40_0' => 3.00, 'g40_15' => 3.00, 'g40_30' => 3.00,
         'leads' => 1.40, 'lost_serve' => 2.00,
+        // Valeurs standards de marché (pas encore les cotes réellement
+        // observées par l'utilisateur sur son bookmaker, contrairement aux
+        // autres cotes ci-dessus) — à affiner. edge_hold/edge_break seront
+        // faux tant que ces valeurs ne sont pas confirmées (demandé le
+        // 2026-10-15, en attendant).
+        'hold' => 1.40, 'break' => 2.80,
     ];
 
     /**
@@ -328,6 +349,16 @@ class ComputeTennisTightnessScores extends Command
             $rLost2 = $this->blendWithTier($tensionB->rateMatchLostFirstPointOnServe(), $tierStatB, 'sample_matches', fn ($t) => $t->rateMatchLostFirstPointOnServe());
             $result['prob_lost_serve1_in_set'] = $rLost1 !== null ? round($rLost1 * 100, 2) : null;
             $result['prob_lost_serve2_in_set'] = $rLost2 !== null ? round($rLost2 * 100, 2) : null;
+
+            // hold/break/030 n'ont pas (encore) d'historique point-by-point
+            // agrégé — toujours théorique, même quand le reste du match utilise
+            // l'empirique (comme prob_server_loss_to_love déjà).
+            $theoretical = $this->set1ProbabilitiesFromTheoreticalModel($statA, $statB);
+            $result['prob_hold'] = $theoretical['prob_hold'];
+            $result['prob_break'] = $theoretical['prob_break'];
+            $result['prob_hold_in_set'] = $theoretical['prob_hold_in_set'];
+            $result['prob_break_in_set'] = $theoretical['prob_break_in_set'];
+            $result['prob_030'] = $theoretical['prob_030'];
 
             return $result;
         }
@@ -455,7 +486,10 @@ class ComputeTennisTightnessScores extends Command
             return [
                 'prob_15a' => null, 'prob_30a' => null, 'prob_40a' => null,
                 'prob_30love' => null, 'prob_g40_0' => null, 'prob_g40_15' => null, 'prob_g40_30' => null,
-                'prob_server_loss_to_love' => null, 'source' => null,
+                'prob_server_loss_to_love' => null, 'prob_030' => null,
+                'prob_hold' => null, 'prob_break' => null,
+                'prob_hold_in_set' => null, 'prob_break_in_set' => null,
+                'source' => null,
             ];
         }
 
@@ -478,6 +512,45 @@ class ComputeTennisTightnessScores extends Command
         // Spécifique au serveur : proba qu'IL perde son propre jeu 0-40 (le
         // relanceur gagne les 4 points), pas de compoundage des deux sens.
         $avgServerLoss = round(((((1 - $pA) ** 4)) + (((1 - $pB) ** 4))) / 2 * 100, 2);
+        // Idem, mais à 2 points (0-30) plutôt que 4 (0-40) : proba que le
+        // serveur se retrouve mené 0-30 sur son propre jeu.
+        $avgServerDown030 = round(((((1 - $pA) ** 2)) + (((1 - $pB) ** 2))) / 2 * 100, 2);
+
+        // Proba standard (modèle binomial, avec gestion du deuce) qu'un jeu de
+        // service soit remporté par le serveur : somme des façons de gagner
+        // 4-0/4-1/4-2 sans deuce, + proba d'atteindre deuce (40-40, déjà
+        // $perGame40 ci-dessus) multipliée par la proba de gagner depuis deuce
+        // (résultat classique de la série géométrique "gagner par 2 points
+        // d'écart") = p²/(p²+(1-p)²). Formule standard de statistiques tennis
+        // (ex. Klaassen & Magnus), PAS d'historique point-by-point agrégé
+        // disponible pour ce marché pour l'instant (contrairement à 15A/30A/
+        // 40A), donc théorique uniquement, comme prob_server_loss_to_love.
+        $perGameHold = function (float $p): float {
+            $winFromDeuce = ($p ** 2) / (($p ** 2) + ((1 - $p) ** 2));
+            return ($p ** 4) + 4 * ($p ** 4) * (1 - $p) + 10 * ($p ** 4) * ((1 - $p) ** 2)
+                + 20 * ($p ** 3) * ((1 - $p) ** 3) * $winFromDeuce;
+        };
+        $avgHold = round((($perGameHold($pA) + $perGameHold($pB)) / 2) * 100, 2);
+        // Break = complémentaire exact de hold (pas de simulation séparée :
+        // moyenne de (1-hold) = 1 - moyenne(hold), linéaire).
+        $avgBreak = round(100 - $avgHold, 2);
+
+        // "Au moins un hold/break dans les 10 premiers jeux du set" (même
+        // fenêtre que prob_*_in_set) : compound sur le nombre de jeux de
+        // service de CE joueur dans la fenêtre, approximé à la moitié des
+        // jeux (chaque joueur sert environ un jeu sur deux). ATTENTION :
+        // "au moins un hold" et "au moins un break" ne sont PAS complémentaires
+        // une fois compoundés sur plusieurs jeux (seul le résultat d'un jeu
+        // ISOLÉ l'est) — chacun doit compounder sa propre proba par jeu,
+        // sinon un joueur qui tient quasi toujours son service (hold_in_set
+        // ≈100%) afficherait à tort un break_in_set ≈0% au lieu de la vraie
+        // proba (petite mais non nulle) qu'il se fasse casser au moins une
+        // fois sur plusieurs jeux (bug constaté le 2026-10-15 avant prod).
+        $windowServiceGames = (int) ceil(self::MARTINGALE_WINDOW_GAMES / 2);
+        $holdInSet = fn (float $p) => 1 - ((1 - $perGameHold($p)) ** $windowServiceGames);
+        $breakInSet = fn (float $p) => 1 - ($perGameHold($p) ** $windowServiceGames);
+        $avgHoldInSet = round((($holdInSet($pA) + $holdInSet($pB)) / 2) * 100, 2);
+        $avgBreakInSet = round((($breakInSet($pA) + $breakInSet($pB)) / 2) * 100, 2);
 
         return [
             'prob_15a' => $avg($perGame15),
@@ -488,9 +561,21 @@ class ComputeTennisTightnessScores extends Command
             'prob_g40_15' => $avg($perGame40_15),
             'prob_g40_30' => $avg($perGame40_30),
             'prob_server_loss_to_love' => $avgServerLoss,
+            'prob_030' => $avgServerDown030,
+            'prob_hold' => $avgHold,
+            'prob_break' => $avgBreak,
+            'prob_hold_in_set' => $avgHoldInSet,
+            'prob_break_in_set' => $avgBreakInSet,
             'source' => 'théorique',
         ];
     }
+
+    /**
+     * Fenêtre "au moins une fois dans les N premiers jeux du set" — même
+     * valeur que BacktestTennisScores::MARTINGALE_WINDOW_GAMES (dupliquée,
+     * comme MARKET_ODDS, pas de dépendance croisée entre ces deux commandes).
+     */
+    private const MARTINGALE_WINDOW_GAMES = 10;
 
     /**
      * Stats de la surface la plus fournie (le plus de matchs) pour l'année en cours.

@@ -7,8 +7,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="${PROJECT_DIR:-$(dirname "$SCRIPT_DIR")}"
 APP_SERVICE="${APP_SERVICE:-web}"
 PHP_CLI_OPTS="${PHP_CLI_OPTS:--d memory_limit=-1 -d max_execution_time=0}"
-# Détection environnement : Docker ou PHP direct
-if [[ -n "${USE_DOCKER:-}" ]] || { [[ -f "$PROJECT_DIR/docker-compose.yml" ]] && command -v docker >/dev/null 2>&1; }; then
+# Détection environnement : Docker ou PHP direct — `docker info` (pas juste
+# `command -v docker`) car le binaire reste présent sur le PATH même quand le
+# daemon/VM Docker Desktop est down (cf. incident 2026-10-14).
+if [[ -n "${USE_DOCKER:-}" ]] || { [[ -f "$PROJECT_DIR/docker-compose.yml" ]] && docker info >/dev/null 2>&1; }; then
     PHP_CMD="docker compose exec -T $APP_SERVICE php $PHP_CLI_OPTS"
     echo "Mode: Docker détecté"
 else

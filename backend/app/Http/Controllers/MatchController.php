@@ -49,10 +49,17 @@ class MatchController extends Controller
         // par pur bruit de variance plutôt qu'un vrai signal) — voir
         // MIN_VALUE_BET_EDGE côté frontend (TodayMatches.vue), même seuil ici
         // pour rester cohérent entre le badge 💰 et ce filtre.
+        // Seuil tightness (score >= 50) : les probas par pattern (15A/30A/...)
+        // sont calculées sur un échantillon global (tous niveaux de match
+        // confondus), pas segmenté par tightness — sur un match pas serré
+        // (lopsided), ces probas moyennes ne sont pas représentatives du
+        // comportement réel du match, donc pas de pari dessus (demandé le
+        // 2026-10-14, en attendant une segmentation des probas par tightness).
         // Appliqué à $query (avant clonage) pour que $total/has_more restent
         // cohérents avec le filtre.
         if ($request->boolean('value_bets')) {
             $query->where('tts.sample_size', '>=', 15)
+                ->where('tts.score', '>=', 50)
                 ->where(function ($q) {
                     $q->where('tts.edge_15a', '>', 5)
                       ->orWhere('tts.edge_30a', '>', 5)
@@ -98,6 +105,8 @@ class MatchController extends Controller
                 'tts.prob_game_40_0_in_set', 'tts.prob_game_40_15_in_set', 'tts.prob_game_40_30_in_set',
                 'tts.prob_team1_leads_15_0_in_set', 'tts.prob_team2_leads_15_0_in_set',
                 'tts.prob_lost_serve1_in_set', 'tts.prob_lost_serve2_in_set',
+                'tts.prob_hold', 'tts.prob_break', 'tts.edge_hold', 'tts.edge_break',
+                'tts.prob_hold_in_set', 'tts.prob_break_in_set', 'tts.prob_030',
             ]);
 
         $sortMap = [
@@ -239,17 +248,40 @@ class MatchController extends Controller
         $id1 = $team1->sofascore_id;
         $id2 = $team2->sofascore_id;
 
-        // Chercher le match dans les deux sens (équipe 1 ↔ équipe 2)
-        $match = MatchModel::where('match_start_date', $date)
+        // Chercher le match dans les deux sens (équipe 1 ↔ équipe 2), en
+        // joignant les probas/tightness déjà calculées (tennis_match_tightness_scores)
+        // pour que les consommateurs externes (ex: bot mrtingal) n'aient pas à
+        // refaire ce calcul eux-mêmes à partir de stats brutes par joueur —
+        // une seule source de vérité, partagée avec MatchController::today
+        // (demandé le 2026-10-15).
+        $match = DB::table('matches as m')
+            ->leftJoin('tennis_match_tightness_scores as tts', 'tts.event_id', '=', 'm.event_id')
+            ->where('m.match_start_date', $date)
             ->where(function ($q) use ($id1, $id2) {
                 $q->where(function ($q) use ($id1, $id2) {
-                    $q->where('team_1_sofascore_id', $id1)
-                        ->where('team_2_sofascore_id', $id2);
+                    $q->where('m.team_1_sofascore_id', $id1)
+                        ->where('m.team_2_sofascore_id', $id2);
                 })->orWhere(function ($q) use ($id1, $id2) {
-                    $q->where('team_1_sofascore_id', $id2)
-                        ->where('team_2_sofascore_id', $id1);
+                    $q->where('m.team_1_sofascore_id', $id2)
+                        ->where('m.team_2_sofascore_id', $id1);
                 });
             })
+            ->select([
+                'm.sofascore_link', 'm.match_start_date', 'm.match_start_time', 'm.event_id',
+                'm.team_1_sofascore_id',
+                'tts.score as tightness_score', 'tts.sample_size',
+                'tts.prob_15a_in_set', 'tts.prob_30a_in_set', 'tts.prob_40a_in_set',
+                'tts.prob_30love_in_set',
+                'tts.prob_game_40_0_in_set', 'tts.prob_game_40_15_in_set', 'tts.prob_game_40_30_in_set',
+                'tts.prob_team1_leads_15_0_in_set', 'tts.prob_team2_leads_15_0_in_set',
+                'tts.prob_lost_serve1_in_set', 'tts.prob_lost_serve2_in_set',
+                'tts.edge_15a', 'tts.edge_30a', 'tts.edge_40a', 'tts.edge_30love',
+                'tts.edge_g40_0', 'tts.edge_g40_15', 'tts.edge_g40_30',
+                'tts.edge_leads1', 'tts.edge_leads2',
+                'tts.edge_lost_serve1', 'tts.edge_lost_serve2',
+                'tts.prob_hold_in_set', 'tts.prob_break_in_set', 'tts.edge_hold', 'tts.edge_break',
+                'tts.prob_030',
+            ])
             ->first();
 
         if (!$match) {
@@ -262,6 +294,11 @@ class MatchController extends Controller
             ], 404);
         }
 
+        // tts.*1/*2 et team1_leads/team2_leads suivent l'ordre team_1/team_2
+        // en BDD, pas forcément l'ordre team1/team2 de la requête — on remet
+        // dans l'ordre demandé ($id1 = team1) avant de répondre.
+        $swap = ((int) $match->team_1_sofascore_id !== (int) $id1);
+
         return response()->json([
             'success'        => true,
             'sofascore_link' => $match->sofascore_link,
@@ -269,6 +306,47 @@ class MatchController extends Controller
             'event_id'       => $match->event_id,
             'team1'          => ['name' => $team1->name, 'sofascore_id' => $id1],
             'team2'          => ['name' => $team2->name, 'sofascore_id' => $id2],
+            // Tension globale du match (0-100) : sous 50, les probas 15A/30A/40A
+            // (in_set) ne sont pas représentatives d'un match déséquilibré, voir
+            // MIN_TIGHTNESS_FOR_SET_LEAD_PROBS côté frontend (TodayMatches.vue).
+            'tightness_score' => $match->tightness_score !== null ? (int) $match->tightness_score : null,
+            'sample_size'     => $match->sample_size !== null ? (int) $match->sample_size : null,
+            'probs_in_set'    => [
+                '15A'    => $match->prob_15a_in_set,
+                '30A'    => $match->prob_30a_in_set,
+                '40A'    => $match->prob_40a_in_set,
+                '300'    => $match->prob_30love_in_set,
+                '400'    => $match->prob_game_40_0_in_set,
+                '4015'   => $match->prob_game_40_15_in_set,
+                '4030'   => $match->prob_game_40_30_in_set,
+                '150_1'  => $swap ? $match->prob_team2_leads_15_0_in_set : $match->prob_team1_leads_15_0_in_set,
+                '150_2'  => $swap ? $match->prob_team1_leads_15_0_in_set : $match->prob_team2_leads_15_0_in_set,
+                '015_1'  => $swap ? $match->prob_lost_serve2_in_set : $match->prob_lost_serve1_in_set,
+                '015_2'  => $swap ? $match->prob_lost_serve1_in_set : $match->prob_lost_serve2_in_set,
+                // HOLD/BREAK : moyenne des deux joueurs, pas de notion de
+                // "camp 1/2" (symétrique), contrairement à 150/015 ci-dessus.
+                'HOLD'   => $match->prob_hold_in_set,
+                'BREAK'  => $match->prob_break_in_set,
+            ],
+            'edges' => [
+                '15A'   => $match->edge_15a,
+                '30A'   => $match->edge_30a,
+                '40A'   => $match->edge_40a,
+                '300'   => $match->edge_30love,
+                '400'   => $match->edge_g40_0,
+                '4015'  => $match->edge_g40_15,
+                '4030'  => $match->edge_g40_30,
+                '150_1' => $swap ? $match->edge_leads2 : $match->edge_leads1,
+                '150_2' => $swap ? $match->edge_leads1 : $match->edge_leads2,
+                '015_1' => $swap ? $match->edge_lost_serve2 : $match->edge_lost_serve1,
+                '015_2' => $swap ? $match->edge_lost_serve1 : $match->edge_lost_serve2,
+                'HOLD'  => $match->edge_hold,
+                'BREAK' => $match->edge_break,
+            ],
+            // Proba (théorique, pas de cote de référence confirmée pour
+            // l'instant -> pas d'edge) que le serveur se retrouve mené 0-30
+            // sur son propre jeu, moyenne des deux joueurs.
+            'prob_030' => $match->prob_030,
         ]);
     }
 

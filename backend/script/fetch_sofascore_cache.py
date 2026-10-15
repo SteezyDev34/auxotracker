@@ -577,14 +577,11 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
         cache_dir = STORAGE_BASE / "tennis_players"
         current_year = int(target_date[:4])
 
-        # Écrire tout de suite les fichiers event_*.json (lecture seule du
-        # cache, aucun appel Sofascore) : sans ça, ils ne sont créés que par
-        # le tennis:import-from-schedule de fin de cache_tennis.sh, et les
-        # imports par lot (local + prod) n'ont aucun match du jour à créer
-        # pendant tout le run (constaté le 2026-10-01 : 1 seul match en prod).
-        print("  📅 Mise en cache des matchs du jour (import-from-schedule --offline)...")
-        _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
-              "tennis:import-from-schedule", "--offline"], timeout=600)
+        # Note : plus d'appel local à tennis:import-from-schedule ici — la BDD
+        # locale n'est plus alimentée au fil du run (voir refresh_local_db_from_prod,
+        # appelé une fois en toute fin de run), et maybe_run_prod_sync() lance
+        # déjà sa propre tennis:import-from-schedule --offline côté PROD à
+        # partir du cache schedule synchronisé (demandé le 2026-10-15).
 
         # Traitement par LOT de MATCH_BATCH_SIZE matchs, dans l'ordre de
         # démarrage (all_events est déjà trié plus haut) : pour chaque lot,
@@ -620,14 +617,15 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
             fetch_player_point_by_point_history(driver, match_player_ids, cache_dir)
             processed_player_ids.update(pid for pid, _ in match_player_ids)
 
-            # Import local + calcul probas + sync prod tous les
+            # Sync prod (import + calcul probas là-bas) tous les
             # MATCH_BATCH_SIZE matchs (force=True : pas d'attente
             # d'intervalle, seul le compteur de matchs traités décide).
             # archive=False : le fetch tourne encore, on ne doit pas vider
-            # les dossiers de cache sous ses pieds (voir maybe_run_prod_sync)
-            # — seul le flush final archive.
+            # les dossiers de cache sous ses pieds — seul le flush final
+            # archive. Plus de BDD locale alimentée ici (voir
+            # refresh_local_db_from_prod, appelé une fois en fin de run).
             if i % MATCH_BATCH_SIZE == 0:
-                maybe_run_local_import(force=True)
+                maybe_run_prod_sync(force=True)
 
         # Joueurs déjà en cache (jours précédents) mais pas liés à un match
         # du jour : moins urgent (pas de match imminent), traités en bloc
@@ -648,13 +646,17 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
             print(f"\n👤 Joueurs additionnels (cache, hors matchs du jour): {len(extra_list)}")
             fetch_player_details(driver, extra_list, cache_dir, current_year)
             fetch_player_rankings(driver, extra_list, cache_dir)
-            maybe_run_local_import()
+            maybe_run_prod_sync()
 
-    # Flush final : importer/synchroniser/archiver le dernier lot partiel,
-    # même s'il n'a pas atteint le seuil normal (sinon perdu jusqu'au
-    # prochain run). C'est le SEUL point du run qui archive réellement.
-    maybe_run_local_import(force=True)
+    # Flush final : synchroniser/archiver le dernier lot partiel, même s'il
+    # n'a pas atteint le seuil normal (sinon perdu jusqu'au prochain run).
+    # C'est le SEUL point du run qui archive réellement.
     maybe_run_prod_sync(force=True, archive=True)
+    # BDD locale (MAMP) remise à l'identique de prod une seule fois ici, en
+    # toute fin de run complet — plus simple et plus fiable que de la tenir
+    # à jour incrémentalement en local pendant le run (demandé le 2026-10-15,
+    # prod étant déjà la source de vérité via maybe_run_prod_sync ci-dessus).
+    refresh_local_db_from_prod()
 
 
 # ---------------------------------------------------------------------------
@@ -1045,7 +1047,7 @@ def fetch_player_details(driver: webdriver.Chrome, player_ids: list, cache_dir: 
 
         if made_request:
             time.sleep(random.uniform(0.9, 1.8))
-            # Pas d'appel à maybe_run_local_import() ici : le déclenchement se
+            # Pas d'appel à maybe_run_prod_sync() ici : le déclenchement se
             # fait désormais explicitement dans la boucle par lot de matchs
             # de fetch_tennis (voir MATCH_BATCH_SIZE) — un appel ici en plus
             # créait un import déclenché en plein milieu du fetch d'un match,
@@ -1080,7 +1082,7 @@ def fetch_player_rankings(driver: webdriver.Chrome, player_ids: list, cache_dir:
             out_file.write_text(json.dumps(data, ensure_ascii=False))
             fetched += 1
         time.sleep(random.uniform(0.9, 1.8))
-        # Pas d'appel à maybe_run_local_import() ici — voir fetch_player_details.
+        # Pas d'appel à maybe_run_prod_sync() ici — voir fetch_player_details.
         if i % 50 == 0:
             print(f"  [{i}/{total}] traités... ({fetched} nouveaux)")
     print(f"  📊 Rankings fetchés: {fetched}/{total}")
@@ -1228,7 +1230,7 @@ def fetch_player_point_by_point_history(driver: webdriver.Chrome, player_ids: li
         if i % 50 == 0:
             print(f"  [{i}/{total}] traités... ({fetched} nouveaux, {skipped_cached} déjà en cache)")
         time.sleep(random.uniform(1.0, 1.8))
-        # Pas d'appel à maybe_run_local_import() ici — voir fetch_player_details.
+        # Pas d'appel à maybe_run_prod_sync() ici — voir fetch_player_details.
 
     # Retry final : les joueurs dont le fetch team/{id}/events/last/0 a
     # échoué en 403 (bloqué temporairement, pas mis en cache négatif) sont
@@ -1284,7 +1286,7 @@ def fetch_h2h_and_odds_for_events(driver: webdriver.Chrome, events: list, cache_
                 odds_ok += 1
             time.sleep(random.uniform(0.9, 1.8))
 
-        # Pas d'appel à maybe_run_local_import() ici — voir fetch_player_details.
+        # Pas d'appel à maybe_run_prod_sync() ici — voir fetch_player_details.
         if i % 50 == 0:
             print(f"  [{i}/{total}] traités...")
 
@@ -1648,22 +1650,20 @@ def fetch_sport_scheduled(driver: webdriver.Chrome, sport: str, target_date: str
 
 PROJECT_DIR = Path(__file__).parent.parent
 # Basé sur le TEMPS écoulé (pas un compteur d'éléments traités) : la commande
-# d'import PHP retraite tout le cache à chaque appel (~2min30 mesuré), donc un
-# seuil par volume devient vite trop fréquent/coûteux quand le fetch avance
-# vite (cache hits) ou trop rare quand il ralentit (vrais fetch + 403). Les
-# matchs sont désormais fetchés dans l'ordre de leur heure de départ (voir
-# tri dans fetch_tennis), donc même un intervalle fixe profite déjà aux
-# matchs qui commencent le plus tôt.
-LOCAL_IMPORT_INTERVAL_SECONDS = 3 * 60    # ~3 min — proche du temps de l'import lui-même (~2min30),
-                                           # pas d'attente artificielle en plus (demandé par l'utilisateur)
-PROD_SYNC_INTERVAL_SECONDS = 9 * 60       # ~9 min (≈ tous les 3 imports locaux) — limite le nb de connexions SSH
+# d'import PHP retraite tout le cache à chaque appel, donc un seuil par
+# volume devient vite trop fréquent/coûteux quand le fetch avance vite (cache
+# hits) ou trop rare quand il ralentit (vrais fetch + 403). Les matchs sont
+# fetchés dans l'ordre de leur heure de départ (voir tri dans fetch_tennis),
+# donc même un intervalle fixe profite déjà aux matchs qui commencent le
+# plus tôt.
+PROD_SYNC_INTERVAL_SECONDS = 9 * 60       # ~9 min — limite le nb de connexions SSH hors boucle par lot
 
 # Initialisé au moment du chargement du module (proche du démarrage réel du
 # run) plutôt qu'à 0 — un compteur à 0 déclencherait le tout premier appel
 # immédiatement (temps écoulé depuis l'epoch = énorme), ce qui a provoqué un
 # archivage prématuré (voir maybe_run_prod_sync) alors que le fetch venait à
 # peine de commencer.
-_interleave_counter = {"last_local_import_at": time.time(), "last_prod_sync_at": time.time()}
+_interleave_counter = {"last_prod_sync_at": time.time()}
 
 
 def _run(cmd: list, cwd=None, timeout=180, env=None) -> bool:
@@ -1682,52 +1682,9 @@ def _run(cmd: list, cwd=None, timeout=180, env=None) -> bool:
         return False
 
 
-_docker_status = {"checked": False, "available": True}
-
-
-def _docker_available() -> bool:
-    """Vérifie une seule fois par run si Docker local répond (mémoïsé) —
-    évite de retenter/d'afficher l'erreur brute à chaque lot alors que
-    Docker est cassé pour toute la durée du run (cf. skip import local
-    décidé le 2026-10-14, Docker Desktop incompatible avec macOS Monterey)."""
-    if not _docker_status["checked"]:
-        _docker_status["checked"] = True
-        try:
-            result = subprocess.run(["docker", "info"], capture_output=True, timeout=5)
-            _docker_status["available"] = result.returncode == 0
-        except Exception:
-            _docker_status["available"] = False
-        if not _docker_status["available"]:
-            print("  ⏭️  Docker local indisponible — import/calcul local skip pour tout le run, sync prod uniquement", file=sys.stderr)
-    return _docker_status["available"]
-
-
-def maybe_run_local_import(force: bool = False):
-    """Toutes les LOCAL_IMPORT_INTERVAL_SECONDS écoulées, importe en base
-    locale ce qui a déjà été fetché (le cache existant est réutilisé par les
-    prochains passages, rien n'est perdu ni refait). Basé sur le temps
-    écoulé plutôt qu'un compteur d'éléments : coût fixe par appel (~2min30),
-    indépendant du volume traité entre deux appels."""
-    now = time.time()
-    if not force and (now - _interleave_counter["last_local_import_at"]) < LOCAL_IMPORT_INTERVAL_SECONDS:
-        return
-    _interleave_counter["last_local_import_at"] = now
-    if _docker_available():
-        print("  🔄 Import PHP local incrémental (lot)...")
-        _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
-              "tennis:import-from-cache", "--force", "--skip-archive"], timeout=300)
-        # Calcul des probabilités (léger, ~20s mesuré) — sans ça les matchs sont
-        # importés mais pas "exploitables" (pas de stats/proba tant que cette
-        # commande séparée n'a pas tourné).
-        print("  🎯 Calcul des probabilités (lot)...")
-        _run(["docker", "compose", "exec", "-T", "web", "php", "artisan",
-              "tennis:compute-tightness-scores", "--force"], timeout=120)
-    maybe_run_prod_sync(force=force)
-
-
 def maybe_run_prod_sync(force: bool = False, archive: bool = False):
     """Synchronise le cache vers prod et relance l'import + calcul de probas
-    là-bas. Appelé après chaque match (force=True) depuis maybe_run_local_import,
+    là-bas. Appelé après chaque lot (force=True) depuis la boucle de fetch_tennis,
     donc en pratique quasi jamais gaté par PROD_SYNC_INTERVAL_SECONDS (ce
     seuil ne sert plus que pour le pool de joueurs additionnels hors matchs
     du jour, traité en bloc à la fin de fetch_tennis).
@@ -1746,18 +1703,93 @@ def maybe_run_prod_sync(force: bool = False, archive: bool = False):
     if _run(["bash", "script/send_cache_and_archive.sh"], timeout=300, env=archive_env):
         # tennis:import-from-schedule --offline génère les fichiers
         # tournaments/events/event_*.json (source de création des lignes
-        # `matches`) à partir du cache schedule synchronisé juste au-dessus.
-        # Normalement lancé en LOCAL via Docker avant la boucle par lots
-        # (cache_tennis.sh) — mais si Docker local est down (cf. 2026-10-14),
-        # ces fichiers event_*.json ne sont jamais générés ni synchronisés,
-        # et tennis:import-from-cache n'a alors plus rien de nouveau à partir
-        # de quoi créer des matchs. On le relance donc aussi ici côté prod
-        # (pas de dépendance Docker là-bas, lit uniquement le cache synchronisé) —
-        # idempotent, sans appel réseau (--offline).
+        # `matches`) à partir du cache schedule synchronisé juste au-dessus —
+        # lancé ici côté PROD (seul endroit qui écrit en base désormais, voir
+        # refresh_local_db_from_prod), idempotent, sans appel réseau (--offline).
         _run(["ssh", "sc2vagr6376@bouteille.o2switch.net",
               "cd ~/api.auxotracker && php artisan tennis:import-from-schedule --offline "
               "&& php artisan tennis:import-from-cache --force --download-images --download-logos "
               "&& php artisan tennis:compute-tightness-scores --force"], timeout=300)
+
+
+def _read_env_values(env_path: Path, keys: list) -> dict:
+    """Lecture minimale d'un fichier .env (pas de dépendance externe) : ne
+    gère que des lignes `CLE=valeur` simples, suffisant pour DB_*."""
+    out = {}
+    try:
+        for line in env_path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, _, v = line.partition("=")
+            k = k.strip()
+            if k in keys:
+                out[k] = v.strip().strip('"').strip("'")
+    except Exception as e:
+        print(f"  ⚠️  Impossible de lire {env_path}: {e}", file=sys.stderr)
+    return out
+
+
+LOCAL_MYSQL_BIN = os.environ.get(
+    "LOCAL_MYSQL_BIN",
+    "/Applications/MAMP/Library/bin/mysql80/bin/mysql" if Path("/Applications/MAMP/Library/bin/mysql80/bin/mysql").exists() else "mysql",
+)
+
+
+def refresh_local_db_from_prod() -> None:
+    """Remet la BDD locale (MAMP) à l'identique de prod via un mysqldump
+    distant + import local — plus simple et plus fiable que de la tenir à
+    jour incrémentalement en local pendant le run, maintenant que prod est de
+    toute façon la seule source de vérité (voir maybe_run_prod_sync). Appelé
+    une seule fois, à la toute fin d'un run complet (demandé le 2026-10-15).
+    Le mot de passe prod n'est jamais lu localement ni mis en argument de
+    commande : mysqldump tourne côté serveur, qui source son propre .env."""
+    print("\n💾 Rafraîchissement de la BDD locale (MAMP) depuis un dump prod...")
+
+    remote_dump = "/tmp/auxotracker_refresh_dump.sql"
+    dump_cmd = (
+        "cd ~/api.auxotracker && set -a && source .env && set +a && "
+        f"MYSQL_PWD=\"$DB_PASSWORD\" mysqldump -h \"$DB_HOST\" -u \"$DB_USERNAME\" "
+        f"--single-transaction --quick --no-tablespaces \"$DB_DATABASE\" > {remote_dump}"
+    )
+    if not _run(["ssh", "sc2vagr6376@bouteille.o2switch.net", dump_cmd], timeout=300):
+        print("  ⚠️  Dump prod échoué — BDD locale non rafraîchie", file=sys.stderr)
+        return
+
+    local_dump = PROJECT_DIR / "storage" / "app" / ".tmp_auxotracker_refresh_dump.sql"
+    if not _run(["scp", f"sc2vagr6376@bouteille.o2switch.net:{remote_dump}", str(local_dump)], timeout=300):
+        print("  ⚠️  Téléchargement du dump prod échoué — BDD locale non rafraîchie", file=sys.stderr)
+        _run(["ssh", "sc2vagr6376@bouteille.o2switch.net", f"rm -f {remote_dump}"], timeout=30)
+        return
+    _run(["ssh", "sc2vagr6376@bouteille.o2switch.net", f"rm -f {remote_dump}"], timeout=30)
+
+    local_env = _read_env_values(PROJECT_DIR / ".env", ["DB_HOST", "DB_PORT", "DB_DATABASE", "DB_USERNAME", "DB_PASSWORD"])
+    db_host = local_env.get("DB_HOST", "127.0.0.1")
+    db_port = local_env.get("DB_PORT", "3306")
+    db_name = local_env.get("DB_DATABASE", "auxotracker")
+    db_user = local_env.get("DB_USERNAME", "root")
+    db_pass = local_env.get("DB_PASSWORD", "root")
+
+    mysql_base = [LOCAL_MYSQL_BIN, "-h", db_host, "-P", db_port, "-u", db_user]
+    local_env_vars = {"MYSQL_PWD": db_pass}
+    recreate_sql = f"DROP DATABASE IF EXISTS `{db_name}`; CREATE DATABASE `{db_name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    if not _run(mysql_base + ["-e", recreate_sql], timeout=30, env=local_env_vars):
+        print("  ⚠️  Recréation de la base locale échouée — BDD locale non rafraîchie", file=sys.stderr)
+        local_dump.unlink(missing_ok=True)
+        return
+
+    try:
+        with open(local_dump, "rb") as f:
+            result = subprocess.run(mysql_base + [db_name], stdin=f, cwd=PROJECT_DIR,
+                                     env={**os.environ, **local_env_vars}, timeout=300)
+        if result.returncode == 0:
+            print("  ✅ BDD locale rafraîchie depuis prod")
+        else:
+            print("  ⚠️  Import du dump en local échoué", file=sys.stderr)
+    except Exception as e:
+        print(f"  ⚠️  Erreur import dump local: {e}", file=sys.stderr)
+    finally:
+        local_dump.unlink(missing_ok=True)
 
 
 def main():

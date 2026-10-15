@@ -1,13 +1,18 @@
 ---
 name: import-tennis
-description: Cycle complet d'import Tennis 🎾 — Phase 1 cache (local), sync prod, Phase 2 BDD (local + prod).
+description: Cycle complet d'import Tennis 🎾 — fetch Sofascore, sync + import prod automatique par lots, BDD locale (MAMP) rafraîchie depuis un dump prod en fin de run.
 ---
 
 # Import Tennis 🎾 — Cycle complet
 
-Lance le cycle complet : fetch Sofascore (2 tunnels possibles) → sync prod → import-from-cache (prod).
+Depuis le 2026-10-15, **tout le cycle est automatisé dans un seul run** (`cache_tennis.sh` → `fetch_sofascore_cache.py`) : plus d'étapes manuelles séparées de sync/import prod/import local à enchaîner.
 
-**L'import local (Phase 2 locale, `import_tennis.sh`) est SKIP par défaut** depuis le 2026-10-14 : Docker local est cassé sur cette machine (macOS 12.7.6 Monterey, incompatible avec la dernière version de Docker Desktop installable via `brew install --cask docker`, qui exige macOS Sonoma minimum — cf. tentative de réinstallation du 2026-10-14). Ça n'empêche pas le cycle d'aboutir : le sync + l'import prod (étapes 2 à 4 ci-dessous) ne dépendent pas de Docker local, seule la BDD locale (utile pour le dev/test en local) ne sera pas peuplée tant que Docker n'est pas réparé. Si Docker est réparé un jour, voir la section "Réactiver l'import local" en bas pour revenir au cycle complet.
+Ce qui se passe pendant le run, automatiquement :
+1. Fetch Sofascore (cache local des matchs/joueurs/stats/H2H/point-by-point).
+2. Tous les `MATCH_BATCH_SIZE` matchs : sync du cache vers prod (`send_cache_and_archive.sh`) puis, **sur prod** via SSH, `tennis:import-from-schedule --offline` (génère les matchs du jour) + `tennis:import-from-cache --force --download-images --download-logos` + `tennis:compute-tightness-scores --force`. Prod est donc à jour en continu pendant tout le run.
+3. Flush final : sync + archivage, puis **BDD locale (MAMP) entièrement rafraîchie depuis un dump de prod** (`refresh_local_db_from_prod()` — mysqldump sur prod via SSH, téléchargé, importé dans MySQL local sur le port `8889`). La BDD locale devient donc une copie exacte de prod une fois le run terminé, sans jamais être alimentée incrémentalement en local pendant le run (plus simple, prod étant déjà la seule source de vérité).
+
+Docker local n'est plus un blocage même s'il est cassé : `cache_tennis.sh` détecte si son daemon répond réellement (`docker info`, pas juste la présence du binaire) et bascule sur PHP natif sinon — mais ça ne concerne plus que des commandes ponctuelles, l'essentiel tourne côté prod.
 
 ## Instructions
 
@@ -22,45 +27,24 @@ Une fois le choix fait, exporter `TENNIS_TRANSPORT=extension` ou `TENNIS_TRANSPO
 
 **Si le fetch échoue en boucle avec des `status=403 reason=challenge`** (sur les DEUX tunnels, extension et selenium) alors que l'utilisateur confirme avoir accès au site dans son propre navigateur : ce n'est PAS un ban IP (vérifié le 2026-09-29 : même IP bloquée pour le fetch automatisé mais site accessible manuellement) — c'est l'anti-bot qui détecte la signature de la requête automatisée elle-même. Vérifier que l'extension utilise bien le content script (voir `content_fetch.js` + relai via `chrome.tabs.sendMessage` dans `service_worker.js`), pas un fetch direct depuis le service worker. Si le blocage persiste malgré ça, demander à l'utilisateur de changer d'IP (VPN) en dernier recours.
 
-### 1. Phase 1 : cache local (fetch + import-from-schedule)
+### 1. Lancer le cycle complet
 ```bash
 cd "/Volumes/WORKSPACE/NEW BET TRACKER/backend"
 TENNIS_FORCE=1 TENNIS_TRANSPORT=extension bash script/cache_tennis.sh 2>&1 | tail -20
 # ou : TENNIS_TRANSPORT=selenium bash script/cache_tennis.sh
 ```
+C'est la SEULE commande à lancer — sync, import prod et rafraîchissement de la BDD locale se font tout seuls (voir ci-dessus).
 
-### 2. Sync + archive vers prod
-```bash
-cd "/Volumes/WORKSPACE/NEW BET TRACKER/backend"
-bash script/send_cache_and_archive.sh 2>&1 | tail -5
-```
+### 2. Report
+Show a summary: leagues, matches, players created/updated (prod), tightness scores computed (prod), et confirmer que la BDD locale a bien été rafraîchie en fin de run (chercher `✅ BDD locale rafraîchie depuis prod` dans la sortie).
 
-### 3. Phase 2 prod : import-from-cache sur o2switch
-```bash
-ssh sc2vagr6376@bouteille.o2switch.net "cd ~/api.auxotracker && php artisan tennis:import-from-cache --force --download-images --download-logos 2>&1 | tail -15"
-```
-
-### 4. Recompute des scores "match serré" sur prod
-```bash
-ssh sc2vagr6376@bouteille.o2switch.net "cd ~/api.auxotracker && php artisan tennis:compute-tightness-scores --days=14 --force 2>&1 | tail -10"
-```
-
-### 5. Report
-Show a summary: leagues, matches, players created/updated (prod), tightness scores computed (prod). Préciser que la BDD locale n'a pas été mise à jour (import local skip, Docker cassé).
-
-**Important**: 
+**Important**:
 - Toujours demander/confirmer le tunnel (étape 0) avant de lancer l'étape 1 — ne pas supposer `extension` par défaut sans vérifier que Chrome est prêt.
 - Ces scripts lisent uniquement depuis le cache — aucun appel à l'API Sofascore directement (contrainte prod).
-- Le calcul des scores "match serré" (`tennis:compute-tightness-scores`) est indépendant de l'import : il faut le relancer explicitement après l'import (étape 4), pour prod uniquement tant que l'import local est skip.
-- Le code PHP de prod (o2switch) n'est PAS redéployé par ce skill — seuls les fichiers de cache sont synchronisés (étape 2). Si des changements de code/migrations ont été faits en local (ex: nouvelles colonnes), ils ne sont pas automatiquement présents sur prod tant qu'un déploiement de code (`deploy-o2switch.sh`/`deploy-production.sh` + `php artisan migrate --force` sur prod) n'a pas été fait séparément.
-
-## Réactiver l'import local (une fois Docker réparé)
-
-Remettre l'étape suivante entre l'étape 1 (fetch) et l'étape 2 (sync), car le sync archive les fichiers cache :
-
-```bash
-cd "/Volumes/WORKSPACE/NEW BET TRACKER/backend"
-bash script/import_tennis.sh
-```
-
-Ça recalcule aussi les scores "match serré" en local automatiquement (pas besoin de relancer l'étape 4 pour le local, uniquement pour prod).
+- Le code PHP de prod (o2switch) n'est PAS redéployé par ce skill — seuls les fichiers de cache sont synchronisés. Si des changements de code/migrations ont été faits en local (ex: nouvelles colonnes), ils ne sont pas automatiquement présents sur prod tant qu'un déploiement de code (`deploy-o2switch.sh`/`deploy-production.sh` + `php artisan migrate --force` sur prod) n'a pas été fait séparément.
+- Si le run est interrompu avant la fin (Ctrl+C, crash), la BDD locale ne sera PAS rafraîchie (ça n'arrive qu'au flush final) — relancer le run, ou rafraîchir manuellement :
+  ```bash
+  cd "/Volumes/WORKSPACE/NEW BET TRACKER/backend/script"
+  /usr/bin/python3 -c "import fetch_sofascore_cache as f; f.refresh_local_db_from_prod()"
+  ```
+- MAMP doit être démarré (MySQL sur le port `8889`) pour que ce rafraîchissement fonctionne — sinon il échoue proprement (message d'erreur, pas de crash) et la BDD locale reste simplement pas à jour jusqu'au prochain run réussi.
