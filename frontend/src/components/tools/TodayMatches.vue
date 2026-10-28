@@ -48,6 +48,10 @@ const STAT_HELP = {
         title: '🎾 Nom perd 1er pt srv: X%',
         text: "Probabilité que CE joueur précis perde le tout premier point QUAND IL SERT (dénominateur = ses jeux servis uniquement, différent de \"mène 15-0\" qui mélange service/retour). Utile pour repérer les joueurs à éviter en martingale sur leur service. Cote de référence : 2.00. Vert = edge positif.",
     },
+    serverLoss040: {
+        title: '⚠️ Nom 0-40: X%',
+        text: "Probabilité que CE joueur précis perde TOUT son jeu de service à zéro (le relanceur gagne les 4 premiers points, score final 0-40) — spécifique à chaque joueur, pas une moyenne. Pas de cote de référence confirmée pour l'instant, badge purement informatif.",
+    },
 };
 function toggleStatHelp(event, key) {
     activeStatHelpKey.value = key;
@@ -307,6 +311,21 @@ function lostFirstPointOnServeProbabilities(match) {
     }
     if (match.prob_lost_serve2 !== null && match.prob_lost_serve2 !== undefined) {
         probs.push({ name: match.team2_name, value: match.prob_lost_serve2, edge: match.edge_lost_serve2 });
+    }
+    return probs;
+}
+
+// Perd TOUT son jeu de service à zéro (0-40, le relanceur gagne les 4
+// premiers points) — pendant par joueur de prob_server_loss_to_love
+// (qui moyenne les 2 joueurs, utilisé seulement pour le tri). Pas de cote
+// de référence confirmée pour ce marché -> pas d'edge, badge informatif.
+function serverLoss0_40Probabilities(match) {
+    const probs = [];
+    if (match.prob_server_loss1 !== null && match.prob_server_loss1 !== undefined) {
+        probs.push({ name: match.team1_name, value: match.prob_server_loss1 });
+    }
+    if (match.prob_server_loss2 !== null && match.prob_server_loss2 !== undefined) {
+        probs.push({ name: match.team2_name, value: match.prob_server_loss2 });
     }
     return probs;
 }
@@ -621,6 +640,11 @@ onMounted(load);
                                            'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300']"
                                   :title="`Proba que ${p.name} perde le 1er point sur SON service : ${p.value}%`+ (p.edge !== null && p.edge !== undefined ? ` (edge ${p.edge > 0 ? '+' : ''}${p.edge} pts)` : '')">
                                 {{ isValueBet(p, match) ? '💰 ' : '🎾' }}{{ p.name }} perd 1er pt srv: {{ Math.round(p.value) }}%
+                            </span>
+                            <span v-for="p in serverLoss0_40Probabilities(match)" :key="'serverloss-' + p.name"
+                                  class="text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                                  :title="`Proba que ${p.name} perde TOUT son jeu de service à zéro (0-40) : ${p.value}%`">
+                                ⚠️ {{ p.name }} 0-40: {{ Math.round(p.value) }}%
                             </span>
                         </div>
 

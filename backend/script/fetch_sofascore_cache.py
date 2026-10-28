@@ -625,7 +625,7 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
             # archive. Plus de BDD locale alimentée ici (voir
             # refresh_local_db_from_prod, appelé une fois en fin de run).
             if i % MATCH_BATCH_SIZE == 0:
-                maybe_run_prod_sync(force=True)
+                maybe_run_prod_sync(force=True, target_date=target_date)
 
         # Joueurs déjà en cache (jours précédents) mais pas liés à un match
         # du jour : moins urgent (pas de match imminent), traités en bloc
@@ -646,12 +646,12 @@ def fetch_tennis(driver: webdriver.Chrome, target_date: str, fetch_players: bool
             print(f"\n👤 Joueurs additionnels (cache, hors matchs du jour): {len(extra_list)}")
             fetch_player_details(driver, extra_list, cache_dir, current_year)
             fetch_player_rankings(driver, extra_list, cache_dir)
-            maybe_run_prod_sync()
+            maybe_run_prod_sync(target_date=target_date)
 
     # Flush final : synchroniser/archiver le dernier lot partiel, même s'il
     # n'a pas atteint le seuil normal (sinon perdu jusqu'au prochain run).
     # C'est le SEUL point du run qui archive réellement.
-    maybe_run_prod_sync(force=True, archive=True)
+    maybe_run_prod_sync(force=True, archive=True, target_date=target_date)
     # BDD locale (MAMP) remise à l'identique de prod une seule fois ici, en
     # toute fin de run complet — plus simple et plus fiable que de la tenir
     # à jour incrémentalement en local pendant le run (demandé le 2026-10-15,
@@ -1682,7 +1682,57 @@ def _run(cmd: list, cwd=None, timeout=180, env=None) -> bool:
         return False
 
 
-def maybe_run_prod_sync(force: bool = False, archive: bool = False):
+def _cleanup_stale_sync_lock() -> None:
+    """subprocess.run(timeout=...) tue le process via SIGKILL quand il dépasse
+    son délai — le `trap ... EXIT` de send_cache_and_archive.sh (qui supprime
+    LOCK et restaure les markers déplacés) ne peut pas s'exécuter sur SIGKILL,
+    laissant le verrou bloqué pour de bon et empêchant tout sync ultérieur
+    (incident répété le 2026-10-15/17/18 : verrou resté jusqu'à 2 jours,
+    nécessitant une intervention manuelle à chaque fois). Appelé juste après
+    un _run() en échec sur send_cache_and_archive.sh pour que le run suivant
+    ne reste jamais bloqué plus d'un cycle — reproduit exactement la logique
+    de restauration du script bash (mv des fichiers, pas de suppression)."""
+    lock_dir = PROJECT_DIR / ".locks" / "send_cache_and_archive.lock"
+    if lock_dir.is_dir():
+        try:
+            lock_dir.rmdir()
+            print(f"  🔓 Verrou de sync périmé supprimé ({lock_dir})")
+        except OSError as e:
+            print(f"  ⚠️  Impossible de supprimer le verrou périmé {lock_dir}: {e}", file=sys.stderr)
+
+    locks_dir = PROJECT_DIR / ".locks"
+    if not locks_dir.is_dir():
+        return
+    for marker_tmp_dir in locks_dir.glob("sofascore_markers_tmp_*"):
+        if not marker_tmp_dir.is_dir():
+            continue
+        restored = 0
+        for f in marker_tmp_dir.rglob("*"):
+            if not f.is_file():
+                continue
+            rel = f.relative_to(marker_tmp_dir)
+            dest_dir = STORAGE_BASE / rel.parent
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                f.replace(dest_dir / f.name)
+                restored += 1
+            except OSError as e:
+                print(f"  ⚠️  Impossible de restaurer le marker {f}: {e}", file=sys.stderr)
+        # Supprime l'arborescence temporaire désormais vide (sous-dossiers puis racine).
+        for d in sorted((p for p in marker_tmp_dir.rglob("*") if p.is_dir()), key=lambda p: -len(p.parts)):
+            try:
+                d.rmdir()
+            except OSError:
+                pass
+        try:
+            marker_tmp_dir.rmdir()
+        except OSError:
+            pass
+        if restored:
+            print(f"  🔓 {restored} marker(s) restauré(s) depuis {marker_tmp_dir}")
+
+
+def maybe_run_prod_sync(force: bool = False, archive: bool = False, target_date=None):
     """Synchronise le cache vers prod et relance l'import + calcul de probas
     là-bas. Appelé après chaque lot (force=True) depuis la boucle de fetch_tennis,
     donc en pratique quasi jamais gaté par PROD_SYNC_INTERVAL_SECONDS (ce
@@ -1692,7 +1742,15 @@ def maybe_run_prod_sync(force: bool = False, archive: bool = False):
     envoi) — voir send_cache_and_archive.sh : archiver PENDANT que le fetch
     tourne encore viderait le dossier de travail sous ses pieds et le ferait
     planter (FileNotFoundError constaté le 2026-09-30). Seul le flush final
-    de fetch_tennis passe archive=True."""
+    de fetch_tennis passe archive=True.
+    `target_date` (YYYY-MM-DD) est passé en `--date` absolue à l'import prod —
+    sans ça, `tennis:import-from-schedule --offline` défaut à `--date-offset=0`,
+    c'est-à-dire "aujourd'hui" calculé CÔTÉ PROD au moment de l'appel SSH. Pour
+    un fetch visant un jour futur (J+1/J+2), ça importait silencieusement le
+    jour courant de prod au lieu du jour réellement fetché — aucune des
+    données J+1/J+2 n'atteignait jamais prod via ce chemin (incident
+    2026-10-18/19 : import local "réussi" pour J+1/J+2 mais rien côté prod,
+    car seul ce chemin SSH écrit en base prod)."""
     now = time.time()
     if not force and (now - _interleave_counter["last_prod_sync_at"]) < PROD_SYNC_INTERVAL_SECONDS:
         return
@@ -1700,16 +1758,41 @@ def maybe_run_prod_sync(force: bool = False, archive: bool = False):
     archive_env = None if archive else {"SKIP_ARCHIVE": "1"}
     label = "final (avec archivage)" if archive else "match par match (sans archivage)"
     print(f"  ☁️  Sync + import prod {label}...")
-    if _run(["bash", "script/send_cache_and_archive.sh"], timeout=300, env=archive_env):
+    # Timeout généreux (15 min) : un gros backlog (ex. après plusieurs jours sans
+    # sync réussi) peut légitimement dépasser les 300s historiques — mieux vaut
+    # laisser le temps à ljdsync de finir que de le tuer en pleine progression.
+    # En dernier recours (timeout quand même atteint), _cleanup_stale_sync_lock()
+    # évite que le verrou reste bloqué pour les tentatives suivantes (voir sa
+    # docstring : subprocess tue en SIGKILL, le trap EXIT du script ne peut pas
+    # s'exécuter).
+    if _run(["bash", "script/send_cache_and_archive.sh"], timeout=900, env=archive_env):
         # tennis:import-from-schedule --offline génère les fichiers
         # tournaments/events/event_*.json (source de création des lignes
         # `matches`) à partir du cache schedule synchronisé juste au-dessus —
         # lancé ici côté PROD (seul endroit qui écrit en base désormais, voir
         # refresh_local_db_from_prod), idempotent, sans appel réseau (--offline).
+        # --date=target_date (absolue) si connue : sans elle, la commande
+        # défaute à --date-offset=0 = "aujourd'hui" CÔTÉ PROD au moment de cet
+        # appel SSH, pas le jour réellement fetché (voir docstring).
+        date_opt = f" --date={target_date}" if target_date else ""
+        # --download-images/--download-logos seulement au flush final (archive=True) :
+        # pour un joueur absent du cache local déjà synchronisé, import-from-cache
+        # retombe sur un téléchargement HTTP direct depuis Sofascore, qui échoue
+        # systématiquement (même blocage anti-bot que la raison d'être du fetch par
+        # extension Chrome — ~7s perdues par joueur, 3 stratégies tentées en vain).
+        # Avec des centaines de joueurs sans photo en cache pendant un run, ça épuise
+        # à lui seul le timeout de 300s AVANT d'atteindre compute-tightness-scores,
+        # qui ne s'exécute alors jamais pour ce lot (incident 2026-10-19 : matchs
+        # importés mais tightness_score/probas restés null sur la quasi-totalité).
+        # Les images ne sont pas nécessaires au calcul des probas — les récupérer
+        # seulement une fois, à la fin du run, suffit.
+        images_opt = " --download-images --download-logos" if archive else ""
         _run(["ssh", "sc2vagr6376@bouteille.o2switch.net",
-              "cd ~/api.auxotracker && php artisan tennis:import-from-schedule --offline "
-              "&& php artisan tennis:import-from-cache --force --download-images --download-logos "
+              f"cd ~/api.auxotracker && php artisan tennis:import-from-schedule --offline{date_opt} "
+              f"&& php artisan tennis:import-from-cache --force{images_opt} "
               "&& php artisan tennis:compute-tightness-scores --force"], timeout=300)
+    else:
+        _cleanup_stale_sync_lock()
 
 
 def _read_env_values(env_path: Path, keys: list) -> dict:

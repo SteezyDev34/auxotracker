@@ -107,6 +107,7 @@ class MatchController extends Controller
                 'tts.prob_lost_serve1_in_set', 'tts.prob_lost_serve2_in_set',
                 'tts.prob_hold', 'tts.prob_break', 'tts.edge_hold', 'tts.edge_break',
                 'tts.prob_hold_in_set', 'tts.prob_break_in_set', 'tts.prob_030',
+                'tts.prob_server_loss1', 'tts.prob_server_loss2',
             ]);
 
         $sortMap = [
@@ -281,6 +282,7 @@ class MatchController extends Controller
                 'tts.edge_lost_serve1', 'tts.edge_lost_serve2',
                 'tts.prob_hold_in_set', 'tts.prob_break_in_set', 'tts.edge_hold', 'tts.edge_break',
                 'tts.prob_030',
+                'tts.prob_server_loss1', 'tts.prob_server_loss2',
             ])
             ->first();
 
@@ -304,8 +306,12 @@ class MatchController extends Controller
             'sofascore_link' => $match->sofascore_link,
             'match_start'    => $match->match_start_date . ' ' . $match->match_start_time,
             'event_id'       => $match->event_id,
-            'team1'          => ['name' => $team1->name, 'sofascore_id' => $id1],
-            'team2'          => ['name' => $team2->name, 'sofascore_id' => $id2],
+            // Classement ATP/WTA (plus bas = favori) — exposé pour permettre au
+            // consommateur (bot mrtingal) de déterminer le favori du match côté
+            // appelant, sans dépendance supplémentaire (demandé le 2026-10-28,
+            // pour router 15V1/15V2 selon favori/non-favori + risque 0-40).
+            'team1'          => ['name' => $team1->name, 'sofascore_id' => $id1, 'ranking' => $team1->ranking],
+            'team2'          => ['name' => $team2->name, 'sofascore_id' => $id2, 'ranking' => $team2->ranking],
             // Tension globale du match (0-100) : sous 50, les probas 15A/30A/40A
             // (in_set) ne sont pas représentatives d'un match déséquilibré, voir
             // MIN_TIGHTNESS_FOR_SET_LEAD_PROBS côté frontend (TodayMatches.vue).
@@ -327,6 +333,13 @@ class MatchController extends Controller
                 // "camp 1/2" (symétrique), contrairement à 150/015 ci-dessus.
                 'HOLD'   => $match->prob_hold_in_set,
                 'BREAK'  => $match->prob_break_in_set,
+                // Proba PAR JEU (pas "au moins une fois dans le set" comme le
+                // reste de ce bloc) que ce joueur perde son propre service 0-40
+                // — c'est la proba pour LE jeu en cours qui compte pour une
+                // décision de script en direct (qui sert maintenant), pas une
+                // fréquence compoundée sur plusieurs jeux.
+                'SERVERLOSS_1' => $swap ? $match->prob_server_loss2 : $match->prob_server_loss1,
+                'SERVERLOSS_2' => $swap ? $match->prob_server_loss1 : $match->prob_server_loss2,
             ],
             'edges' => [
                 '15A'   => $match->edge_15a,
@@ -387,7 +400,7 @@ class MatchController extends Controller
                 [$searchLower, $searchLower, $searchLower, $searchStart, $searchStart, $searchStart]
             )
             ->orderBy('teams.name')
-            ->select('teams.id', 'teams.name', 'teams.nickname', 'teams.sofascore_id')
+            ->select('teams.id', 'teams.name', 'teams.nickname', 'teams.sofascore_id', 'teams.ranking')
             ->first();
     }
 }

@@ -120,6 +120,8 @@ class ComputeTennisTightnessScores extends Command
                     'prob_hold_in_set' => $result['prob_hold_in_set'],
                     'prob_break_in_set' => $result['prob_break_in_set'],
                     'prob_030' => $result['prob_030'],
+                    'prob_server_loss1' => $result['prob_server_loss1'],
+                    'prob_server_loss2' => $result['prob_server_loss2'],
                     'computed_at' => now(),
                 ]
             );
@@ -236,6 +238,8 @@ class ComputeTennisTightnessScores extends Command
             'prob_break_in_set' => $set1Probs['prob_break_in_set'] ?? null,
             // Pas de cote de référence confirmée pour ce marché -> pas d'edge.
             'prob_030' => $set1Probs['prob_030'] ?? null,
+            'prob_server_loss1' => $set1Probs['prob_team1_server_loss'] ?? null,
+            'prob_server_loss2' => $set1Probs['prob_team2_server_loss'] ?? null,
         ];
     }
 
@@ -462,6 +466,11 @@ class ComputeTennisTightnessScores extends Command
             'prob_g40_15' => $avg($ag15, $bg15),
             'prob_g40_30' => $avg($ag30, $bg30),
             'prob_server_loss_to_love' => $avg($aServerLoss, $bServerLoss),
+            // Pendants PAR JOUEUR de prob_server_loss_to_love ci-dessus (qui
+            // moyenne les 2) — nécessaire pour savoir, pour UN joueur précis,
+            // son risque de perdre son propre service 0-40.
+            'prob_team1_server_loss' => $aServerLoss !== null ? round($aServerLoss * 100, 2) : null,
+            'prob_team2_server_loss' => $bServerLoss !== null ? round($bServerLoss * 100, 2) : null,
             'source' => 'empirique',
         ];
     }
@@ -487,6 +496,7 @@ class ComputeTennisTightnessScores extends Command
                 'prob_15a' => null, 'prob_30a' => null, 'prob_40a' => null,
                 'prob_30love' => null, 'prob_g40_0' => null, 'prob_g40_15' => null, 'prob_g40_30' => null,
                 'prob_server_loss_to_love' => null, 'prob_030' => null,
+                'prob_team1_server_loss' => null, 'prob_team2_server_loss' => null,
                 'prob_hold' => null, 'prob_break' => null,
                 'prob_hold_in_set' => null, 'prob_break_in_set' => null,
                 'source' => null,
@@ -512,6 +522,9 @@ class ComputeTennisTightnessScores extends Command
         // Spécifique au serveur : proba qu'IL perde son propre jeu 0-40 (le
         // relanceur gagne les 4 points), pas de compoundage des deux sens.
         $avgServerLoss = round(((((1 - $pA) ** 4)) + (((1 - $pB) ** 4))) / 2 * 100, 2);
+        // Pendants PAR JOUEUR (pas de moyenne) — mêmes formules, un seul côté.
+        $serverLossA = round(((1 - $pA) ** 4) * 100, 2);
+        $serverLossB = round(((1 - $pB) ** 4) * 100, 2);
         // Idem, mais à 2 points (0-30) plutôt que 4 (0-40) : proba que le
         // serveur se retrouve mené 0-30 sur son propre jeu.
         $avgServerDown030 = round(((((1 - $pA) ** 2)) + (((1 - $pB) ** 2))) / 2 * 100, 2);
@@ -561,6 +574,8 @@ class ComputeTennisTightnessScores extends Command
             'prob_g40_15' => $avg($perGame40_15),
             'prob_g40_30' => $avg($perGame40_30),
             'prob_server_loss_to_love' => $avgServerLoss,
+            'prob_team1_server_loss' => $serverLossA,
+            'prob_team2_server_loss' => $serverLossB,
             'prob_030' => $avgServerDown030,
             'prob_hold' => $avgHold,
             'prob_break' => $avgBreak,

@@ -3,6 +3,11 @@
 .gitattributes
 .gitignore
 
+# Projet Python distinct déployé directement sur prod, absent en local —
+# jamais touché par ce rsync --delete (trouvé le 2026-10-28 avant un déploiement,
+# même famille d'incident que le symlink public/storage du 2026-10-14).
+bot-telegram/
+
 # Dépendances de développement
 node_modules/
 vendor/

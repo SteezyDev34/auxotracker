@@ -54,6 +54,8 @@ class TennisMatchTightnessScore extends Model
         'prob_hold_in_set',
         'prob_break_in_set',
         'prob_030',
+        'prob_server_loss1',
+        'prob_server_loss2',
         'computed_at',
     ];
 

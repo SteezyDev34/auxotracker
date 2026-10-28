@@ -15,9 +15,17 @@ PHP_CLI_OPTS="${PHP_CLI_OPTS:--d memory_limit=-1 -d max_execution_time=0}"
 if [[ -n "${USE_DOCKER:-}" ]] || { [[ -f "$PROJECT_DIR/docker-compose.yml" ]] && docker info >/dev/null 2>&1; }; then
     PHP_CMD="docker compose exec -T $APP_SERVICE php $PHP_CLI_OPTS"
     echo "Mode: Docker détecté"
-else
+elif command -v php >/dev/null 2>&1; then
     PHP_CMD="php"
     echo "Mode: PHP direct (serveur)"
+else
+    # Ni Docker ni PHP local (ex: machine sans environnement PHP/MySQL local,
+    # juste Python + Chrome pour le fetch) — l'étape artisan locale ci-dessous
+    # devient optionnelle : prod régénère de toute façon ses propres matchs du
+    # jour via maybe_run_prod_sync() côté fetch_sofascore_cache.py, donc rien
+    # n'est perdu, seule la BDD locale (si elle existe) ne sera pas alimentée.
+    PHP_CMD=""
+    echo "Mode: ni Docker ni PHP local disponibles — étape artisan locale sautée (prod s'en charge)"
 fi
 LOG_DIR="$PROJECT_DIR/script/logs"
 mkdir -p "$LOG_DIR"
@@ -35,15 +43,30 @@ if ! mkdir "$LOCK" 2>/dev/null; then
 fi
 trap 'rm -rf "$LOCK"' EXIT
 
-TENNIS_CACHE_MARKER="$PROJECT_DIR/storage/app/sofascore_cache/tennis_CACHE_DONE_$(date +%Y-%m-%d)"
+# Date cible du run, calculée UNE SEULE FOIS ici (pas recalculée plus loin, ni côté
+# artisan) — TENNIS_FETCH_DATE (absolue, YYYY-MM-DD) est prioritaire sur
+# TENNIS_DATE_OFFSET (relatif à "maintenant"). Nécessaire pour un enchaînement
+# multi-jours : incident 2026-10-18/19, un fetch de 8h a fait franchir minuit en
+# plein run, et un --date-offset recalculé à chaque étape (ici ET côté artisan,
+# exécuté des heures plus tard) a glissé d'un jour entier par rapport à la date
+# réellement visée au lancement — un enchaînement offset=0/1/2 a fini par couvrir
+# J+1/J+2/J+3 au lieu de J/J+1/J+2, sans jamais traiter le jour courant.
+if [ -n "${TENNIS_FETCH_DATE:-}" ]; then
+    FETCH_DATE="$TENNIS_FETCH_DATE"
+else
+    FETCH_DATE="${TENNIS_DATE_OFFSET:+$(date -v+${TENNIS_DATE_OFFSET}d +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)}"
+    FETCH_DATE="${FETCH_DATE:-$(date +%Y-%m-%d)}"
+fi
+
+TENNIS_CACHE_MARKER="$PROJECT_DIR/storage/app/sofascore_cache/tennis_CACHE_DONE_${FETCH_DATE}"
 
 if [[ "${TENNIS_FORCE:-}" != "1" ]]; then
     if [[ -f "$TENNIS_CACHE_MARKER" ]]; then
-        echo "$(date) : ⏭️ Tennis Phase 1 déjà faite (marker présent). Skip." 2>&1 | tee -a "$LOG"
+        echo "$(date) : ⏭️ Tennis Phase 1 déjà faite pour ${FETCH_DATE} (marker présent). Skip." 2>&1 | tee -a "$LOG"
         exit 0
     fi
 else
-    echo "$(date) : ⚠️ Tennis force demandé (TENNIS_FORCE=1) — exécution Phase 1" 2>&1 | tee -a "$LOG"
+    echo "$(date) : ⚠️ Tennis force demandé (TENNIS_FORCE=1) — exécution Phase 1 pour ${FETCH_DATE}" 2>&1 | tee -a "$LOG"
 fi
 
 # Construire les paramètres pour tennis:cache-players (configurable via variables d'environnement)
@@ -53,12 +76,13 @@ if [ "${TENNIS_FORCE:-}" = "1" ]; then TEN_PARAMS="--force"; fi
 [ -n "${TENNIS_DOWNLOAD_IMAGES:-}" ] && TEN_PARAMS="$TEN_PARAMS ${TENNIS_DOWNLOAD_IMAGES}"
 [ -n "${TENNIS_LIMIT:-}" ] && TEN_PARAMS="$TEN_PARAMS --limit=${TENNIS_LIMIT}"
 [ -n "${TENNIS_DELAY:-}" ] && TEN_PARAMS="$TEN_PARAMS --delay=${TENNIS_DELAY}"
-[ -n "${TENNIS_DATE_OFFSET:-}" ] && TEN_PARAMS="$TEN_PARAMS --date-offset=${TENNIS_DATE_OFFSET}"
+# --date (absolue) plutôt que --date-offset côté artisan : évite que PHP, exécuté
+# potentiellement des heures après le début du fetch, recalcule "aujourd'hui" à un
+# moment différent (voir commentaire FETCH_DATE ci-dessus).
+TEN_PARAMS="$TEN_PARAMS --date=${FETCH_DATE}"
 
 # Phase 0 : fetch des données Sofascore (contourne le ban IP/TLS)
 echo "$(date) : Fetch Sofascore cache via $TENNIS_TRANSPORT..." 2>&1 | tee -a "$LOG"
-FETCH_DATE="${TENNIS_DATE_OFFSET:+$(date -v+${TENNIS_DATE_OFFSET}d +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)}"
-FETCH_DATE="${FETCH_DATE:-$(date +%Y-%m-%d)}"
 
 # Retry automatique (jusqu'à 2 tentatives supplémentaires) si le script Python
 # sort avec le code 42 : ça signifie que Chrome a crashé en cours de route
@@ -102,14 +126,20 @@ else
     echo "$(date) : Fetch Chrome OK — artisan lancé en mode --offline (sans --force)" 2>&1 | tee -a "$LOG"
 fi
 
-echo "$(date) : Exécution artisan tennis:import-from-schedule $TEN_PARAMS" 2>&1 | tee -a "$LOG"
-$PHP_CMD artisan tennis:import-from-schedule $TEN_PARAMS 2>&1 | tee -a "$LOG"
-if [[ $? -eq 0 ]]; then
+if [[ -z "$PHP_CMD" ]]; then
+    echo "$(date) : ⏭️  Pas de PHP/Docker local — artisan tennis:import-from-schedule sauté (prod s'en charge)" 2>&1 | tee -a "$LOG"
     printf "%s" "done" > "$TENNIS_CACHE_MARKER" 2>/dev/null || true
     echo "$(date) : ✅ Tennis Phase 1 (cache) terminée" 2>&1 | tee -a "$LOG"
 else
-    echo "$(date) : ❌ Erreur lors du cache Tennis Phase 1" 2>&1 | tee -a "$LOG"
-    exit 1
+    echo "$(date) : Exécution artisan tennis:import-from-schedule $TEN_PARAMS" 2>&1 | tee -a "$LOG"
+    $PHP_CMD artisan tennis:import-from-schedule $TEN_PARAMS 2>&1 | tee -a "$LOG"
+    if [[ $? -eq 0 ]]; then
+        printf "%s" "done" > "$TENNIS_CACHE_MARKER" 2>/dev/null || true
+        echo "$(date) : ✅ Tennis Phase 1 (cache) terminée" 2>&1 | tee -a "$LOG"
+    else
+        echo "$(date) : ❌ Erreur lors du cache Tennis Phase 1" 2>&1 | tee -a "$LOG"
+        exit 1
+    fi
 fi
 
 exit 0

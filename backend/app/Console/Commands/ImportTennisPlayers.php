@@ -30,6 +30,7 @@ class ImportTennisPlayers extends Command
                                 {--download-images : Télécharger les images des joueurs pendant la mise en cache}
                                 {--download-logos : Télécharger les logos des tournois pendant la mise en cache}
                                 {--date-offset=0 : Décalage en jours par rapport à aujourd\'hui (ex: 1 pour J+1, utile proche de minuit)}
+                                {--date= : Date de référence absolue (YYYY-MM-DD), prioritaire sur --date-offset — évite la dérive quand l\'exécution traverse minuit (incident 2026-10-18/19 : un fetch de 8h a fait glisser --date-offset=0 vers J+1 au moment de l\'import)}
                                 {--offline : Mode hors-ligne — lit uniquement le cache, aucun appel API (après fetch via navigateur)}';
 
     /**
@@ -86,8 +87,13 @@ class ImportTennisPlayers extends Command
         $force = $this->option('force');
         $downloadImages = $this->option('download-images');
         $limit = $this->option('limit') ? (int) $this->option('limit') : null;
+        $absoluteDate = $this->option('date');
         $dateOffset = (int) $this->option('date-offset');
-        $this->referenceDate = date('Y-m-d', strtotime("+{$dateOffset} days"));
+        if ($absoluteDate) {
+            $this->referenceDate = $absoluteDate;
+        } else {
+            $this->referenceDate = date('Y-m-d', strtotime("+{$dateOffset} days"));
+        }
 
         $this->line("🎾 Début de la collecte des données des joueurs de tennis");
         $this->line("💾 Cache: " . ($noCache ? 'Désactivé' : 'Activé'));
@@ -95,7 +101,9 @@ class ImportTennisPlayers extends Command
         // option --export-data supprimée : export géré séparément si nécessaire
         $this->line("📸 Téléchargement d'images: " . ($downloadImages ? 'Activé' : 'Désactivé'));
         $this->line("⏱️ Délai entre requêtes: {$delay} seconde(s)");
-        if ($dateOffset !== 0) {
+        if ($absoluteDate) {
+            $this->line("📅 Date absolue fixée: {$this->referenceDate}");
+        } elseif ($dateOffset !== 0) {
             $this->line("📅 Décalage date: J+{$dateOffset} → {$this->referenceDate}");
         }
         if ($limit) {
